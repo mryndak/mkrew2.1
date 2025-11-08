@@ -18,10 +18,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.mkrew.backend.dto.CreateDonationRequest;
-import pl.mkrew.backend.dto.DonationListResponse;
-import pl.mkrew.backend.dto.DonationResponse;
-import pl.mkrew.backend.dto.ErrorResponse;
+import pl.mkrew.backend.dto.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import pl.mkrew.backend.security.SecurityUtils;
 import pl.mkrew.backend.service.DonationService;
 
@@ -248,5 +247,226 @@ public class DonationController {
         log.info("Retrieved donation ID: {} for user ID: {}", id, userId);
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * US-013: Update donation entry
+     * PATCH /api/v1/users/me/donations/{id}
+     *
+     * Updates an existing donation entry (partial update).
+     * Authentication required. User must own the donation.
+     *
+     * @param id Donation ID
+     * @param request Update data (only provided fields will be updated)
+     * @return Updated donation
+     */
+    @Operation(
+            summary = "Update donation entry",
+            description = "Updates an existing donation entry. Only provided fields will be updated (partial update). " +
+                    "User must be the owner of the donation. " +
+                    "Cannot change rckikId or donationDate per business rules. " +
+                    "Creates audit log entry for tracking changes. " +
+                    "JWT authentication required.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Donation updated successfully",
+                    content = @Content(schema = @Schema(implementation = DonationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Bad request - Validation errors",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - User does not own this donation",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Donation not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PatchMapping("/{id}")
+    public ResponseEntity<DonationResponse> updateDonation(
+            @Parameter(description = "Donation ID to update", example = "502")
+            @PathVariable Long id,
+
+            @Parameter(description = "Donation update data", required = true)
+            @Valid @RequestBody UpdateDonationRequest request) {
+
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("PATCH /api/v1/users/me/donations/{} - Update donation for user ID: {}", id, userId);
+
+        DonationResponse response = donationService.updateDonation(userId, id, request);
+
+        log.info("Updated donation ID: {} for user ID: {}", id, userId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * US-013: Delete donation entry
+     * DELETE /api/v1/users/me/donations/{id}
+     *
+     * Soft deletes a donation entry.
+     * Authentication required. User must own the donation.
+     *
+     * @param id Donation ID
+     * @return No content
+     */
+    @Operation(
+            summary = "Delete donation entry",
+            description = "Soft deletes a donation entry by setting deleted_at timestamp. " +
+                    "User must be the owner of the donation. " +
+                    "Creates audit log entry with donation data before deletion. " +
+                    "This operation should require confirmation in the UI. " +
+                    "JWT authentication required.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Donation deleted successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - User does not own this donation",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Donation not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDonation(
+            @Parameter(description = "Donation ID to delete", example = "502")
+            @PathVariable Long id) {
+
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("DELETE /api/v1/users/me/donations/{} - Delete donation for user ID: {}", id, userId);
+
+        donationService.deleteDonation(userId, id);
+
+        log.info("Deleted donation ID: {} for user ID: {}", id, userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * US-014: Export donation history
+     * GET /api/v1/users/me/donations/export
+     *
+     * Exports user's donation history to CSV or JSON format.
+     * Authentication required.
+     *
+     * @param format Export format (csv or json)
+     * @param fromDate Optional start date filter
+     * @param toDate Optional end date filter
+     * @return Exported data
+     */
+    @Operation(
+            summary = "Export donation history",
+            description = "Exports authenticated user's donation history to CSV or JSON format. " +
+                    "Supports filtering by date range. " +
+                    "For MVP: synchronous generation. " +
+                    "Future: async with download link for large datasets. " +
+                    "JWT authentication required.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Export generated successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Bad request - Invalid format parameter",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/export")
+    public ResponseEntity<?> exportDonations(
+            @Parameter(description = "Export format (csv or json)", example = "csv", required = true)
+            @RequestParam String format,
+
+            @Parameter(description = "Start date for filtering (ISO 8601)", example = "2024-01-01")
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fromDate,
+
+            @Parameter(description = "End date for filtering (ISO 8601)", example = "2025-01-31")
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate toDate) {
+
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("GET /api/v1/users/me/donations/export?format={} - Export donations for user ID: {} " +
+                        "(fromDate: {}, toDate: {})",
+                format, userId, fromDate, toDate);
+
+        // Validate format parameter
+        if (!format.equalsIgnoreCase("csv") && !format.equalsIgnoreCase("json")) {
+            throw new IllegalArgumentException("Invalid format parameter. Must be 'csv' or 'json'");
+        }
+
+        // Validate date range
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
+            throw new IllegalArgumentException("fromDate cannot be after toDate");
+        }
+
+        String timestamp = LocalDate.now().toString().replace("-", "");
+
+        if (format.equalsIgnoreCase("csv")) {
+            // Export to CSV
+            String csvData = donationService.exportDonationsToCsv(userId, fromDate, toDate);
+
+            String filename = "donations_export_" + timestamp + ".csv";
+
+            log.info("Exported donations to CSV for user ID: {} - filename: {}", userId, filename);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.parseMediaType("text/csv"))
+                    .body(csvData);
+        } else {
+            // Export to JSON
+            DonationExportResponse jsonData = donationService.exportDonationsToJson(userId, fromDate, toDate);
+
+            String filename = "donations_export_" + timestamp + ".json";
+
+            log.info("Exported donations to JSON for user ID: {} - filename: {}", userId, filename);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(jsonData);
+        }
     }
 }
