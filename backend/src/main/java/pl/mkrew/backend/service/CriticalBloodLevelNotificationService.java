@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 /**
  * Service for checking critical blood levels and sending notifications
  * US-010: Email Notifications for Critical Blood Levels
+ * US-011: In-App Notifications
  */
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,7 @@ public class CriticalBloodLevelNotificationService {
     private final NotificationPreferenceRepository notificationPreferenceRepository;
     private final EmailService emailService;
     private final EmailLogService emailLogService;
+    private final InAppNotificationService inAppNotificationService;
 
     @Value("${mkrew.notification.critical-threshold:20.0}")
     private BigDecimal criticalThreshold;
@@ -87,13 +89,19 @@ public class CriticalBloodLevelNotificationService {
             for (UserFavoriteRckik favorite : favorites) {
                 User user = favorite.getUser();
 
-                // Check if user should receive notification
-                if (shouldSendNotification(user)) {
+                // Send email notification if user preferences allow
+                if (shouldSendEmailNotification(user)) {
                     boolean sent = sendCriticalAlert(user, favorite.getRckik().getId(),
                             favorite.getRckik().getName(), snapshots);
                     if (sent) {
                         totalNotifications++;
                     }
+                }
+
+                // Create in-app notification if user preferences allow
+                if (shouldSendInAppNotification(user)) {
+                    createInAppNotification(user, favorite.getRckik().getId(),
+                            favorite.getRckik().getName(), snapshots);
                 }
             }
         }
@@ -103,12 +111,12 @@ public class CriticalBloodLevelNotificationService {
     }
 
     /**
-     * Check if user should receive critical notification
+     * Check if user should receive critical email notification
      *
      * @param user User
-     * @return true if notification should be sent
+     * @return true if email notification should be sent
      */
-    private boolean shouldSendNotification(User user) {
+    private boolean shouldSendEmailNotification(User user) {
         // Check if user is active
         if (user.getDeletedAt() != null) {
             log.debug("User {} is deleted, skipping notification", user.getId());
@@ -250,6 +258,101 @@ public class CriticalBloodLevelNotificationService {
                 .criticalBloodGroups(criticalGroups)
                 .snapshotTime(firstSnapshot.getScrapedAt())
                 .build();
+    }
+
+    /**
+     * Check if user should receive in-app notification
+     *
+     * @param user User
+     * @return true if in-app notification should be created
+     */
+    private boolean shouldSendInAppNotification(User user) {
+        // Check if user is active
+        if (user.getDeletedAt() != null) {
+            log.debug("User {} is deleted, skipping in-app notification", user.getId());
+            return false;
+        }
+
+        // Get notification preferences
+        NotificationPreference prefs = notificationPreferenceRepository
+                .findByUserId(user.getId())
+                .orElse(null);
+
+        if (prefs == null) {
+            log.debug("User {} has no notification preferences, skipping in-app notification", user.getId());
+            return false;
+        }
+
+        // Check if in-app notifications are enabled
+        if (!prefs.getInAppEnabled()) {
+            log.debug("User {} has in-app notifications disabled", user.getId());
+            return false;
+        }
+
+        // Check in-app frequency setting
+        String frequency = prefs.getInAppFrequency();
+        if ("DISABLED".equals(frequency)) {
+            log.debug("User {} has in-app frequency set to DISABLED", user.getId());
+            return false;
+        }
+
+        // For ONLY_CRITICAL and IMMEDIATE, create notification
+        if (!"ONLY_CRITICAL".equals(frequency) && !"IMMEDIATE".equals(frequency)) {
+            log.debug("User {} in-app frequency is {}, not creating individual critical alert",
+                    user.getId(), frequency);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Create in-app notification for critical blood level
+     *
+     * @param user      User
+     * @param rckikId   RCKiK ID
+     * @param rckikName RCKiK name
+     * @param snapshots Critical blood snapshots
+     */
+    private void createInAppNotification(User user, Long rckikId, String rckikName,
+                                         List<BloodSnapshot> snapshots) {
+        try {
+            // Build critical blood groups message
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.append("Krytyczne stany krwi w ").append(rckikName).append(":\n\n");
+
+            for (BloodSnapshot snapshot : snapshots) {
+                messageBuilder.append("Grupa ")
+                        .append(snapshot.getBloodGroup())
+                        .append(": ")
+                        .append(snapshot.getLevelPercentage())
+                        .append("%\n");
+            }
+
+            String title = "Krytyczny stan krwi - " + rckikName;
+            String message = messageBuilder.toString();
+            String linkUrl = "/rckik/" + rckikId;
+
+            // Set expiration to 7 days from now
+            LocalDateTime expiresAt = LocalDateTime.now().plusDays(7);
+
+            // Create in-app notification
+            inAppNotificationService.createNotification(
+                    user.getId(),
+                    "CRITICAL_BLOOD_LEVEL",
+                    rckikId,
+                    title,
+                    message,
+                    linkUrl,
+                    expiresAt
+            );
+
+            log.info("Created in-app notification for user {} for RCKiK {}", user.getId(), rckikId);
+
+        } catch (Exception e) {
+            log.error("Error creating in-app notification for user {} for RCKiK {}",
+                    user.getId(), rckikId, e);
+        }
     }
 
     /**
