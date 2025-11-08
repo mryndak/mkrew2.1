@@ -218,4 +218,81 @@ public class EmailService {
 
         return sendEmail(request);
     }
+
+    /**
+     * Send account deletion confirmation email
+     * US-016: Right to be Forgotten
+     *
+     * @param recipientEmail Recipient email
+     * @param recipientName  Recipient name
+     * @param userId         User ID
+     * @return true if sent successfully
+     */
+    public boolean sendAccountDeletionConfirmation(
+            String recipientEmail,
+            String recipientName,
+            Long userId) {
+
+        String subject = "Potwierdzenie usunięcia konta - mkrew";
+
+        String htmlTemplate = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Potwierdzenie usunięcia konta</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #d32f2f;">Usunięcie konta</h2>
+                        <p>Witaj {{recipientName}},</p>
+                        <p>Potwierdzamy, że Twoje konto w serwisie mkrew zostało oznaczone do usunięcia.</p>
+                        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-top: 0;">Co zostało usunięte?</h3>
+                            <ul>
+                                <li>Dane profilowe (imię, nazwisko, grupa krwi)</li>
+                                <li>Historia donacji</li>
+                                <li>Ulubione centra krwiodawstwa</li>
+                                <li>Preferencje powiadomień</li>
+                                <li>Wszystkie sesje (zostałeś/aś automatycznie wylogowany/a)</li>
+                            </ul>
+                        </div>
+                        <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-top: 0;">Co zachowujemy?</h3>
+                            <p>Zgodnie z obowiązującymi przepisami prawa, zachowujemy:</p>
+                            <ul>
+                                <li>Logi audytowe (wymagane prawnie)</li>
+                                <li>Dane niezbędne do wypełnienia obowiązków prawnych</li>
+                            </ul>
+                            <p style="font-size: 14px; color: #666;">
+                                Dane te są przechowywane w formie zanonimizowanej i nie są wykorzystywane do żadnych innych celów.
+                            </p>
+                        </div>
+                        <p>Jeśli to nie Ty zażądałeś/aś usunięcia konta lub masz jakiekolwiek pytania, skontaktuj się z nami jak najszybciej.</p>
+                        <p>Dziękujemy za korzystanie z naszej platformy i wspieranie dawstwa krwi!</p>
+                        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                        <p style="font-size: 12px; color: #999;">
+                            mkrew - Platforma dla dawców krwi<br>
+                            <a href="https://mkrew.pl" style="color: #d32f2f;">mkrew.pl</a>
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """;
+
+        EmailNotificationRequest request = EmailNotificationRequest.builder()
+                .recipientEmail(recipientEmail)
+                .recipientName(recipientName)
+                .subject(subject)
+                .notificationType("OTHER")
+                .templateName(htmlTemplate)
+                .templateVariables(java.util.Map.of(
+                        "recipientName", recipientName
+                ))
+                .userId(userId)
+                .rckikId(null)
+                .build();
+
+        return sendEmail(request);
+    }
 }
