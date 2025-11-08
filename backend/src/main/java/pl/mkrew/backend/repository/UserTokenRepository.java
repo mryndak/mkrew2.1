@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import pl.mkrew.backend.entity.UserToken;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -17,6 +18,8 @@ public interface UserTokenRepository extends JpaRepository<UserToken, Long> {
         String tokenType,
         LocalDateTime now
     );
+
+    List<UserToken> findByUserIdAndTokenType(Long userId, String tokenType);
 
     void deleteByExpiresAtBefore(LocalDateTime now);
 }

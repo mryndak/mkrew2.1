@@ -35,6 +35,7 @@ public class AuthService {
     private final LoginAttemptService loginAttemptService;
 
     private static final int TOKEN_VALIDITY_HOURS = 24;
+    private static final int PASSWORD_RESET_TOKEN_VALIDITY_HOURS = 1;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -243,6 +244,113 @@ public class AuthService {
                 .expiresIn(jwtTokenProvider.getAccessTokenExpirationInSeconds())
                 .refreshToken(refreshToken)
                 .user(userDto)
+                .build();
+    }
+
+    @Transactional
+    public PasswordResetResponse requestPasswordReset(PasswordResetRequestDto request) {
+        String email = request.getEmail().toLowerCase();
+        log.info("Password reset request for email: {}", email);
+
+        // 1. Check if user exists (but don't reveal if not - security)
+        userRepository.findByEmailAndDeletedAtIsNull(email)
+                .ifPresent(user -> {
+                    // 2. Invalidate any existing PASSWORD_RESET tokens for this user
+                    userTokenRepository.findByUserIdAndTokenType(user.getId(), "PASSWORD_RESET")
+                            .forEach(token -> {
+                                if (token.getUsedAt() == null) {
+                                    token.setUsedAt(LocalDateTime.now());
+                                    userTokenRepository.save(token);
+                                    log.debug("Invalidated previous password reset token for user: {}", user.getId());
+                                }
+                            });
+
+                    // 3. Generate PASSWORD_RESET token (1h TTL)
+                    String resetToken = generatePasswordResetToken(user);
+                    log.info("Password reset token generated for user ID: {}", user.getId());
+
+                    // 4. TODO: Send password reset email
+                    // emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+                    log.info("Password reset email would be sent to: {} with token: {}", user.getEmail(), resetToken);
+                });
+
+        // 5. Always return success (prevent email enumeration)
+        return PasswordResetResponse.builder()
+                .message("If the email exists, a password reset link has been sent.")
+                .build();
+    }
+
+    private String generatePasswordResetToken(User user) {
+        // Generate secure random token
+        String token = UUID.randomUUID().toString();
+
+        // Calculate expiration time (1 hour from now)
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(PASSWORD_RESET_TOKEN_VALIDITY_HOURS);
+
+        // Create and save token
+        UserToken userToken = UserToken.builder()
+                .user(user)
+                .token(token)
+                .tokenType("PASSWORD_RESET")
+                .expiresAt(expiresAt)
+                .build();
+
+        userTokenRepository.save(userToken);
+
+        return token;
+    }
+
+    @Transactional
+    public PasswordResetResponse confirmPasswordReset(PasswordResetConfirmDto request) {
+        String token = request.getToken();
+        log.info("Password reset confirmation attempt with token: {}...", token.substring(0, 8));
+
+        // 1. Find token by token value and type
+        UserToken userToken = userTokenRepository.findByTokenAndTokenType(token, "PASSWORD_RESET")
+                .orElseThrow(() -> {
+                    log.warn("Password reset failed: Token not found");
+                    return new InvalidTokenException("Password reset token is invalid or has expired");
+                });
+
+        // 2. Check if token has expired
+        if (userToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("Password reset failed: Token expired at {}", userToken.getExpiresAt());
+            throw new TokenExpiredException("Password reset token has expired");
+        }
+
+        // 3. Check if token has already been used
+        if (userToken.getUsedAt() != null) {
+            log.warn("Password reset failed: Token already used at {}", userToken.getUsedAt());
+            throw new InvalidTokenException("Password reset token has already been used");
+        }
+
+        // 4. Get user
+        User user = userToken.getUser();
+
+        // 5. Hash new password
+        String hashedPassword = passwordEncoder.encode(request.getNewPassword());
+
+        // 6. Update user password
+        user.setPasswordHash(hashedPassword);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        log.info("Password updated successfully for user ID: {}", user.getId());
+
+        // 7. Mark token as used
+        userToken.setUsedAt(LocalDateTime.now());
+        userTokenRepository.save(userToken);
+        log.info("Password reset token marked as used");
+
+        // 8. TODO: Invalidate all existing sessions for this user
+        // sessionRepository.revokeAllSessionsForUser(user.getId());
+        log.info("All sessions would be invalidated for user ID: {}", user.getId());
+
+        // 9. TODO: Send confirmation email
+        // emailService.sendPasswordResetConfirmationEmail(user.getEmail());
+        log.info("Password reset confirmation email would be sent to: {}", user.getEmail());
+
+        return PasswordResetResponse.builder()
+                .message("Password reset successfully. You can now log in with your new password.")
                 .build();
     }
 }

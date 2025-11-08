@@ -14,6 +14,8 @@ Backend application for the mkrew blood donation platform built with Java 21 and
 - **PostgreSQL 16**
 - **Liquibase** (database migrations)
 - **BCrypt** (password hashing, cost factor 12)
+- **JWT** (JSON Web Tokens for authentication)
+- **SpringDoc OpenAPI 3.0** (Swagger UI for API documentation)
 - **Lombok** (code generation)
 - **Gradle 8.5** (build tool)
 
@@ -140,6 +142,7 @@ java -jar build/libs/mkrew-backend-0.0.1-SNAPSHOT.jar
 | `DB_USER` | mkrew_user | Database user |
 | `DB_PASSWORD` | mkrew_password | Database password |
 | `PORT` | 8080 | Application port |
+| `JWT_SECRET` | (auto-generated) | JWT signing secret (min 256 bits) |
 | `SPRING_PROFILES_ACTIVE` | dev | Spring profile |
 
 ### Database Configuration
@@ -147,6 +150,28 @@ java -jar build/libs/mkrew-backend-0.0.1-SNAPSHOT.jar
 See `src/main/resources/application.yml` for full configuration.
 
 ## Endpoints
+
+### Swagger UI (API Documentation)
+
+Interactive API documentation with Swagger UI:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+**Features:**
+- Browse all API endpoints
+- Test endpoints directly from browser
+- View request/response schemas
+- Authenticate with JWT tokens
+- See validation rules and examples
+
+**OpenAPI Specification:**
+```
+http://localhost:8080/v3/api-docs
+```
+
+**Documentation:** See `docs/SWAGGER.md` for detailed usage guide
 
 ### Health Check
 ```bash
@@ -230,7 +255,48 @@ private String[] aliases;
   - Verification token generation (24h TTL)
   - Favorite RCKiK centers association
   - GDPR consent recording
-- **Documentation:** See `API-REGISTRATION.md`
+- **Documentation:** See `docs/API-REGISTRATION.md`
+
+### ✅ US-002: Email Verification
+- **Endpoint:** `GET /api/v1/auth/verify-email?token={token}`
+- **Features:**
+  - Token validation (exists, not expired, not used)
+  - 24-hour token expiration
+  - Idempotent operation
+  - Marks user as verified
+  - One-time token usage
+- **Documentation:** See `docs/API-EMAIL-VERIFICATION.md`
+
+### ✅ US-003: User Login
+- **Endpoint:** `POST /api/v1/auth/login`
+- **Features:**
+  - JWT authentication (access + refresh tokens)
+  - Email verification check
+  - Rate limiting (5 attempts per 5 minutes)
+  - Account lockout on failed attempts
+  - BCrypt password verification
+- **Documentation:** See `docs/API-LOGIN.md`
+
+### ✅ US-004: Password Reset
+- **Endpoints:**
+  - `POST /api/v1/auth/password-reset/request`
+  - `POST /api/v1/auth/password-reset/confirm`
+- **Features:**
+  - Two-step reset process
+  - Email enumeration prevention
+  - 1-hour token expiration
+  - Password complexity validation
+  - Old token invalidation
+- **Documentation:** See `docs/API-PASSWORD-RESET.md`
+
+### ✅ Swagger API Documentation
+- **Endpoint:** `http://localhost:8080/swagger-ui.html`
+- **Features:**
+  - Interactive API testing
+  - JWT authentication support
+  - Request/response schemas
+  - Validation rules documentation
+- **Documentation:** See `docs/SWAGGER.md`
 
 ## Project Structure
 
@@ -283,10 +349,14 @@ backend/src/main/java/pl/mkrew/backend/
 5. ✅ Implement user registration (US-001)
 6. ✅ Add Spring Security with BCrypt
 7. ✅ Add validation and error handling
-8. ⏳ Implement email verification (US-002)
-9. ⏳ Implement login with JWT (US-003)
-10. ⏳ Implement password reset (US-004)
-11. ⏳ Add integration tests
+8. ✅ Implement email verification (US-002)
+9. ✅ Implement login with JWT (US-003)
+10. ✅ Implement password reset (US-004)
+11. ✅ Add Swagger API documentation
+12. ⏳ Email service integration (SendGrid/Mailgun)
+13. ⏳ Profile management endpoints (US-005)
+14. ⏳ Notification preferences (US-006)
+15. ⏳ Add integration tests
 
 ## Troubleshooting
 
