@@ -1,0 +1,67 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Claude Code
+.claude/
+
+# Java / Gradle
+.gradle/
+build/
+out/
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.gradletasknamecache
+
+# Node / Frontend
+node_modules/
+dist/
+.astro/
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
+
+# Database
+postgres_data/
+*.sql.backup
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Spring Boot
+.spring-boot-devtools.properties
+application-local.yml
+application-local.properties
+
+# Secrets
+*.pem
+*.key
+*.p12
+*.jks
+credentials.json
+secrets.yml
