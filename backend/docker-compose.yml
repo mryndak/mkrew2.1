@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mkrew-backend-postgres
+    environment:
+      POSTGRES_DB: mkrew
+      POSTGRES_USER: mkrew_user
+      POSTGRES_PASSWORD: mkrew_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_backend_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mkrew_user -d mkrew"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mkrew-backend-network
+
+  liquibase:
+    build:
+      context: ../db
+      dockerfile: Dockerfile
+    container_name: mkrew-backend-liquibase
+    environment:
+      LIQUIBASE_COMMAND_URL: jdbc:postgresql://postgres:5432/mkrew
+      LIQUIBASE_COMMAND_USERNAME: mkrew_user
+      LIQUIBASE_COMMAND_PASSWORD: mkrew_password
+      LIQUIBASE_COMMAND_CHANGELOG_FILE: db/changelog/db.changelog-master.yaml
+    volumes:
+      - ../db/changelog:/liquibase/changelog
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["update"]
+    networks:
+      - mkrew-backend-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mkrew-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mkrew
+      DB_USER: mkrew_user
+      DB_PASSWORD: mkrew_password
+    ports:
+      - "8080:8080"
+    depends_on:
+      liquibase:
+        condition: service_completed_successfully
+    networks:
+      - mkrew-backend-network
+    restart: unless-stopped
+
+volumes:
+  postgres_backend_data:
+    name: mkrew-backend-postgres-data
+
+networks:
+  mkrew-backend-network:
+    name: mkrew-backend-network
+    driver: bridge
