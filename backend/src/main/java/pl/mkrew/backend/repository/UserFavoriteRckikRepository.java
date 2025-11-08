@@ -10,11 +10,55 @@ import java.util.Optional;
 @Repository
 public interface UserFavoriteRckikRepository extends JpaRepository<UserFavoriteRckik, Long> {
 
-    List<UserFavoriteRckik> findByUserId(Long userId);
+    /**
+     * Find all favorite RCKiK centers for a user
+     * Ordered by priority (ascending, nulls last) then created_at (descending)
+     *
+     * @param userId User ID
+     * @return List of user's favorite centers
+     */
+    List<UserFavoriteRckik> findByUserIdOrderByPriorityAscCreatedAtDesc(Long userId);
 
+    /**
+     * Find favorite entry by user and RCKiK
+     *
+     * @param userId User ID
+     * @param rckikId RCKiK ID
+     * @return Optional favorite entry
+     */
     Optional<UserFavoriteRckik> findByUserIdAndRckikId(Long userId, Long rckikId);
 
+    /**
+     * Check if user has favorited specific RCKiK
+     *
+     * @param userId User ID
+     * @param rckikId RCKiK ID
+     * @return true if favorited, false otherwise
+     */
     boolean existsByUserIdAndRckikId(Long userId, Long rckikId);
 
+    /**
+     * Delete favorite entry by user and RCKiK
+     *
+     * @param userId User ID
+     * @param rckikId RCKiK ID
+     */
     void deleteByUserIdAndRckikId(Long userId, Long rckikId);
+
+    /**
+     * Count number of favorites for a user
+     *
+     * @param userId User ID
+     * @return Number of favorites
+     */
+    long countByUserId(Long userId);
+
+    /**
+     * Find all users who have favorited a specific RCKiK center
+     * US-010: Email Notifications - find users to notify
+     *
+     * @param rckikId RCKiK ID
+     * @return List of favorite entries
+     */
+    List<UserFavoriteRckik> findByRckikId(Long rckikId);
 }

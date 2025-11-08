@@ -75,3 +75,27 @@ springdoc:
     displayRequestDuration: true
     tryItOutEnabled: true
   show-actuator: false
+
+# mkrew-specific configuration
+mkrew:
+  # Email configuration (US-010)
+  email:
+    enabled: ${EMAIL_ENABLED:true}
+    sendgrid:
+      api-key: ${SENDGRID_API_KEY:}
+    from-email: ${EMAIL_FROM:noreply@mkrew.pl}
+    from-name: ${EMAIL_FROM_NAME:mkrew - Platforma dla dawców krwi}
+
+  # Notification configuration (US-010)
+  notification:
+    critical-threshold: ${NOTIFICATION_CRITICAL_THRESHOLD:20.0}  # 20% or below is critical
+    rate-limit: ${NOTIFICATION_RATE_LIMIT:5}  # Max 5 emails per user per 24 hours
+
+  # Scheduler configuration (US-010)
+  scheduler:
+    notification-check: ${SCHEDULER_NOTIFICATION_CHECK:0 0 3 * * *}  # Every day at 03:00 CET
+    health-check: ${SCHEDULER_HEALTH_CHECK:0 0 * * * *}  # Every hour
+
+  # Application URLs
+  app:
+    base-url: ${APP_BASE_URL:http://localhost:3000}

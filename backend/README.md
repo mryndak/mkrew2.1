@@ -289,6 +289,106 @@ private String[] aliases;
   - Old token invalidation
 - **Documentation:** See `docs/API-PASSWORD-RESET.md`
 
+### ✅ US-005: User Profile Management
+- **Endpoints:**
+  - `GET /api/v1/users/me`
+  - `PATCH /api/v1/users/me`
+- **Features:**
+  - Get current user profile
+  - Update profile fields (firstName, lastName, bloodGroup)
+  - Partial update (only provided fields)
+  - JWT authentication required
+  - Email cannot be changed
+  - Automatic timestamp update
+- **Documentation:** See `docs/API-USER-PROFILE.md`
+
+### ✅ US-006: Notification Preferences
+- **Endpoints:**
+  - `GET /api/v1/users/me/notification-preferences`
+  - `PUT /api/v1/users/me/notification-preferences`
+- **Features:**
+  - Get notification preferences (auto-creates with defaults if not exists)
+  - Update email and in-app notification preferences
+  - Four frequency options: DISABLED, ONLY_CRITICAL, DAILY, IMMEDIATE
+  - Opt-out capability (disable all notifications)
+  - One-to-one relationship with users
+  - JWT authentication required
+  - Full update (PUT method - all fields required)
+- **Documentation:** See `docs/API-NOTIFICATION-PREFERENCES.md`
+
+### ✅ US-007: Browse Blood Centers
+- **Endpoint:** `GET /api/v1/rckik`
+- **Features:**
+  - Public endpoint (no authentication required)
+  - Paginated list of RCKiK blood donation centers
+  - Current blood levels for all blood groups
+  - Blood level status (CRITICAL <20%, IMPORTANT <50%, OK >=50%)
+  - Filter by city and active status
+  - Sorting by name, city, or code
+  - Optimized batch fetching of blood levels
+  - Read-only transaction for performance
+- **Documentation:** See `docs/API-RCKIK-LIST.md`
+
+### ✅ US-008: View Center Details and Trends
+- **Endpoints:**
+  - `GET /api/v1/rckik/{id}` - Get center details
+  - `GET /api/v1/rckik/{id}/blood-levels` - Get blood level history
+- **Features:**
+  - Public endpoints (no authentication required)
+  - Detailed center information with metadata
+  - Current blood levels and scraping status
+  - Historical blood level snapshots with pagination
+  - Filter history by blood group and date range
+  - Scraping status tracking (OK, DEGRADED, FAILED, UNKNOWN)
+  - Support for trend analysis and charting
+- **Documentation:** See `docs/API-RCKIK-DETAILS.md`
+
+### ✅ US-009: Favorite Blood Centers Management
+- **Endpoints:**
+  - `GET /api/v1/users/me/favorites` - Get user's favorites
+  - `POST /api/v1/users/me/favorites/{rckikId}` - Add to favorites
+  - `DELETE /api/v1/users/me/favorites/{rckikId}` - Remove from favorites
+- **Features:**
+  - JWT authentication required
+  - Add/remove centers from favorites
+  - Optional priority ordering
+  - List favorites with current blood levels
+  - Duplicate prevention
+  - Enables targeted notifications (US-010, US-011)
+  - Batch fetching of blood levels for performance
+- **Documentation:** See `docs/API-FAVORITE-RCKIK.md`
+
+### ✅ US-010: Email Notifications for Critical Blood Levels
+- **Type:** Background Service (Scheduled Job)
+- **Features:**
+  - Automated monitoring of blood inventory levels
+  - Daily scheduled check at 03:00 CET (after scraping)
+  - Email alerts via SendGrid integration
+  - Critical threshold: Blood levels below 20%
+  - User eligibility filtering:
+    - Active accounts with verified emails
+    - Users with notification preferences enabled
+    - Email frequency: ONLY_CRITICAL or IMMEDIATE
+    - RCKiK centers in user's favorites
+  - Rate limiting: Max 5 emails per user per 24 hours
+  - Personalized HTML email templates
+  - Comprehensive email logging in `email_logs` table
+  - Delivery, open, and bounce tracking
+  - Manual trigger option for testing
+- **Components:**
+  - `EmailService` - SendGrid integration
+  - `EmailLogService` - Email activity logging
+  - `CriticalBloodLevelNotificationService` - Business logic
+  - `NotificationScheduler` - Cron job scheduler
+  - `EmailLogRepository` - Data access and analytics
+- **Configuration:**
+  - `SENDGRID_API_KEY` - SendGrid API key
+  - `EMAIL_ENABLED` - Enable/disable email sending
+  - `NOTIFICATION_CRITICAL_THRESHOLD` - Critical percentage (default: 20.0)
+  - `NOTIFICATION_RATE_LIMIT` - Max emails per user per 24h (default: 5)
+  - `SCHEDULER_NOTIFICATION_CHECK` - Cron schedule (default: 0 0 3 * * *)
+- **Documentation:** See `docs/API-EMAIL-NOTIFICATIONS.md`
+
 ### ✅ Swagger API Documentation
 - **Endpoint:** `http://localhost:8080/swagger-ui.html`
 - **Features:**
@@ -322,14 +422,42 @@ backend/src/main/java/pl/mkrew/backend/
 │   ├── UserRepository.java
 │   ├── UserTokenRepository.java
 │   ├── RckikRepository.java
-│   └── UserFavoriteRckikRepository.java
+│   ├── BloodSnapshotRepository.java
+│   ├── ScraperLogRepository.java
+│   ├── UserFavoriteRckikRepository.java
+│   ├── NotificationPreferenceRepository.java
+│   └── EmailLogRepository.java
 ├── service/              # Business logic
-│   └── AuthService.java
+│   ├── AuthService.java
+│   ├── UserService.java
+│   ├── NotificationPreferenceService.java
+│   ├── RckikService.java
+│   ├── FavoriteRckikService.java
+│   ├── EmailService.java
+│   ├── EmailLogService.java
+│   └── CriticalBloodLevelNotificationService.java
 ├── controller/           # REST controllers
-│   └── AuthController.java
+│   ├── AuthController.java
+│   ├── UserController.java
+│   ├── NotificationPreferenceController.java
+│   ├── RckikController.java
+│   └── FavoriteRckikController.java
 ├── dto/                  # Data Transfer Objects
 │   ├── RegisterRequest.java
 │   ├── RegisterResponse.java
+│   ├── UserProfileResponse.java
+│   ├── UpdateProfileRequest.java
+│   ├── NotificationPreferencesResponse.java
+│   ├── UpdateNotificationPreferencesRequest.java
+│   ├── RckikListResponse.java
+│   ├── RckikSummaryDto.java
+│   ├── RckikDetailDto.java
+│   ├── BloodLevelDto.java
+│   ├── BloodLevelHistoryDto.java
+│   ├── BloodLevelHistoryResponse.java
+│   ├── FavoriteRckikDto.java
+│   ├── CriticalBloodLevelAlertDto.java
+│   ├── EmailNotificationRequest.java
 │   └── ErrorResponse.java
 ├── exception/            # Exception handling
 │   ├── GlobalExceptionHandler.java
@@ -337,6 +465,8 @@ backend/src/main/java/pl/mkrew/backend/
 │   └── ResourceNotFoundException.java
 ├── config/               # Configuration
 │   └── SecurityConfig.java
+├── scheduler/            # Scheduled tasks
+│   └── NotificationScheduler.java
 └── MkrewBackendApplication.java
 ```
 
@@ -353,10 +483,17 @@ backend/src/main/java/pl/mkrew/backend/
 9. ✅ Implement login with JWT (US-003)
 10. ✅ Implement password reset (US-004)
 11. ✅ Add Swagger API documentation
-12. ⏳ Email service integration (SendGrid/Mailgun)
-13. ⏳ Profile management endpoints (US-005)
-14. ⏳ Notification preferences (US-006)
-15. ⏳ Add integration tests
+12. ✅ Profile management endpoints (US-005)
+13. ✅ JWT authentication filter for protected endpoints
+14. ✅ Notification preferences (US-006)
+15. ✅ Browse blood centers with blood levels (US-007)
+16. ✅ RCKiK details view and blood level history (US-008)
+17. ✅ Favorite RCKiK management (US-009)
+18. ✅ Email service integration with SendGrid (US-010)
+19. ✅ Critical blood level email notifications (US-010)
+20. ⏳ In-app notifications (US-011)
+21. ⏳ Donation diary management (US-012)
+22. ⏳ Add integration tests
 
 ## Troubleshooting
 
