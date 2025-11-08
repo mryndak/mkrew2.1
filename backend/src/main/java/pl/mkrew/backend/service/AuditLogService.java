@@ -145,4 +145,61 @@ public class AuditLogService {
                 userData
         );
     }
+
+    /**
+     * Log RCKiK creation
+     * US-019: Admin RCKiK Management
+     *
+     * @param userId Admin user ID who created the RCKiK
+     * @param rckikId RCKiK ID
+     * @param metadata RCKiK creation data
+     */
+    @Transactional
+    public void logRckikCreated(Long userId, Long rckikId, Map<String, Object> metadata) {
+        logAction(
+                String.valueOf(userId),
+                "RCKIK_CREATED",
+                "rckik",
+                rckikId,
+                metadata
+        );
+    }
+
+    /**
+     * Log RCKiK update
+     * US-019: Admin RCKiK Management
+     *
+     * @param userId Admin user ID who updated the RCKiK
+     * @param rckikId RCKiK ID
+     * @param metadata RCKiK update data (old and new values)
+     */
+    @Transactional
+    public void logRckikUpdated(Long userId, Long rckikId, Map<String, Object> metadata) {
+        logAction(
+                String.valueOf(userId),
+                "RCKIK_UPDATED",
+                "rckik",
+                rckikId,
+                metadata
+        );
+    }
+
+    /**
+     * Log RCKiK deletion
+     * US-019: Admin RCKiK Management
+     *
+     * @param userId Admin user ID who deleted the RCKiK
+     * @param rckikId RCKiK ID
+     * @param metadata RCKiK data before deletion
+     */
+    @Transactional
+    public void logRckikDeleted(Long userId, Long rckikId, Map<String, Object> metadata) {
+        logAction(
+                String.valueOf(userId),
+                "RCKIK_DELETED",
+                "rckik",
+                rckikId,
+                metadata
+        );
+    }
 }
