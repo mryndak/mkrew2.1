@@ -13,15 +13,14 @@ import pl.mkrew.backend.entity.BloodSnapshot;
 import pl.mkrew.backend.entity.Rckik;
 import pl.mkrew.backend.entity.ScraperLog;
 import pl.mkrew.backend.exception.ResourceNotFoundException;
+import pl.mkrew.backend.exception.ValidationException;
 import pl.mkrew.backend.repository.BloodSnapshotRepository;
 import pl.mkrew.backend.repository.RckikRepository;
 import pl.mkrew.backend.repository.ScraperLogRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +31,7 @@ public class RckikService {
     private final RckikRepository rckikRepository;
     private final BloodSnapshotRepository bloodSnapshotRepository;
     private final ScraperLogRepository scraperLogRepository;
+    private final AuditLogService auditLogService;
 
     /**
      * Get list of RCKiK centers with current blood levels
@@ -130,6 +130,15 @@ public class RckikService {
                 .map(this::mapToBloodLevelDto)
                 .collect(Collectors.toList());
 
+        // US-020: Determine data completeness status
+        String dataStatus = determineDataStatus(snapshots);
+
+        // US-020: Get last update timestamp (most recent snapshot)
+        LocalDateTime lastUpdate = snapshots.stream()
+                .map(BloodSnapshot::getScrapedAt)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+
         return RckikSummaryDto.builder()
                 .id(rckik.getId())
                 .name(rckik.getName())
@@ -140,7 +149,32 @@ public class RckikService {
                 .longitude(rckik.getLongitude())
                 .active(rckik.getActive())
                 .bloodLevels(bloodLevels)
+                .dataStatus(dataStatus)
+                .lastUpdate(lastUpdate)
                 .build();
+    }
+
+    /**
+     * Determine data completeness status based on blood snapshots
+     * US-020: Obsługa braków danych
+     *
+     * @param snapshots List of blood snapshots
+     * @return Data status (OK, PARTIAL, NO_DATA)
+     */
+    private String determineDataStatus(List<BloodSnapshot> snapshots) {
+        if (snapshots == null || snapshots.isEmpty()) {
+            return "NO_DATA";
+        }
+
+        // Expected number of blood groups: 8 (0+, 0-, A+, A-, B+, B-, AB+, AB-)
+        int expectedBloodGroups = 8;
+
+        if (snapshots.size() >= expectedBloodGroups) {
+            return "OK";
+        } else {
+            // Partial data: some blood groups are missing
+            return "PARTIAL";
+        }
     }
 
     /**
@@ -365,5 +399,212 @@ public class RckikService {
         } else {
             return "UNKNOWN";
         }
+    }
+
+    /* ===== Admin CRUD Operations (US-019) ===== */
+
+    /**
+     * List all RCKiK centers (including inactive) for admin
+     * US-019: Admin RCKiK Management
+     *
+     * @param pageable Pagination parameters
+     * @return Page of RckikDto
+     */
+    @Transactional(readOnly = true)
+    public Page<RckikDto> listAllRckiksForAdmin(Pageable pageable) {
+        log.info("Listing all RCKiK centers for admin - page: {}, size: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<Rckik> rckiks = rckikRepository.findAll(pageable);
+
+        return rckiks.map(this::mapToRckikDto);
+    }
+
+    /**
+     * Get RCKiK center by ID for admin
+     * US-019: Admin RCKiK Management
+     *
+     * @param id RCKiK ID
+     * @return RckikDto
+     */
+    @Transactional(readOnly = true)
+    public RckikDto getRckikByIdForAdmin(Long id) {
+        log.info("Getting RCKiK center for admin: {}", id);
+
+        Rckik rckik = rckikRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("RCKiK not found: {}", id);
+                    return new ResourceNotFoundException("RCKiK not found with ID: " + id);
+                });
+
+        return mapToRckikDto(rckik);
+    }
+
+    /**
+     * Create new RCKiK center (admin operation)
+     * US-019: Add New Center
+     *
+     * @param request Create RCKiK request
+     * @param userId Admin user ID
+     * @return Created RckikDto
+     */
+    @Transactional
+    public RckikDto createRckik(CreateRckikRequest request, Long userId) {
+        log.info("Creating new RCKiK center - code: {}, name: {}", request.getCode(), request.getName());
+
+        // Validate unique code
+        if (rckikRepository.findByCode(request.getCode()).isPresent()) {
+            log.warn("RCKiK code already exists: {}", request.getCode());
+            throw new ValidationException("RCKiK code already exists: " + request.getCode());
+        }
+
+        // Create RCKiK entity
+        Rckik rckik = Rckik.builder()
+                .name(request.getName())
+                .code(request.getCode())
+                .city(request.getCity())
+                .address(request.getAddress())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .aliases(request.getAliases() != null ?
+                        request.getAliases().toArray(new String[0]) : null)
+                .active(request.getActive() != null ? request.getActive() : true)
+                .build();
+
+        Rckik savedRckik = rckikRepository.save(rckik);
+        log.info("Created RCKiK center with ID: {}", savedRckik.getId());
+
+        // Create audit log
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("rckikId", savedRckik.getId());
+        metadata.put("code", savedRckik.getCode());
+        metadata.put("name", savedRckik.getName());
+        metadata.put("city", savedRckik.getCity());
+
+        auditLogService.logRckikCreated(userId, savedRckik.getId(), metadata);
+        log.info("Audit log created for RCKiK creation: {}", savedRckik.getId());
+
+        return mapToRckikDto(savedRckik);
+    }
+
+    /**
+     * Update existing RCKiK center (admin operation)
+     * US-019: Edit Center
+     *
+     * @param id RCKiK ID
+     * @param request Update RCKiK request
+     * @param userId Admin user ID
+     * @return Updated RckikDto
+     */
+    @Transactional
+    public RckikDto updateRckik(Long id, UpdateRckikRequest request, Long userId) {
+        log.info("Updating RCKiK center: {}", id);
+
+        // Find existing RCKiK
+        Rckik rckik = rckikRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("RCKiK not found: {}", id);
+                    return new ResourceNotFoundException("RCKiK not found with ID: " + id);
+                });
+
+        // Save old values for audit log
+        Map<String, Object> oldValues = new HashMap<>();
+        oldValues.put("name", rckik.getName());
+        oldValues.put("code", rckik.getCode());
+        oldValues.put("city", rckik.getCity());
+        oldValues.put("active", rckik.getActive());
+
+        // Validate code uniqueness (if changed)
+        if (!rckik.getCode().equals(request.getCode())) {
+            if (rckikRepository.findByCode(request.getCode()).isPresent()) {
+                log.warn("RCKiK code already exists: {}", request.getCode());
+                throw new ValidationException("RCKiK code already exists: " + request.getCode());
+            }
+        }
+
+        // Update fields
+        rckik.setName(request.getName());
+        rckik.setCode(request.getCode());
+        rckik.setCity(request.getCity());
+        rckik.setAddress(request.getAddress());
+        rckik.setLatitude(request.getLatitude());
+        rckik.setLongitude(request.getLongitude());
+        rckik.setAliases(request.getAliases() != null ?
+                request.getAliases().toArray(new String[0]) : null);
+        if (request.getActive() != null) {
+            rckik.setActive(request.getActive());
+        }
+
+        Rckik updatedRckik = rckikRepository.save(rckik);
+        log.info("Updated RCKiK center: {}", id);
+
+        // Create audit log
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("rckikId", id);
+        metadata.put("oldValues", oldValues);
+        metadata.put("newValues", Map.of(
+                "name", updatedRckik.getName(),
+                "code", updatedRckik.getCode(),
+                "city", updatedRckik.getCity(),
+                "active", updatedRckik.getActive()
+        ));
+
+        auditLogService.logRckikUpdated(userId, id, metadata);
+        log.info("Audit log created for RCKiK update: {}", id);
+
+        return mapToRckikDto(updatedRckik);
+    }
+
+    /**
+     * Delete (deactivate) RCKiK center (admin operation)
+     * US-019: Delete Center
+     *
+     * @param id RCKiK ID
+     * @param userId Admin user ID
+     */
+    @Transactional
+    public void deleteRckik(Long id, Long userId) {
+        log.info("Deleting RCKiK center: {}", id);
+
+        // Find existing RCKiK
+        Rckik rckik = rckikRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("RCKiK not found: {}", id);
+                    return new ResourceNotFoundException("RCKiK not found with ID: " + id);
+                });
+
+        // Soft delete: set active=false
+        rckik.setActive(false);
+        rckikRepository.save(rckik);
+        log.info("Deactivated RCKiK center: {}", id);
+
+        // Create audit log
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("rckikId", id);
+        metadata.put("code", rckik.getCode());
+        metadata.put("name", rckik.getName());
+
+        auditLogService.logRckikDeleted(userId, id, metadata);
+        log.info("Audit log created for RCKiK deletion: {}", id);
+    }
+
+    /**
+     * Map Rckik entity to RckikDto
+     */
+    private RckikDto mapToRckikDto(Rckik rckik) {
+        return RckikDto.builder()
+                .id(rckik.getId())
+                .name(rckik.getName())
+                .code(rckik.getCode())
+                .city(rckik.getCity())
+                .address(rckik.getAddress())
+                .latitude(rckik.getLatitude())
+                .longitude(rckik.getLongitude())
+                .aliases(rckik.getAliases() != null ?
+                        Arrays.asList(rckik.getAliases()) : List.of())
+                .active(rckik.getActive())
+                .createdAt(rckik.getCreatedAt())
+                .updatedAt(rckik.getUpdatedAt())
+                .build();
     }
 }

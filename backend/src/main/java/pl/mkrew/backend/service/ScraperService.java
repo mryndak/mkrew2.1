@@ -4,20 +4,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.mkrew.backend.dto.ScraperRunResponse;
-import pl.mkrew.backend.dto.TriggerScraperRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import pl.mkrew.backend.dto.*;
 import pl.mkrew.backend.entity.Rckik;
 import pl.mkrew.backend.entity.ScraperConfig;
+import pl.mkrew.backend.entity.ScraperLog;
 import pl.mkrew.backend.entity.ScraperRun;
 import pl.mkrew.backend.entity.User;
 import pl.mkrew.backend.exception.ResourceNotFoundException;
 import pl.mkrew.backend.exception.ValidationException;
-import pl.mkrew.backend.repository.RckikRepository;
-import pl.mkrew.backend.repository.ScraperConfigRepository;
-import pl.mkrew.backend.repository.ScraperRunRepository;
-import pl.mkrew.backend.repository.UserRepository;
+import pl.mkrew.backend.repository.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing scraper operations
@@ -31,6 +32,7 @@ public class ScraperService {
 
     private final ScraperRunRepository scraperRunRepository;
     private final ScraperConfigRepository scraperConfigRepository;
+    private final ScraperLogRepository scraperLogRepository;
     private final RckikRepository rckikRepository;
     private final UserRepository userRepository;
 
@@ -166,5 +168,110 @@ public class ScraperService {
                     log.warn("Scraper run not found: {}", runId);
                     return new ResourceNotFoundException("Scraper run not found with ID: " + runId);
                 });
+    }
+
+    /**
+     * List scraper runs with pagination
+     * US-018: Monitor Scraping
+     *
+     * @param pageable Pagination parameters
+     * @return Page of ScraperRunDto
+     */
+    @Transactional(readOnly = true)
+    public Page<ScraperRunDto> listScraperRuns(Pageable pageable) {
+        log.info("Listing scraper runs - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<ScraperRun> runs = scraperRunRepository.findAll(pageable);
+
+        return runs.map(this::mapToScraperRunDto);
+    }
+
+    /**
+     * Get scraper run details with logs
+     * US-018: Monitor Scraping
+     *
+     * @param runId Scraper run ID
+     * @return ScraperRunDetailsDto with logs
+     */
+    @Transactional(readOnly = true)
+    public ScraperRunDetailsDto getScraperRunDetails(Long runId) {
+        log.info("Getting scraper run details: {}", runId);
+
+        ScraperRun run = getScraperRun(runId);
+
+        // Get logs for this run (placeholder - need to add query method)
+        // For now, return empty list
+        List<ScraperLogDto> logs = List.of();
+
+        return ScraperRunDetailsDto.builder()
+                .id(run.getId())
+                .runType(run.getRunType())
+                .startedAt(run.getStartedAt())
+                .completedAt(run.getCompletedAt())
+                .totalRckiks(run.getTotalRckiks())
+                .successfulCount(run.getSuccessfulCount())
+                .failedCount(run.getFailedCount())
+                .durationSeconds(run.getDurationSeconds())
+                .triggeredBy(run.getTriggeredBy())
+                .status(run.getStatus())
+                .errorSummary(run.getErrorSummary())
+                .logs(logs)
+                .build();
+    }
+
+    /**
+     * List scraper logs with pagination
+     * US-018: Export Logs
+     *
+     * @param pageable Pagination parameters
+     * @return Page of ScraperLogDto
+     */
+    @Transactional(readOnly = true)
+    public Page<ScraperLogDto> listScraperLogs(Pageable pageable) {
+        log.info("Listing scraper logs - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<ScraperLog> logs = scraperLogRepository.findAll(pageable);
+
+        return logs.map(this::mapToScraperLogDto);
+    }
+
+    /**
+     * Map ScraperRun entity to ScraperRunDto
+     */
+    private ScraperRunDto mapToScraperRunDto(ScraperRun run) {
+        return ScraperRunDto.builder()
+                .id(run.getId())
+                .runType(run.getRunType())
+                .startedAt(run.getStartedAt())
+                .completedAt(run.getCompletedAt())
+                .totalRckiks(run.getTotalRckiks())
+                .successfulCount(run.getSuccessfulCount())
+                .failedCount(run.getFailedCount())
+                .durationSeconds(run.getDurationSeconds())
+                .triggeredBy(run.getTriggeredBy())
+                .status(run.getStatus())
+                .errorSummary(run.getErrorSummary())
+                .build();
+    }
+
+    /**
+     * Map ScraperLog entity to ScraperLogDto
+     */
+    private ScraperLogDto mapToScraperLogDto(ScraperLog log) {
+        return ScraperLogDto.builder()
+                .id(log.getId())
+                .scraperRunId(log.getScraperRun() != null ? log.getScraperRun().getId() : null)
+                .rckikId(log.getRckik() != null ? log.getRckik().getId() : null)
+                .rckikName(log.getRckik() != null ? log.getRckik().getName() : null)
+                .url(log.getUrl())
+                .status(log.getStatus())
+                .errorMessage(log.getErrorMessage())
+                .parserVersion(log.getParserVersion())
+                .responseTimeMs(log.getResponseTimeMs())
+                .httpStatusCode(log.getHttpStatusCode())
+                .recordsParsed(log.getRecordsParsed())
+                .recordsFailed(log.getRecordsFailed())
+                .createdAt(log.getCreatedAt())
+                .build();
     }
 }

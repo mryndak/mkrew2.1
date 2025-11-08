@@ -10,12 +10,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.mkrew.backend.dto.ErrorResponse;
-import pl.mkrew.backend.dto.ScraperRunResponse;
-import pl.mkrew.backend.dto.TriggerScraperRequest;
+import pl.mkrew.backend.dto.*;
 import pl.mkrew.backend.security.SecurityUtils;
 import pl.mkrew.backend.service.ScraperService;
 
@@ -95,5 +96,142 @@ public class AdminScraperController {
 
         // Return 202 Accepted (async operation)
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
+    /**
+     * US-018: List scraper runs
+     * GET /api/v1/admin/scraper/runs
+     *
+     * Returns paginated list of scraper execution runs for monitoring.
+     *
+     * @param pageable Pagination parameters
+     * @return Page of ScraperRunDto
+     */
+    @Operation(
+            summary = "List scraper runs",
+            description = "Get paginated list of scraper execution runs for monitoring and alerting purposes",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Scraper runs retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = Page.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - User does not have ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/runs")
+    public ResponseEntity<Page<ScraperRunDto>> listScraperRuns(
+            @PageableDefault(size = 20, sort = "startedAt") Pageable pageable) {
+
+        log.info("GET /api/v1/admin/scraper/runs - List scraper runs");
+
+        Page<ScraperRunDto> runs = scraperService.listScraperRuns(pageable);
+
+        log.info("Retrieved {} scraper runs", runs.getTotalElements());
+
+        return ResponseEntity.ok(runs);
+    }
+
+    /**
+     * US-018: Get scraper run details
+     * GET /api/v1/admin/scraper/runs/{id}
+     *
+     * Returns detailed information about specific scraper run including logs.
+     *
+     * @param id Scraper run ID
+     * @return ScraperRunDetailsDto
+     */
+    @Operation(
+            summary = "Get scraper run details",
+            description = "Get detailed information about specific scraper run including associated logs",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Scraper run details retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ScraperRunDetailsDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - User does not have ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Scraper run not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/runs/{id}")
+    public ResponseEntity<ScraperRunDetailsDto> getScraperRunDetails(@PathVariable Long id) {
+
+        log.info("GET /api/v1/admin/scraper/runs/{} - Get scraper run details", id);
+
+        ScraperRunDetailsDto details = scraperService.getScraperRunDetails(id);
+
+        log.info("Retrieved scraper run details for ID: {}", id);
+
+        return ResponseEntity.ok(details);
+    }
+
+    /**
+     * US-018: List scraper logs
+     * GET /api/v1/admin/scraper/logs
+     *
+     * Returns paginated list of scraper logs across all runs.
+     * Useful for exporting and analyzing scraper errors.
+     *
+     * @param pageable Pagination parameters
+     * @return Page of ScraperLogDto
+     */
+    @Operation(
+            summary = "List scraper logs",
+            description = "Get paginated list of scraper logs across all runs for error analysis and export",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Scraper logs retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = Page.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - User does not have ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/logs")
+    public ResponseEntity<Page<ScraperLogDto>> listScraperLogs(
+            @PageableDefault(size = 50, sort = "createdAt") Pageable pageable) {
+
+        log.info("GET /api/v1/admin/scraper/logs - List scraper logs");
+
+        Page<ScraperLogDto> logs = scraperService.listScraperLogs(pageable);
+
+        log.info("Retrieved {} scraper logs", logs.getTotalElements());
+
+        return ResponseEntity.ok(logs);
     }
 }
