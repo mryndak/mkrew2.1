@@ -1,0 +1,170 @@
+package pl.mkrew.backend.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import pl.mkrew.backend.dto.ScraperRunResponse;
+import pl.mkrew.backend.dto.TriggerScraperRequest;
+import pl.mkrew.backend.entity.Rckik;
+import pl.mkrew.backend.entity.ScraperConfig;
+import pl.mkrew.backend.entity.ScraperRun;
+import pl.mkrew.backend.entity.User;
+import pl.mkrew.backend.exception.ResourceNotFoundException;
+import pl.mkrew.backend.exception.ValidationException;
+import pl.mkrew.backend.repository.RckikRepository;
+import pl.mkrew.backend.repository.ScraperConfigRepository;
+import pl.mkrew.backend.repository.ScraperRunRepository;
+import pl.mkrew.backend.repository.UserRepository;
+
+import java.time.LocalDateTime;
+
+/**
+ * Service for managing scraper operations
+ * US-017: Manual Scraping
+ * US-018: Monitoring and alerting
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class ScraperService {
+
+    private final ScraperRunRepository scraperRunRepository;
+    private final ScraperConfigRepository scraperConfigRepository;
+    private final RckikRepository rckikRepository;
+    private final UserRepository userRepository;
+
+    /**
+     * Trigger manual scraper run
+     * US-017: Manual Scraping
+     *
+     * Business Logic:
+     * 1. Validate request (RCKiK exists if provided)
+     * 2. Get user email for audit trail
+     * 3. Create ScraperRun with run_type=MANUAL
+     * 4. Set triggered_by from authenticated user
+     * 5. Queue scraping job (async) - for MVP: create run record only
+     * 6. Return immediately with run ID for status polling
+     *
+     * @param request Trigger scraper request
+     * @param userId User ID of admin who triggered the run
+     * @return ScraperRunResponse with run details
+     */
+    @Transactional
+    public ScraperRunResponse triggerManualScraping(TriggerScraperRequest request, Long userId) {
+        log.info("Triggering manual scraper run - rckikId: {}, url: {}, userId: {}",
+                request.getRckikId(), request.getUrl(), userId);
+
+        // 1. Get user email for audit trail
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        String triggeredBy = user.getEmail();
+
+        // 2. Validate request
+        validateRequest(request);
+
+        // 2. Determine number of RCKiK to scrape
+        Integer totalRckiks = determineRckikCount(request);
+
+        // 3. Create ScraperRun with MANUAL type and RUNNING status
+        ScraperRun scraperRun = ScraperRun.builder()
+                .runType("MANUAL")
+                .status("RUNNING")
+                .triggeredBy(triggeredBy)
+                .totalRckiks(totalRckiks)
+                .successfulCount(0)
+                .failedCount(0)
+                .build();
+        // Note: startedAt is auto-set by @CreationTimestamp
+
+        ScraperRun savedRun = scraperRunRepository.save(scraperRun);
+        log.info("Created manual scraper run with ID: {}", savedRun.getId());
+
+        // 4. Queue scraping job (async)
+        // TODO: For MVP, we just create the run record.
+        // In the future, implement actual scraping logic:
+        // - If rckikId is provided: scrape single RCKiK
+        // - If url is provided: use custom URL instead of config
+        // - If neither provided: scrape all active RCKiK
+        // Example: scraperExecutor.execute(() -> performScraping(savedRun.getId(), request));
+
+        log.warn("Scraper execution not yet implemented - run created with ID: {} but no actual scraping will occur",
+                savedRun.getId());
+
+        // 5. Return response
+        return buildScraperRunResponse(savedRun);
+    }
+
+    /**
+     * Validate trigger scraper request
+     */
+    private void validateRequest(TriggerScraperRequest request) {
+        // If rckikId is provided, validate it exists and is active
+        if (request.getRckikId() != null) {
+            Rckik rckik = rckikRepository.findById(request.getRckikId())
+                    .orElseThrow(() -> {
+                        log.warn("RCKiK not found: {}", request.getRckikId());
+                        return new ResourceNotFoundException("RCKiK not found with ID: " + request.getRckikId());
+                    });
+
+            if (!rckik.getActive()) {
+                log.warn("Attempted to scrape inactive RCKiK: {}", request.getRckikId());
+                throw new ValidationException("RCKiK is not active: " + request.getRckikId());
+            }
+
+            log.debug("Validated RCKiK: {} - {}", rckik.getId(), rckik.getName());
+        }
+
+        // If custom URL is provided, validate format (already done by @Pattern in DTO)
+        if (request.getUrl() != null && !request.getUrl().isBlank()) {
+            log.debug("Custom URL provided: {}", request.getUrl());
+        }
+    }
+
+    /**
+     * Determine number of RCKiK centers to scrape
+     */
+    private Integer determineRckikCount(TriggerScraperRequest request) {
+        if (request.getRckikId() != null) {
+            // Single RCKiK
+            return 1;
+        } else {
+            // All active RCKiK
+            long activeCount = rckikRepository.countByActiveTrue();
+            log.debug("Will scrape {} active RCKiK centers", activeCount);
+            return (int) activeCount;
+        }
+    }
+
+    /**
+     * Build ScraperRunResponse from ScraperRun entity
+     */
+    private ScraperRunResponse buildScraperRunResponse(ScraperRun scraperRun) {
+        return ScraperRunResponse.builder()
+                .scraperId(scraperRun.getId())
+                .runType(scraperRun.getRunType())
+                .status(scraperRun.getStatus())
+                .triggeredBy(scraperRun.getTriggeredBy())
+                .startedAt(scraperRun.getStartedAt())
+                .statusUrl("/api/v1/admin/scraper/runs/" + scraperRun.getId())
+                .build();
+    }
+
+    /**
+     * Get scraper run by ID
+     * For future endpoint: GET /api/v1/admin/scraper/runs/{id}
+     *
+     * @param runId Scraper run ID
+     * @return ScraperRun entity
+     */
+    @Transactional(readOnly = true)
+    public ScraperRun getScraperRun(Long runId) {
+        log.info("Getting scraper run: {}", runId);
+
+        return scraperRunRepository.findById(runId)
+                .orElseThrow(() -> {
+                    log.warn("Scraper run not found: {}", runId);
+                    return new ResourceNotFoundException("Scraper run not found with ID: " + runId);
+                });
+    }
+}

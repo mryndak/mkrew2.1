@@ -63,4 +63,11 @@ public interface RckikRepository extends JpaRepository<Rckik, Long>, JpaSpecific
      * @return Page of RCKiK centers
      */
     Page<Rckik> findByCity(String city, Pageable pageable);
+
+    /**
+     * Count active RCKiK centers
+     *
+     * @return Count of active centers
+     */
+    long countByActiveTrue();
 }
