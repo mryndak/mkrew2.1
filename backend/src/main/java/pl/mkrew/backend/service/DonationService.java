@@ -16,6 +16,11 @@ import pl.mkrew.backend.repository.RckikRepository;
 import pl.mkrew.backend.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +30,7 @@ public class DonationService {
     private final DonationRepository donationRepository;
     private final UserRepository userRepository;
     private final RckikRepository rckikRepository;
+    private final AuditLogService auditLogService;
 
     /**
      * Get user's donation history with pagination and filtering
@@ -141,6 +147,248 @@ public class DonationService {
                         "Donation not found with ID: " + donationId + " for user: " + userId));
 
         return mapToDonationResponse(donation);
+    }
+
+    /**
+     * Update existing donation entry
+     * US-013: Edit Donation
+     *
+     * @param userId User ID (for ownership verification)
+     * @param donationId Donation ID
+     * @param request Update data
+     * @return Updated donation
+     */
+    @Transactional
+    public DonationResponse updateDonation(Long userId, Long donationId, UpdateDonationRequest request) {
+        log.debug("Updating donation ID: {} for user ID: {}", donationId, userId);
+
+        // Fetch donation and verify ownership
+        Donation donation = donationRepository.findByIdAndUserIdAndDeletedAtIsNull(donationId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Donation not found with ID: " + donationId + " for user: " + userId));
+
+        // Track changes for audit log
+        Map<String, Object> changes = new HashMap<>();
+        boolean hasChanges = false;
+
+        // Update only provided fields (partial update)
+        if (request.getQuantityMl() != null && !request.getQuantityMl().equals(donation.getQuantityMl())) {
+            changes.put("quantityMl", Map.of("old", donation.getQuantityMl(), "new", request.getQuantityMl()));
+            donation.setQuantityMl(request.getQuantityMl());
+            hasChanges = true;
+        }
+
+        if (request.getDonationType() != null && !request.getDonationType().equals(donation.getDonationType())) {
+            changes.put("donationType", Map.of("old", donation.getDonationType(), "new", request.getDonationType()));
+            donation.setDonationType(request.getDonationType());
+            hasChanges = true;
+        }
+
+        if (request.getNotes() != null && !request.getNotes().equals(donation.getNotes())) {
+            changes.put("notes", Map.of("old", donation.getNotes() != null ? donation.getNotes() : "", "new", request.getNotes()));
+            donation.setNotes(request.getNotes());
+            hasChanges = true;
+        }
+
+        if (!hasChanges) {
+            log.debug("No changes detected for donation ID: {}", donationId);
+            return mapToDonationResponse(donation);
+        }
+
+        // Save updated donation (updatedAt will be automatically updated by @UpdateTimestamp)
+        Donation updatedDonation = donationRepository.save(donation);
+
+        // Create audit log entry
+        auditLogService.logDonationUpdate(userId, donationId, changes);
+
+        log.info("Updated donation ID: {} for user ID: {} - {} field(s) changed",
+                donationId, userId, changes.size());
+
+        return mapToDonationResponse(updatedDonation);
+    }
+
+    /**
+     * Delete donation entry (soft delete)
+     * US-013: Remove Donation
+     *
+     * @param userId User ID (for ownership verification)
+     * @param donationId Donation ID
+     */
+    @Transactional
+    public void deleteDonation(Long userId, Long donationId) {
+        log.debug("Deleting donation ID: {} for user ID: {}", donationId, userId);
+
+        // Fetch donation and verify ownership
+        Donation donation = donationRepository.findByIdAndUserIdAndDeletedAtIsNull(donationId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Donation not found with ID: " + donationId + " for user: " + userId));
+
+        // Prepare data for audit log before deletion
+        Map<String, Object> donationData = new HashMap<>();
+        donationData.put("donationId", donation.getId());
+        donationData.put("rckikId", donation.getRckik().getId());
+        donationData.put("rckikName", donation.getRckik().getName());
+        donationData.put("donationDate", donation.getDonationDate().toString());
+        donationData.put("quantityMl", donation.getQuantityMl());
+        donationData.put("donationType", donation.getDonationType());
+        donationData.put("notes", donation.getNotes());
+        donationData.put("confirmed", donation.getConfirmed());
+        donationData.put("createdAt", donation.getCreatedAt().toString());
+
+        // Soft delete: Set deleted_at timestamp
+        donation.setDeletedAt(LocalDateTime.now());
+        donationRepository.save(donation);
+
+        // Create audit log entry (US-013 requirement)
+        auditLogService.logDonationDeletion(userId, donationId, donationData);
+
+        log.info("Deleted (soft) donation ID: {} for user ID: {}", donationId, userId);
+    }
+
+    /**
+     * Export user's donation history to JSON format
+     * US-014: Export to JSON
+     *
+     * @param userId User ID
+     * @param fromDate Optional start date filter
+     * @param toDate Optional end date filter
+     * @return Export response with donation data
+     */
+    @Transactional(readOnly = true)
+    public DonationExportResponse exportDonationsToJson(Long userId, LocalDate fromDate, LocalDate toDate) {
+        log.debug("Exporting donations to JSON for user ID: {} (fromDate: {}, toDate: {})",
+                userId, fromDate, toDate);
+
+        // Verify user exists
+        if (!userRepository.existsByIdAndDeletedAtIsNull(userId)) {
+            throw new ResourceNotFoundException("User not found with ID: " + userId);
+        }
+
+        // Get donations based on filters
+        List<Donation> donations = queryDonationsForExport(userId, fromDate, toDate);
+
+        // Calculate totals
+        long totalDonations = donations.size();
+        long totalQuantityMl = donations.stream()
+                .mapToLong(Donation::getQuantityMl)
+                .sum();
+
+        // Map to export DTOs
+        List<DonationExportDto> exportDonations = donations.stream()
+                .map(this::mapToDonationExportDto)
+                .collect(Collectors.toList());
+
+        DonationExportResponse response = DonationExportResponse.builder()
+                .userId(userId)
+                .exportDate(LocalDateTime.now())
+                .donations(exportDonations)
+                .totalDonations(totalDonations)
+                .totalQuantityMl(totalQuantityMl)
+                .build();
+
+        log.info("Exported {} donations to JSON for user ID: {}", totalDonations, userId);
+
+        return response;
+    }
+
+    /**
+     * Export user's donation history to CSV format
+     * US-014: Export to CSV
+     *
+     * @param userId User ID
+     * @param fromDate Optional start date filter
+     * @param toDate Optional end date filter
+     * @return CSV string
+     */
+    @Transactional(readOnly = true)
+    public String exportDonationsToCsv(Long userId, LocalDate fromDate, LocalDate toDate) {
+        log.debug("Exporting donations to CSV for user ID: {} (fromDate: {}, toDate: {})",
+                userId, fromDate, toDate);
+
+        // Verify user exists
+        if (!userRepository.existsByIdAndDeletedAtIsNull(userId)) {
+            throw new ResourceNotFoundException("User not found with ID: " + userId);
+        }
+
+        // Get donations based on filters
+        List<Donation> donations = queryDonationsForExport(userId, fromDate, toDate);
+
+        // Build CSV
+        StringBuilder csv = new StringBuilder();
+
+        // Header
+        csv.append("Donation Date,RCKiK Name,RCKiK City,Quantity (ml),Donation Type,Notes,Confirmed\n");
+
+        // Rows
+        for (Donation donation : donations) {
+            Rckik rckik = donation.getRckik();
+            csv.append(escapeCSV(donation.getDonationDate().toString())).append(",");
+            csv.append(escapeCSV(rckik.getName())).append(",");
+            csv.append(escapeCSV(rckik.getCity())).append(",");
+            csv.append(donation.getQuantityMl()).append(",");
+            csv.append(escapeCSV(donation.getDonationType())).append(",");
+            csv.append(escapeCSV(donation.getNotes() != null ? donation.getNotes() : "")).append(",");
+            csv.append(donation.getConfirmed()).append("\n");
+        }
+
+        log.info("Exported {} donations to CSV for user ID: {}", donations.size(), userId);
+
+        return csv.toString();
+    }
+
+    /**
+     * Query donations for export (no pagination)
+     *
+     * @param userId User ID
+     * @param fromDate Optional start date
+     * @param toDate Optional end date
+     * @return List of donations
+     */
+    private List<Donation> queryDonationsForExport(Long userId, LocalDate fromDate, LocalDate toDate) {
+        if (fromDate != null && toDate != null) {
+            return donationRepository.findByUserIdAndDonationDateBetweenAndDeletedAtIsNullOrderByDonationDateDesc(
+                    userId, fromDate, toDate);
+        }
+        return donationRepository.findByUserIdAndDeletedAtIsNullOrderByDonationDateDesc(userId);
+    }
+
+    /**
+     * Map Donation entity to DonationExportDto
+     *
+     * @param donation Donation entity
+     * @return DonationExportDto
+     */
+    private DonationExportDto mapToDonationExportDto(Donation donation) {
+        Rckik rckik = donation.getRckik();
+
+        return DonationExportDto.builder()
+                .donationDate(donation.getDonationDate())
+                .rckikName(rckik.getName())
+                .rckikCity(rckik.getCity())
+                .quantityMl(donation.getQuantityMl())
+                .donationType(donation.getDonationType())
+                .notes(donation.getNotes())
+                .confirmed(donation.getConfirmed())
+                .build();
+    }
+
+    /**
+     * Escape CSV field (handle commas, quotes, newlines)
+     *
+     * @param value Field value
+     * @return Escaped value
+     */
+    private String escapeCSV(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        // If field contains comma, quote, or newline, wrap in quotes and escape quotes
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+
+        return value;
     }
 
     /**
