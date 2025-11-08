@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-notification-preferences-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: notification_preferences
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_notification_preferences
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_notification_preferences_user
+                    foreignKeyName: fk_notification_preferences_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: email_enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email_frequency
+                  type: VARCHAR(50)
+                  defaultValue: ONLY_CRITICAL
+                  constraints:
+                    nullable: false
+              - column:
+                  name: in_app_enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: in_app_frequency
+                  type: VARCHAR(50)
+                  defaultValue: IMMEDIATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE notification_preferences ADD CONSTRAINT chk_notification_preferences_email_frequency CHECK (email_frequency IN ('DISABLED', 'ONLY_CRITICAL', 'DAILY', 'IMMEDIATE'));
+        - sql:
+            sql: ALTER TABLE notification_preferences ADD CONSTRAINT chk_notification_preferences_in_app_frequency CHECK (in_app_frequency IN ('DISABLED', 'ONLY_CRITICAL', 'DAILY', 'IMMEDIATE'));
+        - createIndex:
+            indexName: idx_notification_preferences_user
+            tableName: notification_preferences
+            columns:
+              - column:
+                  name: user_id
+      rollback:
+        - dropTable:
+            tableName: notification_preferences

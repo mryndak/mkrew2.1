@@ -1,0 +1,109 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-create-scraper-logs-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: scraper_logs
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_scraper_logs
+              - column:
+                  name: scraper_run_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_scraper_logs_scraper_run
+                    references: scraper_runs(id)
+                    deleteCascade: true
+              - column:
+                  name: rckik_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_scraper_logs_rckik
+                    references: rckik(id)
+              - column:
+                  name: url
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: error_message
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: parser_version
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: response_time_ms
+                  type: INTEGER
+                  constraints:
+                    nullable: true
+              - column:
+                  name: http_status_code
+                  type: INTEGER
+                  constraints:
+                    nullable: true
+              - column:
+                  name: records_parsed
+                  type: INTEGER
+                  constraints:
+                    nullable: true
+              - column:
+                  name: records_failed
+                  type: INTEGER
+                  constraints:
+                    nullable: true
+              - column:
+                  name: metadata
+                  type: JSONB
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE scraper_logs ADD CONSTRAINT chk_scraper_logs_status CHECK (status IN ('SUCCESS', 'PARTIAL', 'FAILED'));
+        - createIndex:
+            indexName: idx_scraper_logs_rckik_created
+            tableName: scraper_logs
+            columns:
+              - column:
+                  name: rckik_id
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_scraper_logs_status_created
+            tableName: scraper_logs
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_scraper_logs_run_id
+            tableName: scraper_logs
+            columns:
+              - column:
+                  name: scraper_run_id
+      rollback:
+        - dropTable:
+            tableName: scraper_logs

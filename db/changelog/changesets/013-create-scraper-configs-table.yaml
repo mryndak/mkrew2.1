@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-create-scraper-configs-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_scraper_configs
+              - column:
+                  name: rckik_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_scraper_configs_rckik
+                    references: rckik(id)
+                    deleteCascade: true
+              - column:
+                  name: source_url
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parser_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: css_selectors
+                  type: JSONB
+                  constraints:
+                    nullable: true
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: schedule_cron
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: timeout_seconds
+                  type: INTEGER
+                  defaultValueNumeric: 30
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE scraper_configs ADD CONSTRAINT chk_scraper_configs_parser_type CHECK (parser_type IN ('JSOUP', 'SELENIUM', 'CUSTOM'));
+        - createIndex:
+            indexName: idx_scraper_configs_rckik_active
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+              - column:
+                  name: active
+        - createIndex:
+            indexName: idx_scraper_configs_active
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: active
+      rollback:
+        - dropTable:
+            tableName: scraper_configs

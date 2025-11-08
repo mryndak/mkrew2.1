@@ -1,0 +1,107 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-create-audit-logs-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: audit_logs
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_audit_logs
+              - column:
+                  name: actor_id
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: action
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: metadata
+                  type: JSONB
+                  constraints:
+                    nullable: true
+              - column:
+                  name: ip_address
+                  type: VARCHAR(45)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: user_agent
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_audit_logs_actor_created
+            tableName: audit_logs
+            columns:
+              - column:
+                  name: actor_id
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_audit_logs_target_created
+            tableName: audit_logs
+            columns:
+              - column:
+                  name: target_type
+              - column:
+                  name: target_id
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_audit_logs_action
+            tableName: audit_logs
+            columns:
+              - column:
+                  name: action
+        - sql:
+            sql: CREATE INDEX idx_audit_logs_metadata ON audit_logs USING GIN (metadata);
+            comment: GIN index for JSONB metadata search
+        - sql:
+            sql: >
+              CREATE OR REPLACE FUNCTION prevent_audit_logs_update_delete()
+              RETURNS TRIGGER AS 'BEGIN
+              RAISE EXCEPTION ''Audit logs are immutable. UPDATE and DELETE operations are not allowed.'';
+              END;' LANGUAGE plpgsql;
+            comment: Function to prevent modifications to audit_logs
+            splitStatements: false
+        - sql:
+            sql: CREATE TRIGGER trg_prevent_audit_logs_update BEFORE UPDATE ON audit_logs FOR EACH ROW EXECUTE FUNCTION prevent_audit_logs_update_delete();
+            comment: Trigger to prevent updates
+        - sql:
+            sql: CREATE TRIGGER trg_prevent_audit_logs_delete BEFORE DELETE ON audit_logs FOR EACH ROW EXECUTE FUNCTION prevent_audit_logs_update_delete();
+            comment: Trigger to prevent deletes
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_prevent_audit_logs_delete ON audit_logs;
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_prevent_audit_logs_update ON audit_logs;
+        - sql:
+            sql: DROP FUNCTION IF EXISTS prevent_audit_logs_update_delete();
+        - dropTable:
+            tableName: audit_logs

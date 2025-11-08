@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-create-materialized-view-latest-blood-levels
+      author: mkrew-team
+      comment: Materialized view for latest blood levels to improve dashboard performance
+      changes:
+        - sql:
+            sql: |
+              CREATE MATERIALIZED VIEW mv_latest_blood_levels AS
+              SELECT DISTINCT ON (bs.rckik_id, bs.blood_group)
+                  bs.id,
+                  bs.rckik_id,
+                  bs.blood_group,
+                  bs.level_percentage,
+                  bs.snapshot_date,
+                  bs.scraped_at,
+                  bs.is_manual,
+                  r.name as rckik_name,
+                  r.code as rckik_code,
+                  r.city as rckik_city,
+                  r.active as rckik_active,
+                  CASE
+                      WHEN bs.level_percentage < 20 THEN 'CRITICAL'
+                      WHEN bs.level_percentage < 50 THEN 'IMPORTANT'
+                      ELSE 'OK'
+                  END as level_status
+              FROM blood_snapshots bs
+              INNER JOIN rckik r ON bs.rckik_id = r.id
+              ORDER BY bs.rckik_id, bs.blood_group, bs.snapshot_date DESC, bs.scraped_at DESC;
+            comment: Create materialized view for latest blood levels per RCKiK and blood group
+
+        - sql:
+            sql: |
+              CREATE UNIQUE INDEX idx_mv_latest_blood_levels_rckik_group
+              ON mv_latest_blood_levels(rckik_id, blood_group);
+            comment: Unique index required for CONCURRENTLY refresh
+
+        - sql:
+            sql: |
+              CREATE INDEX idx_mv_latest_blood_levels_level_status
+              ON mv_latest_blood_levels(level_status, level_percentage);
+            comment: Index for filtering by level status
+
+        - sql:
+            sql: |
+              CREATE INDEX idx_mv_latest_blood_levels_snapshot_date
+              ON mv_latest_blood_levels(snapshot_date DESC);
+            comment: Index for date-based queries
+
+        - sql:
+            sql: |
+              COMMENT ON MATERIALIZED VIEW mv_latest_blood_levels IS
+              'Materialized view containing the latest blood level snapshot for each RCKiK and blood group.
+              Should be refreshed after each scraping run using REFRESH MATERIALIZED VIEW CONCURRENTLY.';
+            comment: Add documentation comment to materialized view
+
+      rollback:
+        - sql:
+            sql: DROP MATERIALIZED VIEW IF EXISTS mv_latest_blood_levels;

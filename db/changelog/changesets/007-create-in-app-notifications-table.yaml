@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-in-app-notifications-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: in_app_notifications
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_in_app_notifications
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_in_app_notifications_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: notification_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rckik_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_in_app_notifications_rckik
+                    references: rckik(id)
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: link_url
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: read_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE in_app_notifications ADD CONSTRAINT chk_in_app_notifications_type CHECK (notification_type IN ('CRITICAL_BLOOD_LEVEL', 'SYSTEM_ALERT', 'DONATION_REMINDER', 'OTHER'));
+        - sql:
+            sql: |
+              CREATE INDEX idx_in_app_notifications_unread
+              ON in_app_notifications(user_id, created_at DESC)
+              WHERE read_at IS NULL;
+            comment: Partial index for unread notifications
+        - createIndex:
+            indexName: idx_in_app_notifications_user_created
+            tableName: in_app_notifications
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: created_at
+                  descending: true
+      rollback:
+        - dropTable:
+            tableName: in_app_notifications

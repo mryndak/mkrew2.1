@@ -1,0 +1,90 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-donations-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: donations
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_donations
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_donations_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: rckik_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_donations_rckik
+                    references: rckik(id)
+              - column:
+                  name: donation_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity_ml
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+              - column:
+                  name: donation_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: confirmed
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: ALTER TABLE donations ADD CONSTRAINT chk_donations_quantity_ml CHECK (quantity_ml >= 50 AND quantity_ml <= 1000);
+        - sql:
+            sql: ALTER TABLE donations ADD CONSTRAINT chk_donations_type CHECK (donation_type IN ('FULL_BLOOD', 'PLASMA', 'PLATELETS', 'OTHER'));
+        - createIndex:
+            indexName: idx_donations_user_date
+            tableName: donations
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: donation_date
+                  descending: true
+              - column:
+                  name: deleted_at
+      rollback:
+        - dropTable:
+            tableName: donations

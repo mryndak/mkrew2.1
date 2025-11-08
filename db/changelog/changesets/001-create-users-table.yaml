@@ -1,0 +1,87 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_users
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_users_email
+              - column:
+                  name: password_hash
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: blood_group
+                  type: VARCHAR(5)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: email_verified
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: consent_timestamp
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: consent_version
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: ALTER TABLE users ADD CONSTRAINT chk_users_blood_group CHECK (blood_group IN ('0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-') OR blood_group IS NULL);
+        - createIndex:
+            indexName: idx_users_email
+            tableName: users
+            columns:
+              - column:
+                  name: email
+        - sql:
+            sql: CREATE INDEX idx_users_deleted_at ON users(deleted_at) WHERE deleted_at IS NULL;
+      rollback:
+        - dropTable:
+            tableName: users

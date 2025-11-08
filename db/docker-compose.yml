@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mkrew-postgres
+    environment:
+      POSTGRES_DB: mkrew
+      POSTGRES_USER: mkrew_user
+      POSTGRES_PASSWORD: mkrew_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=pl_PL.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mkrew-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mkrew_user -d mkrew"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Liquibase dla migracji bazy danych
+  liquibase:
+    build:
+      dockerfile: Dockerfile
+    container_name: mkrew-liquibase
+    volumes:
+      - ./changelog/:/liquibase/changelog
+    environment:
+      LIQUIBASE_COMMAND_URL: jdbc:postgresql://postgres:5432/mkrew
+      LIQUIBASE_COMMAND_USERNAME: mkrew_user
+      LIQUIBASE_COMMAND_PASSWORD: mkrew_password
+      LIQUIBASE_COMMAND_CHANGELOG_FILE: changelog/db.changelog-master.yaml
+    networks:
+      - mkrew-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["update"]
+    restart: on-failure
+
+  # Opcjonalnie: pgAdmin dla zarządzania bazą danych
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: mkrew-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mkrew.pl
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    networks:
+      - mkrew-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  mkrew-network:
+    driver: bridge

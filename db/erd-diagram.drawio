@@ -1,0 +1,327 @@
+<mxfile host="app.diagrams.net" modified="2025-01-08T12:00:00.000Z" agent="5.0" version="21.0.0" type="device">
+  <diagram name="mkrew-erd" id="mkrew-erd-diagram">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- users table -->
+        <mxCell id="table-users" value="users" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fontStyle=1;align=center;pointerEvents=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="280" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-1" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;fillColor=none;strokeColor=inherit;" vertex="1" parent="table-users">
+          <mxGeometry y="30" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-1-1" value="PK" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=#ffe6cc;align=center;fontStyle=1;startSize=0;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-1">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-1-2" value="id BIGSERIAL" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=#ffe6cc;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;fontStyle=1;" vertex="1" parent="users-row-1">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-2" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="60" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-2-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-2">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-2-2" value="email VARCHAR(255)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-2">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-3" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="90" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-3-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-3">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-3-2" value="password_hash VARCHAR(255)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-3">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-4" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="120" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-4-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-4">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-4-2" value="first_name VARCHAR(100)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-4">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-5" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="150" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-5-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-5">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-5-2" value="last_name VARCHAR(100)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-5">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-6" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="180" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-6-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-6">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-6-2" value="blood_group VARCHAR(5)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-6">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-7" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="210" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-7-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-7">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-7-2" value="email_verified BOOLEAN" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-7">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-8" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="240" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-8-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-8">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-8-2" value="consent_timestamp TIMESTAMP" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-8">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-9" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="270" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-9-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-9">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-9-2" value="consent_version VARCHAR(20)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-9">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-10" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="300" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-10-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-10">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-10-2" value="created_at TIMESTAMP" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-10">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-11" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="330" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-11-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-11">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-11-2" value="updated_at TIMESTAMP" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-11">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-row-12" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-users">
+          <mxGeometry y="360" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-12-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="users-row-12">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="users-cell-12-2" value="deleted_at TIMESTAMP" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="users-row-12">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- rckik table -->
+        <mxCell id="table-rckik" value="rckik" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fontStyle=1;align=center;pointerEvents=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="900" y="100" width="280" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-1" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;fillColor=none;strokeColor=inherit;" vertex="1" parent="table-rckik">
+          <mxGeometry y="30" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-1-1" value="PK" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=#ffe6cc;align=center;fontStyle=1;startSize=0;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-1">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-1-2" value="id BIGSERIAL" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=#ffe6cc;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;fontStyle=1;" vertex="1" parent="rckik-row-1">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-2" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="60" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-2-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-2">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-2-2" value="name VARCHAR(255)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-2">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-3" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="90" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-3-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-3">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-3-2" value="code VARCHAR(50)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-3">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-4" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="120" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-4-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-4">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-4-2" value="city VARCHAR(100)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-4">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-5" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="150" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-5-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-5">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-5-2" value="address TEXT" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-5">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-6" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="180" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-6-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-6">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-6-2" value="latitude NUMERIC(9,6)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-6">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-7" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="210" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-7-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-7">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-7-2" value="longitude NUMERIC(9,6)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-7">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-8" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="240" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-8-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-8">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-8-2" value="aliases TEXT[]" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-8">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-9" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="270" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-9-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-9">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-9-2" value="active BOOLEAN" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-9">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-10" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="300" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-10-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-10">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-10-2" value="created_at TIMESTAMP" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-10">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-row-11" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-rckik">
+          <mxGeometry y="330" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-11-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="rckik-row-11">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="rckik-cell-11-2" value="updated_at TIMESTAMP" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="rckik-row-11">
+          <mxGeometry x="40" width="240" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- blood_snapshots table -->
+        <mxCell id="table-blood-snapshots" value="blood_snapshots" style="shape=table;startSize=30;container=1;collapsible=0;childLayout=tableLayout;fontStyle=1;align=center;pointerEvents=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="500" y="100" width="300" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-1" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;fillColor=none;strokeColor=inherit;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="30" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-1-1" value="PK" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=#ffe6cc;align=center;fontStyle=1;startSize=0;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-1">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-1-2" value="id BIGSERIAL" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=#ffe6cc;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;fontStyle=1;" vertex="1" parent="bs-row-1">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-2" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="60" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-2-1" value="FK" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=#e1d5e7;align=center;fontStyle=1;startSize=0;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-2">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-2-2" value="rckik_id BIGINT" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=#e1d5e7;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-2">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-3" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="90" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-3-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="bs-row-3">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-3-2" value="snapshot_date DATE" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-3">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-4" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="120" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-4-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="bs-row-4">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-4-2" value="blood_group VARCHAR(5)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-4">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-5" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="150" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-5-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="bs-row-5">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-5-2" value="level_percentage NUMERIC(5,2)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-5">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-6" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="180" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-6-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="bs-row-6">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-6-2" value="source_url TEXT" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-6">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-7" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="210" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-7-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="bs-row-7">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-7-2" value="parser_version VARCHAR(50)" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-7">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-8" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="240" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-8-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="bs-row-8">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-8-2" value="scraped_at TIMESTAMP" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-8">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-row-9" value="" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;top=0;left=0;bottom=0;right=0;dropTarget=0;collapsible=0;recursiveResize=0;expand=0;fontStyle=0;" vertex="1" parent="table-blood-snapshots">
+          <mxGeometry y="270" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-9-1" value="" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="bs-row-9">
+          <mxGeometry width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="bs-cell-9-2" value="is_manual BOOLEAN" style="connectable=0;recursiveResize=0;strokeColor=inherit;fillColor=none;align=left;spacingLeft=6;spacingRight=6;overflow=hidden;fontSize=10;" vertex="1" parent="bs-row-9">
+          <mxGeometry x="40" width="260" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Relationships -->
+        <mxCell id="rel-blood-snapshots-rckik" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERmany;startArrow=ERone;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="bs-row-2" target="rckik-row-1">
+          <mxGeometry width="100" height="100" relative="1" as="geometry">
+            <mxPoint x="800" y="175" as="sourcePoint" />
+            <mxPoint x="900" y="145" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Additional tables with minimal details for space -->
+        <mxCell id="note" value="ERD Diagram for mkrew Database&#xa;&#xa;Core Tables:&#xa;- users: User accounts and profiles&#xa;- rckik: Blood donation centers&#xa;- blood_snapshots: Daily blood level snapshots&#xa;- donations: User donation records&#xa;- user_favorite_rckik: User favorite centers&#xa;- notification_preferences: User notification settings&#xa;- in_app_notifications: In-app notification queue&#xa;- email_logs: Email delivery tracking&#xa;- user_tokens: Verification/reset tokens&#xa;- user_sessions: Active user sessions&#xa;- scraper_runs: Scraping batch runs&#xa;- scraper_logs: Individual scraping logs&#xa;- scraper_configs: Scraper configurations&#xa;- user_reports: User data issue reports&#xa;- audit_logs: Audit trail (immutable)&#xa;- mv_latest_blood_levels: Materialized view for dashboard" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;verticalAlign=top;fontSize=11;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="100" y="550" width="400" height="380" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

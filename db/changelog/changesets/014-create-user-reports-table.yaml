@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: 014-create-user-reports-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: user_reports
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_user_reports
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_reports_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: blood_snapshot_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_user_reports_blood_snapshot
+                    references: blood_snapshots(id)
+              - column:
+                  name: rckik_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_reports_rckik
+                    references: rckik(id)
+              - column:
+                  name: description
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: screenshot_url
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  defaultValue: NEW
+                  constraints:
+                    nullable: false
+              - column:
+                  name: admin_notes
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: resolved_by
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_user_reports_resolved_by
+                    references: users(id)
+              - column:
+                  name: resolved_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE user_reports ADD CONSTRAINT chk_user_reports_status CHECK (status IN ('NEW', 'IN_REVIEW', 'RESOLVED', 'REJECTED'));
+        - createIndex:
+            indexName: idx_user_reports_status_created
+            tableName: user_reports
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_user_reports_blood_snapshot
+            tableName: user_reports
+            columns:
+              - column:
+                  name: blood_snapshot_id
+        - createIndex:
+            indexName: idx_user_reports_user_created
+            tableName: user_reports
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: created_at
+                  descending: true
+      rollback:
+        - dropTable:
+            tableName: user_reports

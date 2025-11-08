@@ -1,0 +1,96 @@
+databaseChangeLog:
+  - changeSet:
+      id: 016-create-additional-indexes
+      author: mkrew-team
+      comment: Additional indexes for performance optimization
+      changes:
+        # Composite indexes for common query patterns
+        - createIndex:
+            indexName: idx_blood_snapshots_scraped_at
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: scraped_at
+                  descending: true
+
+        - createIndex:
+            indexName: idx_donations_rckik_date
+            tableName: donations
+            columns:
+              - column:
+                  name: rckik_id
+              - column:
+                  name: donation_date
+                  descending: true
+
+        - createIndex:
+            indexName: idx_email_logs_external_id
+            tableName: email_logs
+            columns:
+              - column:
+                  name: external_id
+
+        - createIndex:
+            indexName: idx_scraper_runs_run_type
+            tableName: scraper_runs
+            columns:
+              - column:
+                  name: run_type
+
+        # Partial index for active users (not deleted)
+        - sql:
+            sql: |
+              CREATE INDEX idx_users_active
+              ON users(id, email)
+              WHERE deleted_at IS NULL;
+            comment: Partial index for active users
+
+        # Partial index for verified users
+        - sql:
+            sql: |
+              CREATE INDEX idx_users_verified
+              ON users(id)
+              WHERE email_verified = true AND deleted_at IS NULL;
+            comment: Partial index for verified active users
+
+        # Index for blood group filtering
+        - createIndex:
+            indexName: idx_users_blood_group
+            tableName: users
+            columns:
+              - column:
+                  name: blood_group
+
+        # Index for notification preferences lookup
+        - createIndex:
+            indexName: idx_notification_preferences_email_enabled
+            tableName: notification_preferences
+            columns:
+              - column:
+                  name: email_enabled
+              - column:
+                  name: email_frequency
+
+      rollback:
+        - dropIndex:
+            indexName: idx_blood_snapshots_scraped_at
+            tableName: blood_snapshots
+        - dropIndex:
+            indexName: idx_donations_rckik_date
+            tableName: donations
+        - dropIndex:
+            indexName: idx_email_logs_external_id
+            tableName: email_logs
+        - dropIndex:
+            indexName: idx_scraper_runs_run_type
+            tableName: scraper_runs
+        - sql:
+            sql: DROP INDEX IF EXISTS idx_users_active;
+        - sql:
+            sql: DROP INDEX IF EXISTS idx_users_verified;
+        - dropIndex:
+            indexName: idx_users_blood_group
+            tableName: users
+        - dropIndex:
+            indexName: idx_notification_preferences_email_enabled
+            tableName: notification_preferences

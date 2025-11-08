@@ -1,0 +1,90 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-create-scraper-runs-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: scraper_runs
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_scraper_runs
+              - column:
+                  name: run_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: total_rckiks
+                  type: INTEGER
+                  constraints:
+                    nullable: true
+              - column:
+                  name: successful_count
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: failed_count
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: duration_seconds
+                  type: INTEGER
+                  constraints:
+                    nullable: true
+              - column:
+                  name: triggered_by
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: error_summary
+                  type: TEXT
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: ALTER TABLE scraper_runs ADD CONSTRAINT chk_scraper_runs_run_type CHECK (run_type IN ('SCHEDULED', 'MANUAL'));
+        - sql:
+            sql: ALTER TABLE scraper_runs ADD CONSTRAINT chk_scraper_runs_status CHECK (status IN ('RUNNING', 'COMPLETED', 'FAILED', 'PARTIAL'));
+        - createIndex:
+            indexName: idx_scraper_runs_started_at
+            tableName: scraper_runs
+            columns:
+              - column:
+                  name: started_at
+                  descending: true
+        - createIndex:
+            indexName: idx_scraper_runs_status_started
+            tableName: scraper_runs
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: started_at
+                  descending: true
+      rollback:
+        - dropTable:
+            tableName: scraper_runs

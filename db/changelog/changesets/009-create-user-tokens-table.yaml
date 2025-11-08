@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-create-user-tokens-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: user_tokens
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_user_tokens
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_tokens_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: token
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_user_tokens_token
+              - column:
+                  name: token_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: used_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: metadata
+                  type: JSONB
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: ALTER TABLE user_tokens ADD CONSTRAINT chk_user_tokens_type CHECK (token_type IN ('EMAIL_VERIFICATION', 'PASSWORD_RESET', 'DONATION_CONFIRMATION'));
+        - createIndex:
+            indexName: idx_user_tokens_token_type_expires
+            tableName: user_tokens
+            columns:
+              - column:
+                  name: token
+              - column:
+                  name: token_type
+              - column:
+                  name: expires_at
+        - createIndex:
+            indexName: idx_user_tokens_user_type
+            tableName: user_tokens
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: token_type
+        - createIndex:
+            indexName: idx_user_tokens_expires_at
+            tableName: user_tokens
+            columns:
+              - column:
+                  name: expires_at
+      rollback:
+        - dropTable:
+            tableName: user_tokens

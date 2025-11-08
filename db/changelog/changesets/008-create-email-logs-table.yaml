@@ -1,0 +1,112 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-create-email-logs-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: email_logs
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_email_logs
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_email_logs_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: notification_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rckik_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_email_logs_rckik
+                    references: rckik(id)
+              - column:
+                  name: recipient_email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sent_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: delivered_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: opened_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: bounced_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: bounce_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: external_id
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: metadata
+                  type: JSONB
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: ALTER TABLE email_logs ADD CONSTRAINT chk_email_logs_notification_type CHECK (notification_type IN ('CRITICAL_ALERT', 'DAILY_SUMMARY', 'VERIFICATION', 'PASSWORD_RESET', 'OTHER'));
+        - sql:
+            sql: ALTER TABLE email_logs ADD CONSTRAINT chk_email_logs_bounce_type CHECK (bounce_type IN ('HARD', 'SOFT') OR bounce_type IS NULL);
+        - createIndex:
+            indexName: idx_email_logs_sent_at
+            tableName: email_logs
+            columns:
+              - column:
+                  name: sent_at
+                  descending: true
+        - createIndex:
+            indexName: idx_email_logs_user_sent
+            tableName: email_logs
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: sent_at
+                  descending: true
+        - createIndex:
+            indexName: idx_email_logs_notification_type_sent
+            tableName: email_logs
+            columns:
+              - column:
+                  name: notification_type
+              - column:
+                  name: sent_at
+                  descending: true
+      rollback:
+        - dropTable:
+            tableName: email_logs

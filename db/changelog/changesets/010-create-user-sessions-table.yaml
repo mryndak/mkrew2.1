@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-create-user-sessions-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: user_sessions
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_user_sessions
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_sessions_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: token_hash
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_user_sessions_token_hash
+              - column:
+                  name: ip_address
+                  type: VARCHAR(45)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: user_agent
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_activity_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: revoked
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: |
+              CREATE INDEX idx_user_sessions_user_expires
+              ON user_sessions(user_id, expires_at)
+              WHERE revoked = false;
+        - createIndex:
+            indexName: idx_user_sessions_expires_at
+            tableName: user_sessions
+            columns:
+              - column:
+                  name: expires_at
+      rollback:
+        - dropTable:
+            tableName: user_sessions

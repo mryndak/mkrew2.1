@@ -1,0 +1,87 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-rckik-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: rckik
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_rckik
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_rckik_code
+              - column:
+                  name: city
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: latitude
+                  type: NUMERIC(9,6)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: longitude
+                  type: NUMERIC(9,6)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: aliases
+                  type: TEXT[]
+                  constraints:
+                    nullable: true
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_rckik_code
+            tableName: rckik
+            columns:
+              - column:
+                  name: code
+        - createIndex:
+            indexName: idx_rckik_active
+            tableName: rckik
+            columns:
+              - column:
+                  name: active
+        - sql:
+            sql: CREATE INDEX idx_rckik_aliases ON rckik USING GIN (aliases);
+            comment: GIN index for array search on aliases
+      rollback:
+        - dropTable:
+            tableName: rckik
