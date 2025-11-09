@@ -1,15 +1,25 @@
 package pl.mkrew.backend.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.mkrew.backend.dto.AuditLogDto;
+import pl.mkrew.backend.dto.AuditLogResponse;
 import pl.mkrew.backend.entity.AuditLog;
 import pl.mkrew.backend.repository.AuditLogRepository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -201,5 +211,104 @@ public class AuditLogService {
                 rckikId,
                 metadata
         );
+    }
+
+    /**
+     * Get audit logs with optional filters
+     * US-024: Audit Trail - Read Access
+     *
+     * @param actorId Actor ID filter (optional)
+     * @param action Action type filter (optional)
+     * @param targetType Target type filter (optional)
+     * @param targetId Target ID filter (optional)
+     * @param fromDate Start date filter (optional)
+     * @param toDate End date filter (optional)
+     * @param page Page number (zero-based)
+     * @param size Page size
+     * @return Paginated audit log response
+     */
+    @Transactional(readOnly = true)
+    public AuditLogResponse getAuditLogs(
+            String actorId,
+            String action,
+            String targetType,
+            Long targetId,
+            LocalDate fromDate,
+            LocalDate toDate,
+            int page,
+            int size) {
+
+        log.debug("Getting audit logs - actor: {}, action: {}, targetType: {}, targetId: {}, fromDate: {}, toDate: {}, page: {}, size: {}",
+                actorId, action, targetType, targetId, fromDate, toDate, page, size);
+
+        // Convert LocalDate to LocalDateTime (start of day for fromDate, end of day for toDate)
+        LocalDateTime fromDateTime = fromDate != null ? fromDate.atStartOfDay() : null;
+        LocalDateTime toDateTime = toDate != null ? toDate.plusDays(1).atStartOfDay().minusNanos(1) : null;
+
+        // Create pageable
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Query with filters
+        Page<AuditLog> auditLogPage = auditLogRepository.findWithFilters(
+                actorId,
+                action,
+                targetType,
+                targetId,
+                fromDateTime,
+                toDateTime,
+                pageable
+        );
+
+        // Convert to DTOs
+        List<AuditLogDto> auditLogDtos = auditLogPage.getContent().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+        log.info("Retrieved {} audit logs (page {}/{}, total: {})",
+                auditLogDtos.size(),
+                auditLogPage.getNumber() + 1,
+                auditLogPage.getTotalPages(),
+                auditLogPage.getTotalElements());
+
+        return AuditLogResponse.builder()
+                .auditLogs(auditLogDtos)
+                .page(auditLogPage.getNumber())
+                .size(auditLogPage.getSize())
+                .totalElements(auditLogPage.getTotalElements())
+                .totalPages(auditLogPage.getTotalPages())
+                .first(auditLogPage.isFirst())
+                .last(auditLogPage.isLast())
+                .build();
+    }
+
+    /**
+     * Convert AuditLog entity to DTO
+     *
+     * @param auditLog AuditLog entity
+     * @return AuditLogDto
+     */
+    private AuditLogDto convertToDto(AuditLog auditLog) {
+        JsonNode metadataNode = null;
+        if (auditLog.getMetadata() != null) {
+            try {
+                metadataNode = objectMapper.readTree(auditLog.getMetadata());
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to parse audit log metadata for ID {}", auditLog.getId(), e);
+                // Return null or empty object node
+                metadataNode = objectMapper.createObjectNode();
+            }
+        }
+
+        return AuditLogDto.builder()
+                .id(auditLog.getId())
+                .actorId(auditLog.getActorId())
+                .action(auditLog.getAction())
+                .targetType(auditLog.getTargetType())
+                .targetId(auditLog.getTargetId())
+                .metadata(metadataNode)
+                .ipAddress(auditLog.getIpAddress())
+                .userAgent(auditLog.getUserAgent())
+                .createdAt(auditLog.getCreatedAt())
+                .build();
     }
 }

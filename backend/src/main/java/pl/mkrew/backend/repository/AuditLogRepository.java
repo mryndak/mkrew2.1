@@ -3,6 +3,8 @@ package pl.mkrew.backend.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import pl.mkrew.backend.entity.AuditLog;
 
@@ -69,4 +71,37 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
      * @return List of audit logs
      */
     List<AuditLog> findByTargetTypeAndTargetIdOrderByCreatedAtDesc(String targetType, Long targetId);
+
+    /**
+     * Find audit logs with optional filters
+     * US-024: Audit Trail with comprehensive filtering
+     *
+     * @param actorId Actor ID (optional)
+     * @param action Action type (optional)
+     * @param targetType Target type (optional)
+     * @param targetId Target ID (optional)
+     * @param fromDate Start date (optional)
+     * @param toDate End date (optional)
+     * @param pageable Pagination parameters
+     * @return Page of audit logs matching the filters
+     */
+    @Query("""
+            SELECT al FROM AuditLog al
+            WHERE (:actorId IS NULL OR al.actorId = :actorId)
+            AND (:action IS NULL OR al.action = :action)
+            AND (:targetType IS NULL OR al.targetType = :targetType)
+            AND (:targetId IS NULL OR al.targetId = :targetId)
+            AND (:fromDate IS NULL OR al.createdAt >= :fromDate)
+            AND (:toDate IS NULL OR al.createdAt <= :toDate)
+            ORDER BY al.createdAt DESC
+            """)
+    Page<AuditLog> findWithFilters(
+            @Param("actorId") String actorId,
+            @Param("action") String action,
+            @Param("targetType") String targetType,
+            @Param("targetId") Long targetId,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            Pageable pageable
+    );
 }
