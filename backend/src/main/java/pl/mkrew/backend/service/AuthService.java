@@ -33,6 +33,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final LoginAttemptService loginAttemptService;
+    private final RateLimitService rateLimitService;
 
     private static final int TOKEN_VALIDITY_HOURS = 24;
     private static final int PASSWORD_RESET_TOKEN_VALIDITY_HOURS = 1;
@@ -251,6 +252,9 @@ public class AuthService {
     public PasswordResetResponse requestPasswordReset(PasswordResetRequestDto request) {
         String email = request.getEmail().toLowerCase();
         log.info("Password reset request for email: {}", email);
+
+        // 0. Check rate limit for password reset (3 requests per email per hour)
+        rateLimitService.checkEmailLimit(email, pl.mkrew.backend.ratelimit.RateLimitType.PASSWORD_RESET);
 
         // 1. Check if user exists (but don't reveal if not - security)
         userRepository.findByEmailAndDeletedAtIsNull(email)

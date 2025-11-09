@@ -44,6 +44,10 @@ dependencies {
     // Email - SendGrid
     implementation 'com.sendgrid:sendgrid-java:4.10.2'
 
+    // Rate Limiting - Bucket4j
+    implementation 'com.bucket4j:bucket4j-core:8.7.0'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
