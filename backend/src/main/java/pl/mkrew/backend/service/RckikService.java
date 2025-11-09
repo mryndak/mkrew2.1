@@ -20,6 +20,7 @@ import pl.mkrew.backend.repository.ScraperLogRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
