@@ -10,16 +10,23 @@ import pl.mkrew.backend.dto.*;
 import pl.mkrew.backend.entity.Donation;
 import pl.mkrew.backend.entity.Rckik;
 import pl.mkrew.backend.entity.User;
+import pl.mkrew.backend.entity.UserToken;
 import pl.mkrew.backend.exception.ResourceNotFoundException;
+import pl.mkrew.backend.exception.InvalidTokenException;
+import pl.mkrew.backend.exception.TokenExpiredException;
 import pl.mkrew.backend.repository.DonationRepository;
 import pl.mkrew.backend.repository.RckikRepository;
 import pl.mkrew.backend.repository.UserRepository;
+import pl.mkrew.backend.repository.UserTokenRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +38,7 @@ public class DonationService {
     private final UserRepository userRepository;
     private final RckikRepository rckikRepository;
     private final AuditLogService auditLogService;
+    private final UserTokenRepository userTokenRepository;
 
     /**
      * Get user's donation history with pagination and filtering
@@ -473,6 +481,145 @@ public class DonationService {
                 .confirmed(donation.getConfirmed())
                 .createdAt(donation.getCreatedAt())
                 .updatedAt(donation.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Confirm donation via token from email (one-time link)
+     * US-027: One-Click Donation Confirmation
+     *
+     * @param token Confirmation token from email
+     * @return Confirmation response with donation details
+     */
+    @Transactional
+    public DonationConfirmationResponse confirmDonationByToken(String token) {
+        log.info("Starting donation confirmation for token: {}", token.substring(0, Math.min(8, token.length())) + "...");
+
+        // 1. Validate token type=DONATION_CONFIRMATION
+        UserToken userToken = userTokenRepository.findByTokenAndTokenType(token, "DONATION_CONFIRMATION")
+                .orElseThrow(() -> {
+                    log.warn("Confirmation failed: Token not found or invalid type");
+                    return new InvalidTokenException("Confirmation token is invalid or has expired");
+                });
+
+        // 2. Check if token has expired
+        if (userToken.getExpiresAt() != null && userToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("Confirmation failed: Token expired at {}", userToken.getExpiresAt());
+            throw new TokenExpiredException("Confirmation token has expired");
+        }
+
+        // 3. Check if token has already been used
+        if (userToken.getUsedAt() != null) {
+            log.warn("Confirmation failed: Token already used at {}", userToken.getUsedAt());
+            // Idempotent: If token was already used, check if donation is confirmed and return success
+            Donation donation = findDonationFromTokenMetadata(userToken);
+            if (donation != null && donation.getConfirmed()) {
+                log.info("Token already used, donation ID: {} already confirmed, returning success", donation.getId());
+                return buildConfirmationResponse(donation, "Donation confirmed successfully");
+            }
+            throw new InvalidTokenException("Confirmation token has already been used");
+        }
+
+        // 4. Find or create donation record from token metadata
+        Donation donation = findDonationFromTokenMetadata(userToken);
+        if (donation == null) {
+            log.error("Donation not found in token metadata for token type: DONATION_CONFIRMATION");
+            throw new ResourceNotFoundException("Donation not found for confirmation token");
+        }
+
+        // 5. Idempotent check: If donation is already confirmed, return success without re-marking
+        if (donation.getConfirmed()) {
+            log.info("Donation ID: {} already confirmed, marking token as used and returning success", donation.getId());
+            userToken.setUsedAt(LocalDateTime.now());
+            userTokenRepository.save(userToken);
+            return buildConfirmationResponse(donation, "Donation confirmed successfully");
+        }
+
+        // 6. Mark donation as confirmed=true
+        donation.setConfirmed(true);
+        donationRepository.save(donation);
+        log.info("Donation ID: {} marked as confirmed", donation.getId());
+
+        // 7. Mark token as used (used_at=NOW())
+        userToken.setUsedAt(LocalDateTime.now());
+        userTokenRepository.save(userToken);
+        log.info("Confirmation token marked as used");
+
+        return buildConfirmationResponse(donation, "Donation confirmed successfully");
+    }
+
+    /**
+     * Find donation from token metadata
+     * Token metadata should contain {"donationId": 123}
+     *
+     * @param userToken User token with metadata
+     * @return Donation or null if not found
+     */
+    private Donation findDonationFromTokenMetadata(UserToken userToken) {
+        try {
+            String metadata = userToken.getMetadata();
+            if (metadata == null || metadata.isBlank()) {
+                log.warn("Token metadata is empty");
+                return null;
+            }
+
+            // Parse metadata JSON to extract donationId
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> metadataMap = objectMapper.readValue(metadata, new TypeReference<Map<String, Object>>() {});
+
+            Object donationIdObj = metadataMap.get("donationId");
+            if (donationIdObj == null) {
+                log.warn("Token metadata does not contain donationId");
+                return null;
+            }
+
+            Long donationId = Long.valueOf(donationIdObj.toString());
+            log.debug("Extracted donationId: {} from token metadata", donationId);
+
+            // Find donation (including soft-deleted for confirmation - business decision)
+            // Note: We allow confirming soft-deleted donations in case user confirms after deletion
+            Optional<Donation> donationOpt = donationRepository.findById(donationId);
+            if (donationOpt.isEmpty()) {
+                log.warn("Donation not found with ID: {}", donationId);
+                return null;
+            }
+
+            Donation donation = donationOpt.get();
+
+            // Verify donation belongs to the user associated with the token
+            if (!donation.getUser().getId().equals(userToken.getUser().getId())) {
+                log.error("Donation ID: {} does not belong to user ID: {}", donationId, userToken.getUser().getId());
+                throw new InvalidTokenException("Confirmation token is invalid");
+            }
+
+            return donation;
+
+        } catch (Exception e) {
+            log.error("Failed to parse token metadata: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Build confirmation response from donation
+     *
+     * @param donation Donation entity
+     * @param message Success message
+     * @return DonationConfirmationResponse
+     */
+    private DonationConfirmationResponse buildConfirmationResponse(Donation donation, String message) {
+        DonationConfirmationResponse.DonationConfirmationDto donationDto =
+                DonationConfirmationResponse.DonationConfirmationDto.builder()
+                        .id(donation.getId())
+                        .donationDate(donation.getDonationDate())
+                        .rckikName(donation.getRckik().getName())
+                        .quantityMl(donation.getQuantityMl())
+                        .confirmed(donation.getConfirmed())
+                        .build();
+
+        return DonationConfirmationResponse.builder()
+                .message(message)
+                .donation(donationDto)
                 .build();
     }
 }
