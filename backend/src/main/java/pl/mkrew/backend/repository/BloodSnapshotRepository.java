@@ -139,4 +139,99 @@ public interface BloodSnapshotRepository extends JpaRepository<BloodSnapshot, Lo
             ORDER BY bs.rckik.id ASC, bs.bloodGroup ASC
             """)
     List<BloodSnapshot> findCriticalLevels(@Param("criticalThreshold") java.math.BigDecimal criticalThreshold);
+
+    // ========== US-026: Anonymized Report Queries ==========
+
+    /**
+     * US-026: Calculate average blood level percentage by blood group - for anonymized reports
+     * Returns list of [bloodGroup, avgLevel] pairs
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return List of Object arrays [String bloodGroup, Double avgLevel]
+     */
+    @Query("SELECT bs.bloodGroup, AVG(bs.levelPercentage) FROM BloodSnapshot bs " +
+           "WHERE bs.snapshotDate BETWEEN :fromDate AND :toDate " +
+           "GROUP BY bs.bloodGroup " +
+           "ORDER BY bs.bloodGroup")
+    List<Object[]> calculateAverageLevelByBloodGroup(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count snapshots by status (CRITICAL/IMPORTANT/OK) - for anonymized reports
+     * Returns list of [status, count] pairs
+     * Status is calculated as: CRITICAL (<20%), IMPORTANT (<50%), OK (>=50%)
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return List of Object arrays [String status, Long count]
+     */
+    @Query("SELECT CASE " +
+           "WHEN bs.levelPercentage < 20 THEN 'CRITICAL' " +
+           "WHEN bs.levelPercentage < 50 THEN 'IMPORTANT' " +
+           "ELSE 'OK' END, " +
+           "COUNT(bs) " +
+           "FROM BloodSnapshot bs " +
+           "WHERE bs.snapshotDate BETWEEN :fromDate AND :toDate " +
+           "GROUP BY CASE " +
+           "WHEN bs.levelPercentage < 20 THEN 'CRITICAL' " +
+           "WHEN bs.levelPercentage < 50 THEN 'IMPORTANT' " +
+           "ELSE 'OK' END " +
+           "ORDER BY CASE " +
+           "WHEN bs.levelPercentage < 20 THEN 'CRITICAL' " +
+           "WHEN bs.levelPercentage < 50 THEN 'IMPORTANT' " +
+           "ELSE 'OK' END")
+    List<Object[]> countSnapshotsByStatus(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count snapshots by RCKiK center - for anonymized reports
+     * Returns list of [rckikName, count] pairs
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return List of Object arrays [String rckikName, Long count]
+     */
+    @Query("SELECT r.name, COUNT(bs) FROM BloodSnapshot bs " +
+           "JOIN bs.rckik r " +
+           "WHERE bs.snapshotDate BETWEEN :fromDate AND :toDate " +
+           "GROUP BY r.name " +
+           "ORDER BY r.name")
+    List<Object[]> countSnapshotsByRckik(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count total snapshots in date range - for anonymized reports
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return Total number of snapshots
+     */
+    @Query("SELECT COUNT(bs) FROM BloodSnapshot bs " +
+           "WHERE bs.snapshotDate BETWEEN :fromDate AND :toDate")
+    Long countSnapshotsByDateRange(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count manual snapshots in date range - for anonymized reports
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return Number of manual snapshots
+     */
+    @Query("SELECT COUNT(bs) FROM BloodSnapshot bs " +
+           "WHERE bs.snapshotDate BETWEEN :fromDate AND :toDate " +
+           "AND bs.isManual = true")
+    Long countManualSnapshots(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Find most frequently critical blood group - for anonymized reports
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return Most critical blood group or null if none
+     */
+    @Query(value = "SELECT bs.blood_group FROM blood_snapshots bs " +
+           "WHERE bs.snapshot_date BETWEEN :fromDate AND :toDate " +
+           "AND bs.level_percentage < 20 " +
+           "GROUP BY bs.blood_group " +
+           "ORDER BY COUNT(*) DESC " +
+           "LIMIT 1", nativeQuery = true)
+    String findMostCriticalBloodGroup(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 }

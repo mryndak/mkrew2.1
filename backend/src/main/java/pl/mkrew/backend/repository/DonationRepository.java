@@ -140,4 +140,103 @@ public interface DonationRepository extends JpaRepository<Donation, Long> {
      * @return true if owned by user, false otherwise
      */
     boolean existsByIdAndUserIdAndDeletedAtIsNull(Long id, Long userId);
+
+    // ========== US-026: Anonymized Report Queries ==========
+
+    /**
+     * US-026: Count total donations (excluding soft-deleted) - for anonymized reports
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return Total number of donations
+     */
+    @Query("SELECT COUNT(d) FROM Donation d " +
+           "WHERE d.deletedAt IS NULL " +
+           "AND d.donationDate BETWEEN :fromDate AND :toDate")
+    Long countDonationsByDateRange(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Sum total volume donated (excluding soft-deleted) - for anonymized reports
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return Total volume in ml
+     */
+    @Query("SELECT COALESCE(SUM(d.quantityMl), 0) FROM Donation d " +
+           "WHERE d.deletedAt IS NULL " +
+           "AND d.donationDate BETWEEN :fromDate AND :toDate")
+    Long sumVolumeByDateRange(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count donations by blood group (excluding soft-deleted) - for anonymized reports
+     * Returns list of [bloodGroup, count] pairs
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return List of Object arrays [String bloodGroup, Long count]
+     */
+    @Query("SELECT u.bloodGroup, COUNT(d) FROM Donation d " +
+           "JOIN d.user u " +
+           "WHERE d.deletedAt IS NULL " +
+           "AND u.bloodGroup IS NOT NULL " +
+           "AND d.donationDate BETWEEN :fromDate AND :toDate " +
+           "GROUP BY u.bloodGroup " +
+           "ORDER BY u.bloodGroup")
+    List<Object[]> countDonationsByBloodGroup(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count donations by donation type (excluding soft-deleted) - for anonymized reports
+     * Returns list of [donationType, count] pairs
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return List of Object arrays [String donationType, Long count]
+     */
+    @Query("SELECT d.donationType, COUNT(d) FROM Donation d " +
+           "WHERE d.deletedAt IS NULL " +
+           "AND d.donationDate BETWEEN :fromDate AND :toDate " +
+           "GROUP BY d.donationType " +
+           "ORDER BY d.donationType")
+    List<Object[]> countDonationsByType(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count donations by RCKiK center (excluding soft-deleted) - for anonymized reports
+     * Returns list of [rckikName, count] pairs
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return List of Object arrays [String rckikName, Long count]
+     */
+    @Query("SELECT r.name, COUNT(d) FROM Donation d " +
+           "JOIN d.rckik r " +
+           "WHERE d.deletedAt IS NULL " +
+           "AND d.donationDate BETWEEN :fromDate AND :toDate " +
+           "GROUP BY r.name " +
+           "ORDER BY r.name")
+    List<Object[]> countDonationsByRckik(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count confirmed donations (excluding soft-deleted) - for anonymized reports
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return Number of confirmed donations
+     */
+    @Query("SELECT COUNT(d) FROM Donation d " +
+           "WHERE d.deletedAt IS NULL " +
+           "AND d.confirmed = true " +
+           "AND d.donationDate BETWEEN :fromDate AND :toDate")
+    Long countConfirmedDonations(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
+    /**
+     * US-026: Count unique donors (excluding soft-deleted) - for anonymized reports
+     *
+     * @param fromDate Start date (inclusive)
+     * @param toDate End date (inclusive)
+     * @return Number of unique donors
+     */
+    @Query("SELECT COUNT(DISTINCT d.user.id) FROM Donation d " +
+           "WHERE d.deletedAt IS NULL " +
+           "AND d.donationDate BETWEEN :fromDate AND :toDate")
+    Long countUniqueDonors(@Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
 }
