@@ -1,0 +1,455 @@
+databaseChangeLog:
+  - changeSet:
+      id: 019-seed-scraper-configs
+      author: mkrew-team
+      comment: Initial scraper configurations for RCKiK centers
+      changes:
+        # Note: URLs and CSS selectors are examples and need to be verified/updated
+        # based on actual RCKiK websites structure
+
+        # 1. Warszawa
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-WAW')
+              - column:
+                  name: source_url
+                  value: https://rckik.warszawa.pl/stany-krwi
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": ".blood-level-table", "blood_group": ".blood-type", "level": ".level-percentage"}'
+              - column:
+                  name: active
+                  valueBoolean: true
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 2. Kraków
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-KRK')
+              - column:
+                  name: source_url
+                  value: https://www.rckik.krakow.pl/zapasy-krwi
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": "#blood-inventory", "blood_group": ".group", "level": ".percentage"}'
+              - column:
+                  name: active
+                  valueBoolean: true
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 3. Wrocław
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-WRO')
+              - column:
+                  name: source_url
+                  value: https://rckik.wroc.pl/zapasy-krwi
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": ".blood-status", "blood_group": ".type", "level": ".level"}'
+              - column:
+                  name: active
+                  valueBoolean: true
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 4. Poznań
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-POZ')
+              - column:
+                  name: source_url
+                  value: https://rckik.poznan.pl/stany-magazynowe
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": ".inventory-table", "blood_group": ".blood-type", "level": ".level-value"}'
+              - column:
+                  name: active
+                  valueBoolean: true
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 5. Gdańsk
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-GDA')
+              - column:
+                  name: source_url
+                  value: https://www.rckik.gda.pl/zapasy-krwi
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": "#blood-levels", "blood_group": ".group-name", "level": ".percentage-value"}'
+              - column:
+                  name: active
+                  valueBoolean: true
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 6. Katowice
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-KAT')
+              - column:
+                  name: source_url
+                  value: https://www.rckik.katowice.pl/zapasy
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": ".blood-table", "blood_group": ".group", "level": ".level"}'
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 7. Łódź
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-LOD')
+              - column:
+                  name: source_url
+                  value: https://rckiklodz.pl/zapasy-krwi
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": ".inventory", "blood_group": ".type", "level": ".percent"}'
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 8. Lublin
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-LUB')
+              - column:
+                  name: source_url
+                  value: https://www.rckik.lublin.pl/stany-krwi
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": "#blood-inventory", "blood_group": ".blood-type", "level": ".level"}'
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 9. Białystok
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-BIA')
+              - column:
+                  name: source_url
+                  value: https://rckik.bialystok.pl/zapasy
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": ".blood-status", "blood_group": ".type", "level": ".percentage"}'
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # 10. Szczecin
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-SZC')
+              - column:
+                  name: source_url
+                  value: https://rckik.szczecin.pl/stany-magazynowe
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: css_selectors
+                  value: '{"blood_levels": ".inventory-table", "blood_group": ".group", "level": ".value"}'
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        # Remaining centers (11-21) with placeholder configurations
+        # These should be updated with actual URLs and selectors when available
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-KIE')
+              - column:
+                  name: source_url
+                  value: https://rckik.kielce.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-RZE')
+              - column:
+                  name: source_url
+                  value: https://rckik.rzeszow.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-BYD')
+              - column:
+                  name: source_url
+                  value: https://www.rckik.bydgoszcz.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-OLS')
+              - column:
+                  name: source_url
+                  value: https://rckik.olsztyn.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-ZGO')
+              - column:
+                  name: source_url
+                  value: https://rckik.zgora.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-KAL')
+              - column:
+                  name: source_url
+                  value: https://rckik.kalisz.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-RAD')
+              - column:
+                  name: source_url
+                  value: https://rckik.radom.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-OPO')
+              - column:
+                  name: source_url
+                  value: https://rckik.opole.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-SLU')
+              - column:
+                  name: source_url
+                  value: https://rckik.slupsk.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-WAL')
+              - column:
+                  name: source_url
+                  value: https://rckik.walbrzych.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+        - insert:
+            tableName: scraper_configs
+            columns:
+              - column:
+                  name: rckik_id
+                  valueComputed: (SELECT id FROM rckik WHERE code = 'RCKIK-RAC')
+              - column:
+                  name: source_url
+                  value: https://rckik-raciborz.pl
+              - column:
+                  name: parser_type
+                  value: JSOUP
+              - column:
+                  name: active
+                  valueBoolean: false
+              - column:
+                  name: timeout_seconds
+                  valueNumeric: 30
+
+      rollback:
+        - delete:
+            tableName: scraper_configs
+            where: rckik_id IN (SELECT id FROM rckik WHERE code LIKE 'RCKIK-%')

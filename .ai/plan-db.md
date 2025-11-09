@@ -682,7 +682,7 @@ CREATE POLICY donations_own_data ON donations
 
 ### 5.1 Liquibase Changesets
 
-**17 changesetów:**
+**19 changesetów:**
 1. users
 2. rckik
 3. blood_snapshots
@@ -700,6 +700,8 @@ CREATE POLICY donations_own_data ON donations
 15. audit_logs
 16. Dodatkowe indeksy
 17. Materialized view
+18. **Seed data: RCKiK** (21 centrów w Polsce)
+19. **Seed data: Scraper configs** (konfiguracje dla wszystkich RCKiK)
 
 **Historia migracji:**
 - Tabela: `databasechangelog`
@@ -1021,6 +1023,7 @@ resource "google_sql_database_instance" "mkrew" {
 | Data | Wersja | Zmiany |
 |------|--------|--------|
 | 2025-11-08 | 1.0 | Inicjalna wersja - 17 changesetów zaimplementowanych |
+| 2025-11-09 | 1.1 | Dodano dane seed: 21 RCKiK i konfiguracje scraperów (changesets 018-019) |
 
 ---
 
