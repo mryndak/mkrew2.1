@@ -234,4 +234,57 @@ public class AdminScraperController {
 
         return ResponseEntity.ok(logs);
     }
+
+    /**
+     * US-025: Get global scraper system status
+     * GET /api/v1/admin/scraper/status
+     *
+     * Returns the overall health status of the scraping system, including:
+     * - Global status (OK, DEGRADED, FAILED)
+     * - Last successful scraper run timestamp
+     * - Number of consecutive failures
+     * - Statistics on recent scraper runs
+     *
+     * This endpoint is critical for monitoring and alerting purposes, especially
+     * in extreme scenarios where the scraping system cannot access RCKiK pages.
+     *
+     * @return ScraperGlobalStatusDto with system health information
+     */
+    @Operation(
+            summary = "Get global scraper system status",
+            description = "Returns the overall health status of the scraping system. " +
+                    "US-025: Extreme Mode - Handles scenarios where scraper cannot access RCKiK pages. " +
+                    "Status levels: OK (system operating normally), DEGRADED (some failures), " +
+                    "FAILED (prolonged failure requiring manual intervention).",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Global scraper status retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ScraperGlobalStatusDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - User does not have ADMIN role",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/status")
+    public ResponseEntity<ScraperGlobalStatusDto> getScraperGlobalStatus() {
+
+        log.info("GET /api/v1/admin/scraper/status - Get global scraper system status");
+
+        ScraperGlobalStatusDto status = scraperService.getScraperGlobalStatus();
+
+        log.info("Global scraper status: {} - Consecutive failures: {}",
+                status.getGlobalStatus(), status.getConsecutiveFailures());
+
+        return ResponseEntity.ok(status);
+    }
 }
