@@ -274,4 +274,119 @@ public class ScraperService {
                 .createdAt(log.getCreatedAt())
                 .build();
     }
+
+    /**
+     * Get global scraper system status
+     * US-025: Extreme Mode - No Access to RCKiK Pages
+     *
+     * This method analyzes recent scraper runs to determine the overall health
+     * of the scraping system and provides information for monitoring and alerting.
+     *
+     * Status determination:
+     * - OK: Last run was successful (COMPLETED), or at most 1 failure in recent runs
+     * - DEGRADED: 2 consecutive failures, but not all recent runs failed
+     * - FAILED: 3+ consecutive failures (prolonged failure requiring admin intervention)
+     *
+     * @return ScraperGlobalStatusDto with system health information
+     */
+    @Transactional(readOnly = true)
+    public ScraperGlobalStatusDto getScraperGlobalStatus() {
+        log.info("Calculating global scraper status");
+
+        // 1. Get recent scraper runs (last 5 completed runs)
+        org.springframework.data.domain.PageRequest pageRequest =
+                org.springframework.data.domain.PageRequest.of(0, 5);
+        Page<ScraperRun> recentRunsPage = scraperRunRepository.findAllByOrderByStartedAtDesc(pageRequest);
+        List<ScraperRun> recentRuns = recentRunsPage.getContent();
+
+        // Filter only completed runs (exclude RUNNING status)
+        List<ScraperRun> completedRuns = recentRuns.stream()
+                .filter(run -> run.getCompletedAt() != null)
+                .collect(Collectors.toList());
+
+        log.debug("Found {} completed scraper runs in recent history", completedRuns.size());
+
+        // 2. Find last successful run
+        Optional<ScraperRun> lastSuccessful = scraperRunRepository
+                .findFirstByStatusOrderByCompletedAtDesc("COMPLETED");
+
+        LocalDateTime lastSuccessfulTimestamp = lastSuccessful
+                .map(ScraperRun::getCompletedAt)
+                .orElse(null);
+
+        // 3. Count consecutive failures
+        List<ScraperRun> consecutiveFailedRuns = scraperRunRepository.findConsecutiveFailedRuns();
+        int consecutiveFailures = consecutiveFailedRuns.size();
+
+        log.debug("Consecutive failures: {}", consecutiveFailures);
+
+        // 4. Count successful and failed runs in recent history
+        long successfulCount = completedRuns.stream()
+                .filter(run -> "COMPLETED".equals(run.getStatus()))
+                .count();
+
+        long failedCount = completedRuns.stream()
+                .filter(run -> "FAILED".equals(run.getStatus()) || "PARTIAL".equals(run.getStatus()))
+                .count();
+
+        log.debug("Recent runs - Successful: {}, Failed: {}", successfulCount, failedCount);
+
+        // 5. Determine global status
+        String globalStatus;
+        String message;
+        boolean requiresAdminAlert;
+
+        if (consecutiveFailures >= 3) {
+            // FAILED: Prolonged failure - 3+ consecutive failures
+            globalStatus = "FAILED";
+            message = String.format(
+                    "Critical: Scraping system has experienced %d consecutive failures. " +
+                    "Manual intervention required. Consider manual data import.",
+                    consecutiveFailures
+            );
+            requiresAdminAlert = true;
+            log.warn("Scraper status: FAILED - {} consecutive failures", consecutiveFailures);
+
+        } else if (consecutiveFailures == 2) {
+            // DEGRADED: Warning state - 2 consecutive failures
+            globalStatus = "DEGRADED";
+            message = String.format(
+                    "Warning: Scraping system has experienced %d consecutive failures. " +
+                    "Monitoring closely for potential prolonged failure.",
+                    consecutiveFailures
+            );
+            requiresAdminAlert = false;
+            log.info("Scraper status: DEGRADED - {} consecutive failures", consecutiveFailures);
+
+        } else if (consecutiveFailures == 1 && failedCount > 1) {
+            // DEGRADED: Some recent failures but not consecutive
+            globalStatus = "DEGRADED";
+            message = String.format(
+                    "Scraping system experiencing intermittent failures. " +
+                    "%d out of %d recent runs failed.",
+                    failedCount, completedRuns.size()
+            );
+            requiresAdminAlert = false;
+            log.info("Scraper status: DEGRADED - intermittent failures");
+
+        } else {
+            // OK: System operating normally
+            globalStatus = "OK";
+            message = "Scraping system is operating normally.";
+            requiresAdminAlert = false;
+            log.info("Scraper status: OK");
+        }
+
+        // 6. Build and return DTO
+        return ScraperGlobalStatusDto.builder()
+                .globalStatus(globalStatus)
+                .lastSuccessfulTimestamp(lastSuccessfulTimestamp)
+                .consecutiveFailures(consecutiveFailures)
+                .totalRecentRuns(completedRuns.size())
+                .successfulRecentRuns((int) successfulCount)
+                .failedRecentRuns((int) failedCount)
+                .message(message)
+                .requiresAdminAlert(requiresAdminAlert)
+                .build();
+    }
 }

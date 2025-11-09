@@ -295,4 +295,108 @@ public class EmailService {
 
         return sendEmail(request);
     }
+
+    /**
+     * Send scraper failure alert email to administrators
+     * US-025: Extreme Mode - Notify admins about prolonged scraper failures
+     *
+     * @param adminEmail        Administrator email
+     * @param adminName         Administrator name
+     * @param consecutiveFailures Number of consecutive failures
+     * @param lastSuccessfulTimestamp Last successful scraper run timestamp
+     * @param statusUrl         URL to check scraper status
+     * @return true if sent successfully
+     */
+    public boolean sendScraperFailureAlert(
+            String adminEmail,
+            String adminName,
+            int consecutiveFailures,
+            String lastSuccessfulTimestamp,
+            String statusUrl) {
+
+        String subject = "CRITICAL: Scraping System Failure - Manual Intervention Required";
+
+        String htmlTemplate = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Scraping System Failure Alert</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #d32f2f;">🚨 CRITICAL ALERT: Scraping System Failure</h2>
+                        <p>Hello {{adminName}},</p>
+                        <p>The mkrew blood donation scraping system has experienced a <strong>prolonged failure</strong> and requires immediate manual intervention.</p>
+                        <div style="background-color: #ffebee; border-left: 4px solid #d32f2f; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-top: 0;">Failure Details</h3>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 8px 0;"><strong>Consecutive Failures:</strong></td>
+                                    <td style="padding: 8px 0;">{{consecutiveFailures}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0;"><strong>Last Successful Run:</strong></td>
+                                    <td style="padding: 8px 0;">{{lastSuccessfulTimestamp}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0;"><strong>Status:</strong></td>
+                                    <td style="padding: 8px 0; color: #d32f2f;"><strong>FAILED</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-top: 0;">⚠️ Recommended Actions</h3>
+                            <ol>
+                                <li><strong>Check RCKiK websites</strong> - Verify if the source websites are accessible</li>
+                                <li><strong>Review scraper logs</strong> - Check for error messages and patterns</li>
+                                <li><strong>Consider manual data import</strong> - If websites have changed structure, update parsers or import data manually</li>
+                                <li><strong>Notify users</strong> - If data will be stale for extended period, inform users about the situation</li>
+                            </ol>
+                        </div>
+                        <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-top: 0;">📋 Next Steps</h3>
+                            <p>1. <strong>Review System Status:</strong></p>
+                            <div style="text-align: center; margin: 15px 0;">
+                                <a href="{{statusUrl}}" style="background-color: #2196f3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                                    View Scraper Status Dashboard
+                                </a>
+                            </div>
+                            <p>2. <strong>Check Scraper Logs:</strong></p>
+                            <p style="font-size: 14px; color: #666;">Review detailed logs in the admin panel to identify the root cause</p>
+                            <p>3. <strong>Manual Scraper Trigger:</strong></p>
+                            <p style="font-size: 14px; color: #666;">Try triggering a manual scraper run via the admin API to test if the issue persists</p>
+                        </div>
+                        <p style="font-size: 14px; color: #666; margin-top: 30px;">
+                            <strong>Note:</strong> This alert is triggered when the scraping system experiences 3 or more consecutive failures.
+                            Immediate action is recommended to maintain data freshness for users.
+                        </p>
+                        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                        <p style="font-size: 12px; color: #999;">
+                            mkrew Admin Alert System<br>
+                            <a href="https://mkrew.pl/admin" style="color: #d32f2f;">Admin Dashboard</a>
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """;
+
+        EmailNotificationRequest request = EmailNotificationRequest.builder()
+                .recipientEmail(adminEmail)
+                .recipientName(adminName)
+                .subject(subject)
+                .notificationType("SYSTEM_ALERT")
+                .templateName(htmlTemplate)
+                .templateVariables(java.util.Map.of(
+                        "adminName", adminName,
+                        "consecutiveFailures", String.valueOf(consecutiveFailures),
+                        "lastSuccessfulTimestamp", lastSuccessfulTimestamp != null ? lastSuccessfulTimestamp : "Never",
+                        "statusUrl", statusUrl
+                ))
+                .userId(null)
+                .rckikId(null)
+                .build();
+
+        return sendEmail(request);
+    }
 }
