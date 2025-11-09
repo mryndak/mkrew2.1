@@ -56,3 +56,6 @@ databaseChangeLog:
   - include:
       file: changesets/019-seed-scraper-configs.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changesets/020-create-consent-records-table.yaml
+      relativeToChangelogFile: true

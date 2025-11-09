@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-create-consent-records-table
+      author: mkrew-team
+      changes:
+        - createTable:
+            tableName: consent_records
+            remarks: "Table for tracking user consent records (GDPR compliance)"
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_consent_records
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_consent_records_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: consent_version
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: consent_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: accepted
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ip_address
+                  type: VARCHAR(45)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: user_agent
+                  type: TEXT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE consent_records ADD CONSTRAINT chk_consent_records_type CHECK (consent_type IN ('PRIVACY_POLICY', 'TERMS_OF_SERVICE', 'DATA_PROCESSING', 'MARKETING', 'OTHER'));
+        - createIndex:
+            indexName: idx_consent_records_user_created
+            tableName: consent_records
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: created_at
+                  descending: true
+        - createIndex:
+            indexName: idx_consent_records_type_version
+            tableName: consent_records
+            columns:
+              - column:
+                  name: consent_type
+              - column:
+                  name: consent_version
+      rollback:
+        - dropTable:
+            tableName: consent_records
