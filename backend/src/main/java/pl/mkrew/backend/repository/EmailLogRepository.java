@@ -142,4 +142,165 @@ public interface EmailLogRepository extends JpaRepository<EmailLog, Long> {
             WHERE el.sentAt BETWEEN :fromDate AND :toDate
             """)
     Double calculateOpenRate(@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+
+    // ==================== US-022: Email Deliverability Metrics ====================
+
+    /**
+     * Count total emails sent in date range with optional filters
+     *
+     * @param fromDate         From date
+     * @param toDate           To date
+     * @param notificationType Notification type (optional)
+     * @param rckikId          RCKiK ID (optional)
+     * @return Count of sent emails
+     */
+    @Query("""
+            SELECT COUNT(el) FROM EmailLog el
+            WHERE el.sentAt BETWEEN :fromDate AND :toDate
+            AND (:notificationType IS NULL OR el.notificationType = :notificationType)
+            AND (:rckikId IS NULL OR el.rckik.id = :rckikId)
+            """)
+    long countTotalSent(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("notificationType") String notificationType,
+            @Param("rckikId") Long rckikId
+    );
+
+    /**
+     * Count total emails delivered in date range with optional filters
+     *
+     * @param fromDate         From date
+     * @param toDate           To date
+     * @param notificationType Notification type (optional)
+     * @param rckikId          RCKiK ID (optional)
+     * @return Count of delivered emails
+     */
+    @Query("""
+            SELECT COUNT(el) FROM EmailLog el
+            WHERE el.sentAt BETWEEN :fromDate AND :toDate
+            AND el.deliveredAt IS NOT NULL
+            AND (:notificationType IS NULL OR el.notificationType = :notificationType)
+            AND (:rckikId IS NULL OR el.rckik.id = :rckikId)
+            """)
+    long countTotalDelivered(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("notificationType") String notificationType,
+            @Param("rckikId") Long rckikId
+    );
+
+    /**
+     * Count total emails bounced in date range with optional filters
+     *
+     * @param fromDate         From date
+     * @param toDate           To date
+     * @param notificationType Notification type (optional)
+     * @param rckikId          RCKiK ID (optional)
+     * @return Count of bounced emails
+     */
+    @Query("""
+            SELECT COUNT(el) FROM EmailLog el
+            WHERE el.sentAt BETWEEN :fromDate AND :toDate
+            AND el.bouncedAt IS NOT NULL
+            AND (:notificationType IS NULL OR el.notificationType = :notificationType)
+            AND (:rckikId IS NULL OR el.rckik.id = :rckikId)
+            """)
+    long countTotalBounced(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("notificationType") String notificationType,
+            @Param("rckikId") Long rckikId
+    );
+
+    /**
+     * Count total emails opened in date range with optional filters
+     *
+     * @param fromDate         From date
+     * @param toDate           To date
+     * @param notificationType Notification type (optional)
+     * @param rckikId          RCKiK ID (optional)
+     * @return Count of opened emails
+     */
+    @Query("""
+            SELECT COUNT(el) FROM EmailLog el
+            WHERE el.sentAt BETWEEN :fromDate AND :toDate
+            AND el.openedAt IS NOT NULL
+            AND (:notificationType IS NULL OR el.notificationType = :notificationType)
+            AND (:rckikId IS NULL OR el.rckik.id = :rckikId)
+            """)
+    long countTotalOpened(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("notificationType") String notificationType,
+            @Param("rckikId") Long rckikId
+    );
+
+    /**
+     * Count hard bounces in date range with optional filters
+     *
+     * @param fromDate         From date
+     * @param toDate           To date
+     * @param notificationType Notification type (optional)
+     * @param rckikId          RCKiK ID (optional)
+     * @return Count of hard bounces
+     */
+    @Query("""
+            SELECT COUNT(el) FROM EmailLog el
+            WHERE el.sentAt BETWEEN :fromDate AND :toDate
+            AND el.bouncedAt IS NOT NULL
+            AND el.bounceType = 'HARD'
+            AND (:notificationType IS NULL OR el.notificationType = :notificationType)
+            AND (:rckikId IS NULL OR el.rckik.id = :rckikId)
+            """)
+    long countHardBounces(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("notificationType") String notificationType,
+            @Param("rckikId") Long rckikId
+    );
+
+    /**
+     * Count soft bounces in date range with optional filters
+     *
+     * @param fromDate         From date
+     * @param toDate           To date
+     * @param notificationType Notification type (optional)
+     * @param rckikId          RCKiK ID (optional)
+     * @return Count of soft bounces
+     */
+    @Query("""
+            SELECT COUNT(el) FROM EmailLog el
+            WHERE el.sentAt BETWEEN :fromDate AND :toDate
+            AND el.bouncedAt IS NOT NULL
+            AND el.bounceType = 'SOFT'
+            AND (:notificationType IS NULL OR el.notificationType = :notificationType)
+            AND (:rckikId IS NULL OR el.rckik.id = :rckikId)
+            """)
+    long countSoftBounces(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("notificationType") String notificationType,
+            @Param("rckikId") Long rckikId
+    );
+
+    /**
+     * Get list of distinct notification types in date range
+     *
+     * @param fromDate From date
+     * @param toDate   To date
+     * @param rckikId  RCKiK ID (optional)
+     * @return List of notification types
+     */
+    @Query("""
+            SELECT DISTINCT el.notificationType FROM EmailLog el
+            WHERE el.sentAt BETWEEN :fromDate AND :toDate
+            AND (:rckikId IS NULL OR el.rckik.id = :rckikId)
+            ORDER BY el.notificationType
+            """)
+    List<String> findDistinctNotificationTypes(
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
+            @Param("rckikId") Long rckikId
+    );
 }
