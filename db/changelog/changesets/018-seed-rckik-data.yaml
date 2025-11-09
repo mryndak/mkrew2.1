@@ -1,0 +1,619 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-seed-rckik-data
+      author: mkrew-team
+      comment: Initial seed data for RCKiK centers in Poland
+      changes:
+        # 1. Warszawa
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Warszawie
+              - column:
+                  name: code
+                  value: RCKIK-WAW
+              - column:
+                  name: city
+                  value: Warszawa
+              - column:
+                  name: address
+                  value: ul. K. Skarżyńskiego 5, 02-068 Warszawa
+              - column:
+                  name: latitude
+                  valueNumeric: 52.2127
+              - column:
+                  name: longitude
+                  valueNumeric: 20.9776
+              - column:
+                  name: aliases
+                  value: '{RCKiK Warszawa,RCKIK WAW,RCKiK w Warszawie}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 2. Kraków
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Krakowie
+              - column:
+                  name: code
+                  value: RCKIK-KRK
+              - column:
+                  name: city
+                  value: Kraków
+              - column:
+                  name: address
+                  value: ul. Rzeźnicza 11, 31-540 Kraków
+              - column:
+                  name: latitude
+                  valueNumeric: 50.0546
+              - column:
+                  name: longitude
+                  valueNumeric: 19.9434
+              - column:
+                  name: aliases
+                  value: '{RCKiK Kraków,RCKIK KRK,RCKiK w Krakowie}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 3. Wrocław
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa we Wrocławiu
+              - column:
+                  name: code
+                  value: RCKIK-WRO
+              - column:
+                  name: city
+                  value: Wrocław
+              - column:
+                  name: address
+                  value: ul. Czerwonego Krzyża 5/9, 50-345 Wrocław
+              - column:
+                  name: latitude
+                  valueNumeric: 51.1079
+              - column:
+                  name: longitude
+                  valueNumeric: 17.0385
+              - column:
+                  name: aliases
+                  value: '{RCKiK Wrocław,RCKIK WRO,RCKiK we Wrocławiu}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 4. Poznań
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Poznaniu
+              - column:
+                  name: code
+                  value: RCKIK-POZ
+              - column:
+                  name: city
+                  value: Poznań
+              - column:
+                  name: address
+                  value: ul. Marcelińska 44, 60-354 Poznań
+              - column:
+                  name: latitude
+                  valueNumeric: 52.4064
+              - column:
+                  name: longitude
+                  valueNumeric: 16.9252
+              - column:
+                  name: aliases
+                  value: '{RCKiK Poznań,RCKIK POZ,RCKiK w Poznaniu}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 5. Gdańsk
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Gdańsku
+              - column:
+                  name: code
+                  value: RCKIK-GDA
+              - column:
+                  name: city
+                  value: Gdańsk
+              - column:
+                  name: address
+                  value: ul. Polanki 119, 80-308 Gdańsk
+              - column:
+                  name: latitude
+                  valueNumeric: 54.3520
+              - column:
+                  name: longitude
+                  valueNumeric: 18.6466
+              - column:
+                  name: aliases
+                  value: '{RCKiK Gdańsk,RCKIK GDA,RCKiK w Gdańsku}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 6. Katowice
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Katowicach
+              - column:
+                  name: code
+                  value: RCKIK-KAT
+              - column:
+                  name: city
+                  value: Katowice
+              - column:
+                  name: address
+                  value: ul. Raciborska 15, 40-074 Katowice
+              - column:
+                  name: latitude
+                  valueNumeric: 50.2599
+              - column:
+                  name: longitude
+                  valueNumeric: 19.0216
+              - column:
+                  name: aliases
+                  value: '{RCKiK Katowice,RCKIK KAT,RCKiK w Katowicach}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 7. Łódź
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Łodzi
+              - column:
+                  name: code
+                  value: RCKIK-LOD
+              - column:
+                  name: city
+                  value: Łódź
+              - column:
+                  name: address
+                  value: ul. Franciszkańska 17, 91-431 Łódź
+              - column:
+                  name: latitude
+                  valueNumeric: 51.7592
+              - column:
+                  name: longitude
+                  valueNumeric: 19.4560
+              - column:
+                  name: aliases
+                  value: '{RCKiK Łódź,RCKIK LOD,RCKiK w Łodzi}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 8. Lublin
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Lublinie
+              - column:
+                  name: code
+                  value: RCKIK-LUB
+              - column:
+                  name: city
+                  value: Lublin
+              - column:
+                  name: address
+                  value: ul. Żołnierzy Niepodległej 8, 20-078 Lublin
+              - column:
+                  name: latitude
+                  valueNumeric: 51.2465
+              - column:
+                  name: longitude
+                  valueNumeric: 22.5684
+              - column:
+                  name: aliases
+                  value: '{RCKiK Lublin,RCKIK LUB,RCKiK w Lublinie}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 9. Białystok
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Białymstoku
+              - column:
+                  name: code
+                  value: RCKIK-BIA
+              - column:
+                  name: city
+                  value: Białystok
+              - column:
+                  name: address
+                  value: ul. M. Skłodowskiej-Curie 23, 15-950 Białystok
+              - column:
+                  name: latitude
+                  valueNumeric: 53.1325
+              - column:
+                  name: longitude
+                  valueNumeric: 23.1688
+              - column:
+                  name: aliases
+                  value: '{RCKiK Białystok,RCKIK BIA,RCKiK w Białymstoku}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 10. Szczecin
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Szczecinie
+              - column:
+                  name: code
+                  value: RCKIK-SZC
+              - column:
+                  name: city
+                  value: Szczecin
+              - column:
+                  name: address
+                  value: ul. Arkońska 8, 71-455 Szczecin
+              - column:
+                  name: latitude
+                  valueNumeric: 53.4285
+              - column:
+                  name: longitude
+                  valueNumeric: 14.5528
+              - column:
+                  name: aliases
+                  value: '{RCKiK Szczecin,RCKIK SZC,RCKiK w Szczecinie}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 11. Kielce
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Kielcach
+              - column:
+                  name: code
+                  value: RCKIK-KIE
+              - column:
+                  name: city
+                  value: Kielce
+              - column:
+                  name: address
+                  value: ul. Jagiellońska 66, 25-734 Kielce
+              - column:
+                  name: latitude
+                  valueNumeric: 50.8661
+              - column:
+                  name: longitude
+                  valueNumeric: 20.6286
+              - column:
+                  name: aliases
+                  value: '{RCKiK Kielce,RCKIK KIE,RCKiK w Kielcach}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 12. Rzeszów
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Rzeszowie
+              - column:
+                  name: code
+                  value: RCKIK-RZE
+              - column:
+                  name: city
+                  value: Rzeszów
+              - column:
+                  name: address
+                  value: ul. Wierzbowa 16, 35-310 Rzeszów
+              - column:
+                  name: latitude
+                  valueNumeric: 50.0412
+              - column:
+                  name: longitude
+                  valueNumeric: 21.9991
+              - column:
+                  name: aliases
+                  value: '{RCKiK Rzeszów,RCKIK RZE,RCKiK w Rzeszowie}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 13. Bydgoszcz
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Bydgoszczy
+              - column:
+                  name: code
+                  value: RCKIK-BYD
+              - column:
+                  name: city
+                  value: Bydgoszcz
+              - column:
+                  name: address
+                  value: ul. Świętej Trójcy 11, 85-224 Bydgoszcz
+              - column:
+                  name: latitude
+                  valueNumeric: 53.1235
+              - column:
+                  name: longitude
+                  valueNumeric: 18.0084
+              - column:
+                  name: aliases
+                  value: '{RCKiK Bydgoszcz,RCKIK BYD,RCKiK w Bydgoszczy}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 14. Olsztyn
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Olsztynie
+              - column:
+                  name: code
+                  value: RCKIK-OLS
+              - column:
+                  name: city
+                  value: Olsztyn
+              - column:
+                  name: address
+                  value: ul. Żołnierska 18, 10-561 Olsztyn
+              - column:
+                  name: latitude
+                  valueNumeric: 53.7799
+              - column:
+                  name: longitude
+                  valueNumeric: 20.4942
+              - column:
+                  name: aliases
+                  value: '{RCKiK Olsztyn,RCKIK OLS,RCKiK w Olsztynie}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 15. Zielona Góra
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Zielonej Górze
+              - column:
+                  name: code
+                  value: RCKIK-ZGO
+              - column:
+                  name: city
+                  value: Zielona Góra
+              - column:
+                  name: address
+                  value: ul. Zyty 26, 65-046 Zielona Góra
+              - column:
+                  name: latitude
+                  valueNumeric: 51.9356
+              - column:
+                  name: longitude
+                  valueNumeric: 15.5062
+              - column:
+                  name: aliases
+                  value: '{RCKiK Zielona Góra,RCKIK ZGO,RCKiK w Zielonej Górze}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 16. Kalisz
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Kaliszu
+              - column:
+                  name: code
+                  value: RCKIK-KAL
+              - column:
+                  name: city
+                  value: Kalisz
+              - column:
+                  name: address
+                  value: ul. Łódzka 52, 62-800 Kalisz
+              - column:
+                  name: latitude
+                  valueNumeric: 51.7613
+              - column:
+                  name: longitude
+                  valueNumeric: 18.0894
+              - column:
+                  name: aliases
+                  value: '{RCKiK Kalisz,RCKIK KAL,RCKiK w Kaliszu}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 17. Radom
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Radomiu
+              - column:
+                  name: code
+                  value: RCKIK-RAD
+              - column:
+                  name: city
+                  value: Radom
+              - column:
+                  name: address
+                  value: ul. Lekarska 4, 26-600 Radom
+              - column:
+                  name: latitude
+                  valueNumeric: 51.4027
+              - column:
+                  name: longitude
+                  valueNumeric: 21.1471
+              - column:
+                  name: aliases
+                  value: '{RCKiK Radom,RCKIK RAD,RCKiK w Radomiu}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 18. Opole
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Opolu
+              - column:
+                  name: code
+                  value: RCKIK-OPO
+              - column:
+                  name: city
+                  value: Opole
+              - column:
+                  name: address
+                  value: ul. Kośnego 55, 45-372 Opole
+              - column:
+                  name: latitude
+                  valueNumeric: 50.6751
+              - column:
+                  name: longitude
+                  valueNumeric: 17.9213
+              - column:
+                  name: aliases
+                  value: '{RCKiK Opole,RCKIK OPO,RCKiK w Opolu}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 19. Słupsk
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Słupsku
+              - column:
+                  name: code
+                  value: RCKIK-SLU
+              - column:
+                  name: city
+                  value: Słupsk
+              - column:
+                  name: address
+                  value: ul. Szarych Szeregów 21, 76-200 Słupsk
+              - column:
+                  name: latitude
+                  valueNumeric: 54.4641
+              - column:
+                  name: longitude
+                  valueNumeric: 17.0285
+              - column:
+                  name: aliases
+                  value: '{RCKiK Słupsk,RCKIK SLU,RCKiK w Słupsku}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 20. Wałbrzych
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Wałbrzychu
+              - column:
+                  name: code
+                  value: RCKIK-WAL
+              - column:
+                  name: city
+                  value: Wałbrzych
+              - column:
+                  name: address
+                  value: ul. Wysockiego 15, 58-309 Wałbrzych
+              - column:
+                  name: latitude
+                  valueNumeric: 50.7842
+              - column:
+                  name: longitude
+                  valueNumeric: 16.2844
+              - column:
+                  name: aliases
+                  value: '{RCKiK Wałbrzych,RCKIK WAL,RCKiK w Wałbrzychu}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+        # 21. Racibórz
+        - insert:
+            tableName: rckik
+            columns:
+              - column:
+                  name: name
+                  value: Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Raciborzu
+              - column:
+                  name: code
+                  value: RCKIK-RAC
+              - column:
+                  name: city
+                  value: Racibórz
+              - column:
+                  name: address
+                  value: ul. Rybnicka 7, 47-400 Racibórz
+              - column:
+                  name: latitude
+                  valueNumeric: 50.0914
+              - column:
+                  name: longitude
+                  valueNumeric: 18.2177
+              - column:
+                  name: aliases
+                  value: '{RCKiK Racibórz,RCKIK RAC,RCKiK w Raciborzu}'
+              - column:
+                  name: active
+                  valueBoolean: true
+
+      rollback:
+        - delete:
+            tableName: rckik
+            where: code IN ('RCKIK-WAW','RCKIK-KRK','RCKIK-WRO','RCKIK-POZ','RCKIK-GDA','RCKIK-KAT','RCKIK-LOD','RCKIK-LUB','RCKIK-BIA','RCKIK-SZC','RCKIK-KIE','RCKIK-RZE','RCKIK-BYD','RCKIK-OLS','RCKIK-ZGO','RCKIK-KAL','RCKIK-RAD','RCKIK-OPO','RCKIK-SLU','RCKIK-WAL','RCKIK-RAC')

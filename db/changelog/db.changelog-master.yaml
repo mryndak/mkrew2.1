@@ -50,3 +50,9 @@ databaseChangeLog:
   - include:
       file: changesets/017-create-materialized-view.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changesets/018-seed-rckik-data.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/019-seed-scraper-configs.yaml
+      relativeToChangelogFile: true
