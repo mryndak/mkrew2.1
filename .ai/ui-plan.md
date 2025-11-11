@@ -279,7 +279,741 @@ Każde user story wymaga przypisania endpointu API (patrz sekcja 1.2) i odpowiad
 
 ---
 
-Dokument zapisany w `.ai/ui-plan.md`. Jeśli chcesz, mogę:
-- wygenerować strukturę katalogów komponentów i szablonów (bez implementacji),
-- przygotować checklistę z priorytetami do sprintu (MVP/backlog),
-- wygenerować przykładowe mocki danych MSW dla krytycznych endpoints.
+## 11. Struktura katalogów komponentów i szablonów
+
+### 11.1 Przegląd struktury projektu frontend
+
+Projekt frontend wykorzystuje Astro z React islands dla interaktywnych komponentów. Struktura katalogów jest zorganizowana zgodnie z najlepszymi praktykami Astro i atomic design.
+
+```
+frontend/
+├── public/                          # Pliki statyczne
+│   ├── images/
+│   │   ├── logo.svg
+│   │   ├── hero-bg.jpg
+│   │   └── icons/
+│   ├── fonts/
+│   └── favicon.ico
+│
+├── src/
+│   ├── assets/                      # Asety procesowane przez Vite
+│   │   ├── styles/
+│   │   │   ├── global.css          # Style globalne
+│   │   │   ├── variables.css       # CSS variables (kolory, spacing)
+│   │   │   └── utilities.css       # Tailwind utilities
+│   │   └── images/
+│   │
+│   ├── components/                  # Komponenty React i Astro
+│   │   ├── ui/                     # Primitive UI components (atoms)
+│   │   │   ├── Button.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Textarea.tsx
+│   │   │   ├── Select.tsx
+│   │   │   ├── Checkbox.tsx
+│   │   │   ├── Radio.tsx
+│   │   │   ├── Badge.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── SlideOver.tsx
+│   │   │   ├── Dropdown.tsx
+│   │   │   ├── Tabs.tsx
+│   │   │   ├── Toast.tsx
+│   │   │   ├── Skeleton.tsx
+│   │   │   ├── Spinner.tsx
+│   │   │   ├── ProgressBar.tsx
+│   │   │   ├── Alert.tsx
+│   │   │   ├── Tooltip.tsx
+│   │   │   └── Avatar.tsx
+│   │   │
+│   │   ├── rckik/                  # Komponenty domenowe RCKiK (molecules/organisms)
+│   │   │   ├── RckikCard.tsx       # Karta centrum krwi
+│   │   │   ├── RckikList.tsx       # Lista centrów (virtualized)
+│   │   │   ├── RckikHeader.tsx     # Nagłówek szczegółów centrum
+│   │   │   ├── BloodLevelBadge.tsx # Badge dla poziomu krwi
+│   │   │   ├── BloodLevelChart.tsx # Wykres trendu (client:visible)
+│   │   │   ├── HistoryTable.tsx    # Tabela snapshotów
+│   │   │   ├── ScraperStatus.tsx   # Status scrapera
+│   │   │   ├── FavoriteButton.tsx  # Przycisk dodaj/usuń z ulubionych
+│   │   │   ├── MapComponent.tsx    # Mapa z markerami (Leaflet/Mapbox)
+│   │   │   ├── FiltersPanel.tsx    # Panel filtrów (drawer na mobile)
+│   │   │   └── SearchBar.tsx       # Wyszukiwarka z debounce
+│   │   │
+│   │   ├── auth/                   # Komponenty autentykacji
+│   │   │   ├── LoginForm.tsx       # Formularz logowania (client:load)
+│   │   │   ├── RegisterForm.tsx    # Multi-step rejestracja
+│   │   │   ├── VerificationStatus.tsx
+│   │   │   ├── ResetRequestForm.tsx
+│   │   │   ├── ResetConfirmForm.tsx
+│   │   │   ├── PasswordStrength.tsx
+│   │   │   ├── PasswordRequirementsChecklist.tsx
+│   │   │   ├── EmailUniquenessCheck.tsx
+│   │   │   ├── FavoritesPicker.tsx # Wybór ulubionych przy rejestracji
+│   │   │   └── RateLimitNotice.tsx
+│   │   │
+│   │   ├── dashboard/              # Komponenty dashboard (protected)
+│   │   │   ├── StatsCard.tsx       # Karta statystyk
+│   │   │   ├── FavoritesWidget.tsx # Widget ulubionych
+│   │   │   ├── NotificationsWidget.tsx # Widget powiadomień (client:idle)
+│   │   │   ├── MiniMap.tsx         # Mini mapa krytycznych stanów
+│   │   │   ├── RecentDonationsTimeline.tsx
+│   │   │   ├── QuickActions.tsx
+│   │   │   ├── DonationTable.tsx   # Tabela donacji (sortable)
+│   │   │   ├── DonationForm.tsx    # Formularz donacji (modal)
+│   │   │   ├── ExportDropdown.tsx
+│   │   │   ├── FavoritesList.tsx   # Lista ulubionych (dnd)
+│   │   │   ├── FavoriteCard.tsx
+│   │   │   ├── NotificationList.tsx
+│   │   │   ├── NotificationItem.tsx
+│   │   │   ├── NotificationBell.tsx # Bell icon z badge
+│   │   │   ├── ProfileForm.tsx     # Edycja profilu (auto-save)
+│   │   │   ├── NotificationPreferencesForm.tsx
+│   │   │   ├── PasswordChangeForm.tsx
+│   │   │   └── GDPRTools.tsx       # Export/Delete data
+│   │   │
+│   │   ├── admin/                  # Komponenty admina
+│   │   │   ├── AdminTable.tsx      # Uniwersalna tabela admin
+│   │   │   ├── AdminForm.tsx       # Uniwersalny formularz CRUD
+│   │   │   ├── ConfirmModal.tsx
+│   │   │   ├── AuditTrail.tsx
+│   │   │   ├── ScraperStatusPanel.tsx
+│   │   │   ├── LogViewer.tsx       # Paginated logs
+│   │   │   ├── AlertingPanel.tsx
+│   │   │   ├── ReportTable.tsx
+│   │   │   ├── ReportDetails.tsx
+│   │   │   └── ExportTools.tsx
+│   │   │
+│   │   ├── common/                 # Wspólne komponenty
+│   │   │   ├── Navbar.astro        # Główna nawigacja
+│   │   │   ├── Footer.astro
+│   │   │   ├── Sidebar.astro       # Sidebar dla dashboard/admin
+│   │   │   ├── MobileNav.astro     # Mobile hamburger menu
+│   │   │   ├── Breadcrumbs.astro
+│   │   │   ├── Hero.astro          # Landing page hero
+│   │   │   ├── FeaturesList.astro
+│   │   │   ├── Testimonials.astro
+│   │   │   ├── CTAButton.astro
+│   │   │   ├── EmptyState.tsx
+│   │   │   └── ErrorBoundary.tsx
+│   │   │
+│   │   └── forms/                  # Komponenty formularzy (reusable)
+│   │       ├── FormField.tsx       # Wrapper dla input z label/error
+│   │       ├── FormGroup.tsx
+│   │       ├── FormError.tsx
+│   │       ├── FormHelper.tsx
+│   │       └── MultiStepForm.tsx   # Wrapper dla multi-step
+│   │
+│   ├── layouts/                     # Layouty Astro
+│   │   ├── BaseLayout.astro        # Podstawowy layout (public)
+│   │   ├── AuthLayout.astro        # Layout dla stron auth
+│   │   ├── DashboardLayout.astro   # Layout dla dashboard
+│   │   └── AdminLayout.astro       # Layout dla panelu admina
+│   │
+│   ├── pages/                       # Strony Astro (file-based routing)
+│   │   ├── index.astro             # Landing page (SSG)
+│   │   │
+│   │   ├── rckik/
+│   │   │   ├── index.astro         # Lista RCKiK (SSG + ISR 5min)
+│   │   │   └── [id].astro          # Szczegóły RCKiK (SSG + ISR 5min)
+│   │   │
+│   │   ├── login.astro             # Logowanie (SSR)
+│   │   ├── register.astro          # Rejestracja (SSR)
+│   │   ├── verify-email.astro      # Weryfikacja email (SSR)
+│   │   ├── verify-email-pending.astro
+│   │   ├── reset-password.astro    # Request reset (SSR)
+│   │   │
+│   │   ├── dashboard/
+│   │   │   ├── index.astro         # Dashboard główny (SSR + auth)
+│   │   │   ├── profile.astro       # Profil użytkownika
+│   │   │   ├── donations.astro     # Lista donacji
+│   │   │   ├── favorites.astro     # Ulubione
+│   │   │   └── notifications.astro # Powiadomienia in-app
+│   │   │
+│   │   └── admin/
+│   │       ├── rckik.astro         # Zarządzanie RCKiK
+│   │       ├── scraper.astro       # Monitoring scrapera
+│   │       └── reports.astro       # Raporty użytkowników
+│   │
+│   ├── lib/                         # Biblioteki i utilities
+│   │   ├── api/                    # API client
+│   │   │   ├── client.ts           # Axios instance z interceptorami
+│   │   │   ├── endpoints/
+│   │   │   │   ├── auth.ts         # Auth endpoints
+│   │   │   │   ├── users.ts        # User endpoints
+│   │   │   │   ├── rckik.ts        # RCKiK endpoints
+│   │   │   │   ├── donations.ts
+│   │   │   │   ├── favorites.ts
+│   │   │   │   ├── notifications.ts
+│   │   │   │   └── admin.ts
+│   │   │   └── types.ts            # API types
+│   │   │
+│   │   ├── store/                  # Redux Toolkit store
+│   │   │   ├── index.ts            # Store configuration
+│   │   │   ├── slices/
+│   │   │   │   ├── authSlice.ts    # Auth state
+│   │   │   │   ├── userSlice.ts    # User profile
+│   │   │   │   ├── rckikSlice.ts   # RCKiK cache
+│   │   │   │   ├── donationsSlice.ts
+│   │   │   │   ├── favoritesSlice.ts
+│   │   │   │   ├── notificationsSlice.ts
+│   │   │   │   └── preferencesSlice.ts
+│   │   │   └── middleware/
+│   │   │       ├── authMiddleware.ts
+│   │   │       └── errorMiddleware.ts
+│   │   │
+│   │   ├── hooks/                  # Custom React hooks
+│   │   │   ├── useAuth.ts          # Auth hook
+│   │   │   ├── useApi.ts           # API call hook
+│   │   │   ├── useDebounce.ts
+│   │   │   ├── useLocalStorage.ts
+│   │   │   ├── useInfiniteScroll.ts
+│   │   │   ├── useMediaQuery.ts
+│   │   │   └── useToast.ts
+│   │   │
+│   │   ├── utils/                  # Utility functions
+│   │   │   ├── validation.ts       # Zod schemas
+│   │   │   ├── formatting.ts       # Date/number formatters
+│   │   │   ├── bloodLevels.ts      # Blood level calculations
+│   │   │   ├── auth.ts             # Auth helpers (token, roles)
+│   │   │   ├── storage.ts          # LocalStorage/SessionStorage helpers
+│   │   │   ├── sanitize.ts         # DOMPurify wrapper
+│   │   │   └── constants.ts        # App constants
+│   │   │
+│   │   └── types/                  # TypeScript types
+│   │       ├── index.ts
+│   │       ├── api.ts              # API response types
+│   │       ├── models.ts           # Domain models
+│   │       └── forms.ts            # Form types
+│   │
+│   ├── middleware/                  # Astro middleware
+│   │   └── auth.ts                 # Auth middleware (SSR)
+│   │
+│   ├── env.d.ts                    # Environment types
+│   └── config.ts                   # App configuration
+│
+├── tests/                           # Testy
+│   ├── unit/                       # Unit tests (Vitest)
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── utils/
+│   │
+│   ├── integration/                # Integration tests (RTL + MSW)
+│   │   ├── auth.test.tsx
+│   │   ├── donations.test.tsx
+│   │   └── rckik.test.tsx
+│   │
+│   └── e2e/                        # End-to-end tests (Playwright)
+│       ├── auth.spec.ts
+│       ├── donations.spec.ts
+│       └── admin.spec.ts
+│
+├── .vscode/                         # VSCode settings
+├── astro.config.mjs                # Astro configuration
+├── tsconfig.json                   # TypeScript config
+├── tailwind.config.cjs             # Tailwind config
+├── package.json
+├── .env.example
+└── README.md
+```
+
+### 11.2 Konwencje nazewnictwa
+
+**Komponenty:**
+- React komponenty: `PascalCase.tsx` (np. `RckikCard.tsx`)
+- Astro komponenty: `PascalCase.astro` (np. `BaseLayout.astro`)
+- Pliki utils: `camelCase.ts` (np. `bloodLevels.ts`)
+
+**Strony:**
+- File-based routing Astro: `kebab-case.astro` (np. `verify-email.astro`)
+- Dynamic routes: `[param].astro` (np. `[id].astro`)
+
+**Style:**
+- Tailwind utility classes jako default
+- CSS Modules dla custom styles: `Component.module.css`
+
+**Typy:**
+- Interfejsy: prefix `I` (np. `IUser`)
+- Types: bez prefiksu (np. `UserRole`)
+- Enums: `PascalCase` (np. `BloodGroup`)
+
+### 11.3 Strategia hydratacji komponentów React
+
+Zgodnie z Astro Islands architecture:
+
+```typescript
+// client:load - Natychmiastowa hydratacja (krytyczne interaktywne komponenty)
+<LoginForm client:load />
+<RegisterForm client:load />
+
+// client:idle - Hydratacja gdy przeglądarka jest bezczynna
+<NotificationsWidget client:idle />
+<DonationTable client:idle />
+
+// client:visible - Hydratacja gdy komponent wchodzi w viewport
+<BloodLevelChart client:visible />
+<MapComponent client:visible />
+
+// client:media - Warunkowa hydratacja (responsywność)
+<MobileNav client:media="(max-width: 768px)" />
+
+// client:only - Render tylko po stronie klienta (no SSR)
+<RealTimeNotifications client:only="react" />
+```
+
+### 11.4 Organizacja Redux Store
+
+```typescript
+// src/lib/store/index.ts
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from './slices/authSlice';
+import userReducer from './slices/userSlice';
+import rckikReducer from './slices/rckikSlice';
+import donationsReducer from './slices/donationsSlice';
+import favoritesReducer from './slices/favoritesSlice';
+import notificationsReducer from './slices/notificationsSlice';
+
+export const store = configureStore({
+  reducer: {
+    auth: authReducer,
+    user: userReducer,
+    rckik: rckikReducer,
+    donations: donationsReducer,
+    favorites: favoritesReducer,
+    notifications: notificationsReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(authMiddleware, errorMiddleware),
+});
+```
+
+### 11.5 Axios Client Configuration
+
+```typescript
+// src/lib/api/client.ts
+import axios from 'axios';
+
+const apiClient = axios.create({
+  baseURL: import.meta.env.PUBLIC_API_URL || '/api/v1',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor - dodaj token
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response interceptor - handle errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Token expired - try refresh or logout
+    }
+    if (error.response?.status === 429) {
+      // Rate limit - show toast with retry-after
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+---
+
+## 12. Checklista z priorytetami do sprintu (MVP vs Backlog)
+
+### 12.1 Sprint 0: Inicjalizacja projektu i setup (Week 0)
+
+**Priority: P0 (Blocker)**
+
+- [ ] **ENV-001**: Setup repozytorium frontend (Astro init)
+- [ ] **ENV-002**: Konfiguracja TypeScript, ESLint, Prettier
+- [ ] **ENV-003**: Setup Tailwind CSS
+- [ ] **ENV-004**: Konfiguracja Redux Toolkit
+- [ ] **ENV-005**: Setup Axios client z interceptorami
+- [ ] **ENV-006**: Konfiguracja environment variables (.env)
+- [ ] **ENV-007**: Setup testing (Vitest, RTL, Playwright)
+- [ ] **ENV-008**: Konfiguracja CI/CD (GitHub Actions / Cloud Build)
+- [ ] **ENV-009**: Setup MSW (Mock Service Worker) dla dev
+- [ ] **ENV-010**: Struktura katalogów zgodnie z sekcją 11.1
+
+**Acceptance Criteria:**
+- Projekt startuje lokalnie (`npm run dev`)
+- TypeScript działa bez błędów
+- Testy jednostkowe uruchamiają się (`npm run test`)
+
+---
+
+### 12.2 Sprint 1: Publiczne strony + Core UI Components (Week 1-2)
+
+**Priority: P0 (MVP - Critical Path)**
+
+#### UI Primitives (components/ui/)
+- [ ] **UI-001**: Button component (variants, states, accessibility)
+- [ ] **UI-002**: Input, Textarea, Select components
+- [ ] **UI-003**: Badge component (blood levels)
+- [ ] **UI-004**: Card component
+- [ ] **UI-005**: Modal component (focus trap, ESC)
+- [ ] **UI-006**: Toast/Alert component (aria-live)
+- [ ] **UI-007**: Skeleton loaders
+- [ ] **UI-008**: Spinner component
+
+#### Layouts
+- [ ] **LAY-001**: BaseLayout.astro (public pages)
+- [ ] **LAY-002**: Navbar.astro (public variant)
+- [ ] **LAY-003**: Footer.astro
+
+#### Landing Page (/)
+- [ ] **LP-001**: Hero section z CTA
+- [ ] **LP-002**: Features list
+- [ ] **LP-003**: Testimonials section (opcjonalnie)
+- [ ] **LP-004**: Footer z linkami
+- [ ] **LP-005**: SEO meta tags
+- [ ] **LP-006**: Mobile responsive design
+
+#### Lista RCKiK (/rckik)
+- [ ] **RCKIK-001**: RckikCard component (SSG)
+- [ ] **RCKIK-002**: RckikList component (virtualized dla >50 items)
+- [ ] **RCKIK-003**: SearchBar z debounce (client:load)
+- [ ] **RCKIK-004**: FiltersPanel (mobile drawer)
+- [ ] **RCKIK-005**: BloodLevelBadge z accessibility (ikony + kolory)
+- [ ] **RCKIK-006**: Pagination/LoadMore
+- [ ] **RCKIK-007**: Empty state i skeletony
+- [ ] **RCKIK-008**: ISR config (revalidate: 5 min)
+- [ ] **RCKIK-009**: Query params sync (shareable URLs)
+
+#### Szczegóły RCKiK (/rckik/[id])
+- [ ] **RCKIK-010**: RckikHeader component
+- [ ] **RCKIK-011**: BloodLevelChart (lazy-load client:visible, Recharts)
+- [ ] **RCKIK-012**: HistoryTable component
+- [ ] **RCKIK-013**: ScraperStatus component
+- [ ] **RCKIK-014**: FavoriteButton (optimistic update - wymaga auth)
+- [ ] **RCKIK-015**: Breadcrumbs navigation
+- [ ] **RCKIK-016**: ISR config (revalidate: 5 min)
+
+**Acceptance Criteria:**
+- Publiczne strony działają bez JavaScript (SSG)
+- Interaktywne komponenty hydratują się poprawnie
+- Mobile responsive (tested on 375px+)
+- Lighthouse score: Performance >90, Accessibility >95
+- ISR cache działa (5 min revalidation)
+
+---
+
+### 12.3 Sprint 2: Autentykacja i Auth Pages (Week 2-3)
+
+**Priority: P0 (MVP - Blocker dla protected routes)**
+
+#### Auth Infrastructure
+- [ ] **AUTH-001**: authSlice Redux (user, tokens, isAuthenticated)
+- [ ] **AUTH-002**: Axios interceptor dla 401/403
+- [ ] **AUTH-003**: Auth middleware Astro (protected routes)
+- [ ] **AUTH-004**: Token refresh logic
+- [ ] **AUTH-005**: Auto-logout na token expiry
+
+#### Rejestracja (/register)
+- [ ] **REG-001**: RegisterForm multi-step (3 kroki)
+- [ ] **REG-002**: Krok 1: email, password, zgody (US-001)
+- [ ] **REG-003**: PasswordStrength component
+- [ ] **REG-004**: EmailUniquenessCheck (debounced)
+- [ ] **REG-005**: Krok 2: imię, nazwisko, grupa krwi
+- [ ] **REG-006**: Krok 3: FavoritesPicker (opcjonalny)
+- [ ] **REG-007**: ProgressBar dla kroków
+- [ ] **REG-008**: SessionStorage draft (bez hasła)
+- [ ] **REG-009**: Zod validation schemas
+- [ ] **REG-010**: Rate limiting UI feedback
+- [ ] **REG-011**: AuthLayout.astro
+
+#### Logowanie (/login)
+- [ ] **LOGIN-001**: LoginForm component (client:load)
+- [ ] **LOGIN-002**: Email + password fields
+- [ ] **LOGIN-003**: Rate limit notice (5 attempts → 5 min lockout)
+- [ ] **LOGIN-004**: CAPTCHA po 3 próbach (reCAPTCHA v3)
+- [ ] **LOGIN-005**: "Zapamiętaj mnie" checkbox
+- [ ] **LOGIN-006**: Linki do reset hasła i rejestracji
+- [ ] **LOGIN-007**: Obsługa 401/403 errors
+- [ ] **LOGIN-008**: Redirect do /dashboard po logowaniu
+
+#### Weryfikacja email (/verify-email)
+- [ ] **VER-001**: VerificationStatus component (US-002)
+- [ ] **VER-002**: Loading → success/error states
+- [ ] **VER-003**: ResendButton component
+- [ ] **VER-004**: Redirect po weryfikacji
+- [ ] **VER-005**: Token expiry handling
+
+#### Reset hasła (/reset-password)
+- [ ] **RESET-001**: ResetRequestForm (US-004)
+- [ ] **RESET-002**: ResetConfirmForm (/reset-password/confirm?token=)
+- [ ] **RESET-003**: PasswordRequirementsChecklist
+- [ ] **RESET-004**: Token validation
+- [ ] **RESET-005**: Success message i redirect
+
+**Acceptance Criteria:**
+- Użytkownik może się zarejestrować end-to-end (US-001)
+- Email verification działa (US-002)
+- Logowanie z rate limiting (US-003)
+- Reset hasła flow kompletny (US-004)
+- Wszystkie formularze z accessibility (keyboard nav, ARIA)
+- Walidacja inline z Zod + React Hook Form
+
+---
+
+### 12.4 Sprint 3: Dashboard i Protected Routes (Week 3-4)
+
+**Priority: P0 (MVP - Core Features)**
+
+#### Dashboard Layout
+- [ ] **DASH-LAY-001**: DashboardLayout.astro
+- [ ] **DASH-LAY-002**: Sidebar.astro (desktop)
+- [ ] **DASH-LAY-003**: MobileNav.astro (bottom nav)
+- [ ] **DASH-LAY-004**: Navbar dla zalogowanych (avatar, dropdown)
+- [ ] **DASH-LAY-005**: NotificationBell z badge
+
+#### Dashboard główny (/dashboard)
+- [ ] **DASH-001**: StatsCard component (donations, ml, streak)
+- [ ] **DASH-002**: FavoritesWidget (top 3, quick links)
+- [ ] **DASH-003**: NotificationsWidget (client:idle)
+- [ ] **DASH-004**: RecentDonationsTimeline
+- [ ] **DASH-005**: QuickActions panel
+- [ ] **DASH-006**: Fetch GET /api/v1/users/me
+- [ ] **DASH-007**: Skeleton loaders dla async data
+
+#### Profil (/dashboard/profile)
+- [ ] **PROF-001**: ProfileForm (auto-save debounce, US-005)
+- [ ] **PROF-002**: NotificationPreferencesForm (US-006)
+- [ ] **PROF-003**: PasswordChangeForm
+- [ ] **PROF-004**: GDPRTools (export, delete account, US-016)
+- [ ] **PROF-005**: Confirm modals dla wrażliwych akcji
+- [ ] **PROF-006**: Toast notifications dla success/error
+
+#### Donacje (/dashboard/donations)
+- [ ] **DON-001**: DonationTable component (sortable, US-012)
+- [ ] **DON-002**: DonationForm modal (add/edit, US-012, US-013)
+- [ ] **DON-003**: ExportDropdown (CSV/JSON, US-014)
+- [ ] **DON-004**: FiltersBar (date range, RCKiK)
+- [ ] **DON-005**: Statistics header (total, ml, last, next eligible)
+- [ ] **DON-006**: Pagination
+- [ ] **DON-007**: Delete confirmation modal (US-013)
+- [ ] **DON-008**: donationsSlice Redux
+
+#### Ulubione (/dashboard/favorites)
+- [ ] **FAV-001**: FavoritesList component (drag-and-drop, US-009)
+- [ ] **FAV-002**: FavoriteCard z aktualnymi poziomami
+- [ ] **FAV-003**: Remove action z confirm
+- [ ] **FAV-004**: SaveOrderButton (auto-save on drop)
+- [ ] **FAV-005**: EmptyState
+- [ ] **FAV-006**: Optimistic updates z rollback
+- [ ] **FAV-007**: Keyboard accessible reorder
+- [ ] **FAV-008**: favoritesSlice Redux
+
+#### Powiadomienia (/dashboard/notifications)
+- [ ] **NOTIF-001**: NotificationList component (US-011)
+- [ ] **NOTIF-002**: NotificationItem component
+- [ ] **NOTIF-003**: Tabs (All / Unread)
+- [ ] **NOTIF-004**: Mark-as-read button
+- [ ] **NOTIF-005**: Grupowanie po dniu
+- [ ] **NOTIF-006**: Link do akcji
+- [ ] **NOTIF-007**: Polling lub SSE (MVP: polling co 30s)
+- [ ] **NOTIF-008**: notificationsSlice Redux
+
+**Acceptance Criteria:**
+- Dashboard wyświetla dane użytkownika (US-005)
+- Donacje: CRUD operations działa (US-012, US-013)
+- Export donacji do CSV/JSON (US-014)
+- Ulubione: dodawanie, usuwanie, reordering (US-009)
+- Powiadomienia in-app widoczne (US-011)
+- Wszystkie chronione routes wymagają auth
+- Mobile responsive (bottom nav)
+
+---
+
+### 12.5 Sprint 4: Admin Panel (Week 4-5)
+
+**Priority: P1 (MVP - Admin Operations)**
+
+#### Admin Layout
+- [ ] **ADM-LAY-001**: AdminLayout.astro (role check)
+- [ ] **ADM-LAY-002**: Admin sidebar
+- [ ] **ADM-LAY-003**: Role-based route guards
+
+#### Zarządzanie RCKiK (/admin/rckik)
+- [ ] **ADM-RCKIK-001**: AdminTable component (US-019)
+- [ ] **ADM-RCKIK-002**: AdminForm (create/edit RCKiK)
+- [ ] **ADM-RCKIK-003**: ConfirmModal dla delete
+- [ ] **ADM-RCKIK-004**: AuditTrail display
+- [ ] **ADM-RCKIK-005**: Filtry i search
+- [ ] **ADM-RCKIK-006**: Pagination
+
+#### Scraper Monitoring (/admin/scraper)
+- [ ] **ADM-SCR-001**: ScraperStatusPanel (US-017, US-018)
+- [ ] **ADM-SCR-002**: LogViewer (paginated)
+- [ ] **ADM-SCR-003**: Manual trigger button
+- [ ] **ADM-SCR-004**: AlertingPanel
+- [ ] **ADM-SCR-005**: Status polling (auto-refresh)
+
+#### Raporty (/admin/reports)
+- [ ] **ADM-REP-001**: ReportTable (US-021)
+- [ ] **ADM-REP-002**: ReportDetails modal
+- [ ] **ADM-REP-003**: Status update form
+- [ ] **ADM-REP-004**: ExportTools dla raportów
+
+**Acceptance Criteria:**
+- Admin może zarządzać RCKiK (CRUD, US-019)
+- Scraper monitoring działa (US-017, US-018)
+- Raporty użytkowników widoczne (US-021)
+- Tylko role=ADMIN ma dostęp
+- Audit logs dla krytycznych akcji (US-024)
+
+---
+
+### 12.6 Sprint 5: Polishing, Accessibility, Testing (Week 5-6)
+
+**Priority: P0 (MVP Quality Gates)**
+
+#### Accessibility (WCAG 2.1 AA)
+- [ ] **A11Y-001**: Semantic HTML (h1-h6 hierarchy)
+- [ ] **A11Y-002**: Alt text dla obrazów
+- [ ] **A11Y-003**: ARIA labels dla interaktywnych komponentów
+- [ ] **A11Y-004**: Keyboard navigation dla wszystkich akcji
+- [ ] **A11Y-005**: Focus states widoczne
+- [ ] **A11Y-006**: Kontrast kolorów (min 4.5:1)
+- [ ] **A11Y-007**: Ikony + tekst dla blood levels (nie tylko kolory)
+- [ ] **A11Y-008**: aria-live dla toastów i błędów
+- [ ] **A11Y-009**: Screen reader testing
+- [ ] **A11Y-010**: axe DevTools audit (0 critical issues)
+
+#### Performance
+- [ ] **PERF-001**: Lazy loading dla obrazów
+- [ ] **PERF-002**: Code splitting per route
+- [ ] **PERF-003**: Virtualized lists (>50 items)
+- [ ] **PERF-004**: Debounce dla search/filters
+- [ ] **PERF-005**: Optimistic updates
+- [ ] **PERF-006**: ISR cache dla publicznych stron
+- [ ] **PERF-007**: Bundle size analysis (<500KB initial)
+- [ ] **PERF-008**: Lighthouse audit (Performance >90)
+
+#### Security
+- [ ] **SEC-001**: CSP headers
+- [ ] **SEC-002**: DOMPurify dla user-generated content
+- [ ] **SEC-003**: XSS prevention (escaped output)
+- [ ] **SEC-004**: CSRF tokens (jeśli cookies)
+- [ ] **SEC-005**: Rate limiting UI feedback
+- [ ] **SEC-006**: Secure token storage (httpOnly cookies preferred)
+- [ ] **SEC-007**: No PII w console.log
+- [ ] **SEC-008**: HTTPS enforcement
+
+#### Testing
+- [ ] **TEST-001**: Unit tests dla utils (80% coverage)
+- [ ] **TEST-002**: Component tests dla UI primitives
+- [ ] **TEST-003**: Integration tests dla auth flow
+- [ ] **TEST-004**: Integration tests dla donations CRUD
+- [ ] **TEST-005**: E2E test: rejestracja → weryfikacja → login
+- [ ] **TEST-006**: E2E test: dodanie donacji
+- [ ] **TEST-007**: E2E test: admin CRUD RCKiK
+- [ ] **TEST-008**: MSW mocks dla wszystkich endpoints
+
+#### Edge Cases
+- [ ] **EDGE-001**: Brak danych historycznych dla RCKiK
+- [ ] **EDGE-002**: Token expired handling
+- [ ] **EDGE-003**: Rate limit (429) handling
+- [ ] **EDGE-004**: Offline mode banner
+- [ ] **EDGE-005**: Błędy 500 → friendly error page
+- [ ] **EDGE-006**: Optimistic update rollback
+- [ ] **EDGE-007**: Zero results w wyszukiwaniu
+- [ ] **EDGE-008**: Empty states dla list
+
+**Acceptance Criteria:**
+- WCAG 2.1 AA compliance (axe audit passed)
+- Lighthouse: Performance >90, Accessibility >95, Best Practices >90
+- Security audit passed (OWASP Top 10)
+- E2E tests passed dla kluczowych ścieżek
+- Wszystkie edge cases obsłużone z UX
+
+---
+
+### 12.7 Backlog (Post-MVP Features)
+
+**Priority: P2 (Nice to Have - Future Iterations)**
+
+#### Zaawansowane Features
+- [ ] **BACK-001**: MapComponent z clustering (Leaflet/Mapbox)
+- [ ] **BACK-002**: Real-time notifications (WebSocket/SSE)
+- [ ] **BACK-003**: Push notifications (Firebase)
+- [ ] **BACK-004**: Dark mode toggle
+- [ ] **BACK-005**: Multi-language support (i18n)
+- [ ] **BACK-006**: Advanced filtering (multi-select, date ranges)
+- [ ] **BACK-007**: Export danych użytkownika (GDPR)
+- [ ] **BACK-008**: Donation streak gamification
+- [ ] **BACK-009**: Social sharing dla donacji
+- [ ] **BACK-010**: Calendar view dla donacji
+- [ ] **BACK-011**: Donation reminders (56 dni)
+- [ ] **BACK-012**: Analytics dashboard dla admina
+- [ ] **BACK-013**: Email deliverability metrics (US-022)
+- [ ] **BACK-014**: Audit logs viewer (/admin/audit-logs, US-024)
+- [ ] **BACK-015**: User reports zgłaszanie (US-021 frontend)
+
+#### UX Enhancements
+- [ ] **UX-001**: Animations (Framer Motion / GSAP)
+- [ ] **UX-002**: Skeleton screens for all async ops
+- [ ] **UX-003**: Infinite scroll jako alternatywa dla pagination
+- [ ] **UX-004**: Keyboard shortcuts (Cmd+K search)
+- [ ] **UX-005**: Breadcrumbs na wszystkich stronach
+- [ ] **UX-006**: "Back to top" button
+- [ ] **UX-007**: Contextual help tooltips
+- [ ] **UX-008**: Onboarding tour dla nowych użytkowników
+
+#### Technical Debt & Optimization
+- [ ] **TECH-001**: Service Worker dla offline support
+- [ ] **TECH-002**: PWA manifest
+- [ ] **TECH-003**: Sentry integration dla error tracking
+- [ ] **TECH-004**: Analytics (Google Analytics / Plausible)
+- [ ] **TECH-005**: Storybook dla component library
+- [ ] **TECH-006**: Bundle size optimization (<300KB)
+- [ ] **TECH-007**: CDN dla static assets
+- [ ] **TECH-008**: Image optimization (WebP, srcset)
+
+---
+
+### 12.8 Definition of Done (DoD)
+
+Każdy task jest "Done" gdy:
+1. ✅ Kod zaimplementowany zgodnie z acceptance criteria
+2. ✅ TypeScript bez błędów
+3. ✅ ESLint/Prettier passed
+4. ✅ Unit tests napisane i passed (gdzie applicable)
+5. ✅ Accessibility checked (keyboard nav, ARIA)
+6. ✅ Mobile responsive (tested 375px, 768px, 1024px+)
+7. ✅ Code review passed
+8. ✅ Merged do branch'a feature
+9. ✅ Dokumentacja aktualizowana (jeśli API/konwencje)
+10. ✅ Deployed do staging i tested
+
+---
+
+### 12.9 Sprint Velocity i Timeline
+
+**Assumptions:**
+- 1 developer full-time
+- 5-day sprints
+- ~8 tasks/day capacity
+
+**Timeline (MVP - 6 weeks):**
+- Sprint 0: Setup (1 week)
+- Sprint 1: Public pages + UI (2 weeks)
+- Sprint 2: Auth (1 week)
+- Sprint 3: Dashboard (1.5 weeks)
+- Sprint 4: Admin (0.5 weeks)
+- Sprint 5: Polish + Testing (1 week)
+
+**Total: ~6 weeks for MVP**
+
+**Backlog items**: Scheduled for post-MVP iterations (weeks 7-12)
+
+---
+
+Dokument zapisany w `.ai/ui-plan.md`. Struktura katalogów i checklista priorytetów zostały dodane jako sekcje 11 i 12.
