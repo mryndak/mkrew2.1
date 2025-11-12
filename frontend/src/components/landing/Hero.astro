@@ -1,0 +1,55 @@
+---
+import Button from '../ui/Button.astro';
+---
+
+<section class="relative overflow-hidden gradient-hero">
+  <div class="container-custom section">
+    <div class="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
+      <!-- Main Heading -->
+      <h1 class="text-balance">
+        Bądź na bieżąco ze stanami krwi w Polsce
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-xl md:text-2xl text-secondary-700 text-balance max-w-3xl mx-auto">
+        mkrew pomaga dawcom krwi monitorować stany zapasów i otrzymywać powiadomienia
+      </p>
+
+      <!-- Description -->
+      <p class="text-base md:text-lg text-secondary-600 max-w-2xl mx-auto">
+        Sprawdzaj aktualne stany krwi we wszystkich RCKiK, prowadź dziennik donacji
+        i otrzymuj alerty, gdy Twoja krew jest najbardziej potrzebna
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+        <Button
+          variant="primary"
+          size="large"
+          href="/register"
+          ariaLabel="Zarejestruj się w mkrew"
+        >
+          Zarejestruj się
+        </Button>
+
+        <Button
+          variant="outline"
+          size="large"
+          href="/login"
+          ariaLabel="Zaloguj się do mkrew"
+        >
+          Zaloguj się
+        </Button>
+      </div>
+
+      <!-- Optional: Trust indicators -->
+      <div class="pt-8 text-sm text-secondary-500">
+        <p>🔒 Twoje dane są bezpieczne • 🆓 Całkowicie darmowe • ❤️ Dla dawców, przez dawców</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decorative elements -->
+  <div class="absolute top-0 right-0 -z-10 w-96 h-96 bg-primary-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+  <div class="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-secondary-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style="animation-delay: 2s;"></div>
+</section>
