@@ -1,0 +1,42 @@
+---
+import Button from '../ui/Button.astro';
+---
+
+<section class="section relative overflow-hidden gradient-primary">
+  <div class="container-custom relative z-10">
+    <div class="max-w-3xl mx-auto text-center space-y-6">
+      <!-- Heading -->
+      <h2 class="text-white">
+        Gotowy zostać bohaterem?
+      </h2>
+
+      <!-- Description -->
+      <p class="text-xl md:text-2xl text-white/90 text-balance">
+        Dołącz do tysięcy dawców krwi, którzy już korzystają z mkrew.
+        Załóż darmowe konto i zacznij pomagać już dziś!
+      </p>
+
+      <!-- CTA Button -->
+      <div class="pt-4">
+        <Button
+          variant="secondary"
+          size="large"
+          href="/register"
+          ariaLabel="Rozpocznij korzystanie z mkrew"
+          class="!bg-white !text-primary-700 hover:!bg-secondary-50 !shadow-strong"
+        >
+          Rozpocznij teraz
+        </Button>
+      </div>
+
+      <!-- Additional info -->
+      <p class="text-sm text-white/80 pt-4">
+        Nie wymaga karty płatniczej • Rejestracja zajmuje 2 minuty • Anuluj w każdej chwili
+      </p>
+    </div>
+  </div>
+
+  <!-- Decorative elements -->
+  <div class="absolute top-0 right-0 -z-0 w-64 h-64 bg-white/10 rounded-full mix-blend-overlay filter blur-3xl"></div>
+  <div class="absolute bottom-0 left-0 -z-0 w-64 h-64 bg-white/10 rounded-full mix-blend-overlay filter blur-3xl"></div>
+</section>

@@ -1,0 +1,36 @@
+---
+import StepCard from './StepCard.astro';
+import { steps } from '../../data/landing';
+---
+
+<section id="how-it-works" class="section bg-secondary-50">
+  <div class="container-custom">
+    <!-- Section Heading -->
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <h2 class="mb-4">
+        Jak to działa?
+      </h2>
+      <p class="text-lg md:text-xl text-secondary-600">
+        Zacznij korzystać z mkrew w 4 prostych krokach
+      </p>
+    </div>
+
+    <!-- Steps Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
+      {steps && steps.length > 0 ? (
+        steps.map((step) => (
+          <div class="animate-fade-in">
+            <StepCard step={step} />
+          </div>
+        ))
+      ) : null}
+    </div>
+
+    <!-- Optional: Connecting lines for desktop -->
+    <div class="hidden lg:block relative -mt-[280px] mb-[280px] pointer-events-none" aria-hidden="true">
+      <svg class="w-full h-24 opacity-20" viewBox="0 0 1000 100" preserveAspectRatio="none">
+        <path d="M 250 50 L 420 50 M 580 50 L 750 50" stroke="currentColor" stroke-width="2" stroke-dasharray="5,5" fill="none" class="text-primary-400"/>
+      </svg>
+    </div>
+  </div>
+</section>

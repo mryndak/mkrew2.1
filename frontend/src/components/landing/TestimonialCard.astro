@@ -1,0 +1,59 @@
+---
+import type { Testimonial } from '../../types/landing';
+
+interface Props {
+  testimonial: Testimonial;
+}
+
+const { testimonial } = Astro.props;
+
+// Get first letter of author name for fallback avatar
+const authorInitial = testimonial.author ? testimonial.author.charAt(0).toUpperCase() : 'U';
+---
+
+<article class="card h-full">
+  <blockquote class="flex flex-col h-full">
+    <!-- Quote Icon -->
+    <div class="text-4xl text-primary-300 mb-4" aria-hidden="true">
+      "
+    </div>
+
+    <!-- Testimonial Content -->
+    <p class="text-secondary-700 text-base md:text-lg leading-relaxed mb-6 flex-grow italic">
+      {testimonial.content}
+    </p>
+
+    <!-- Author Info -->
+    <footer class="flex items-center gap-4 mt-auto pt-4 border-t border-secondary-200">
+      <!-- Avatar -->
+      {testimonial.avatar ? (
+        <img
+          src={testimonial.avatar}
+          alt={`${testimonial.author} avatar`}
+          class="w-12 h-12 rounded-full object-cover"
+          loading="lazy"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        />
+        <div class="hidden w-12 h-12 rounded-full bg-primary-100 text-primary-700 font-bold items-center justify-center text-lg">
+          {authorInitial}
+        </div>
+      ) : (
+        <div class="w-12 h-12 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-lg">
+          {authorInitial}
+        </div>
+      )}
+
+      <!-- Author Details -->
+      <div>
+        <cite class="not-italic font-semibold text-secondary-900 block">
+          {testimonial.author}
+        </cite>
+        {testimonial.role && (
+          <p class="text-sm text-secondary-600">
+            {testimonial.role}
+          </p>
+        )}
+      </div>
+    </footer>
+  </blockquote>
+</article>

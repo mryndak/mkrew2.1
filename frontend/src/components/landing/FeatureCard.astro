@@ -1,0 +1,44 @@
+---
+import type { Feature } from '../../types/landing';
+
+interface Props {
+  feature: Feature;
+}
+
+const { feature } = Astro.props;
+
+// Icon mapping - można rozszerzyć o SVG lub inne ikony
+const iconMap: Record<string, string> = {
+  'blood-drop': '🩸',
+  'calendar': '📅',
+  'bell': '🔔',
+  'chart': '📊',
+};
+
+const iconDisplay = feature.icon ? (iconMap[feature.icon] || '✓') : '✓';
+---
+
+<article class="card group">
+  <div class="flex flex-col items-center text-center space-y-4">
+    <!-- Icon -->
+    <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-100 text-4xl group-hover:bg-primary-200 transition-colors duration-300">
+      {iconDisplay}
+    </div>
+
+    <!-- Title -->
+    <h3 class="text-xl font-bold text-secondary-900">
+      {feature.title}
+    </h3>
+
+    <!-- Description -->
+    <p class="text-secondary-600 text-base leading-relaxed">
+      {feature.description}
+    </p>
+  </div>
+</article>
+
+<style>
+  .card {
+    @apply hover:scale-[1.02] transform transition-transform duration-300;
+  }
+</style>

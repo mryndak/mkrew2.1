@@ -1,0 +1,72 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  keywords?: string;
+  ogImage?: string;
+  ogType?: string;
+  twitterCard?: string;
+  canonicalUrl?: string;
+}
+
+const {
+  title = 'mkrew - Platforma dla dawców krwi w Polsce',
+  description = 'Monitoruj stany krwi w RCKiK, prowadź dziennik donacji i otrzymuj powiadomienia. Aplikacja dla dawców krwi w Polsce.',
+  keywords = 'dawca krwi, RCKiK, donacja krwi, krwiodawstwo, stan zapasów krwi, powiadomienia',
+  ogImage = '/og-image.jpg',
+  ogType = 'website',
+  twitterCard = 'summary_large_image',
+  canonicalUrl = Astro.url.href,
+} = Astro.props;
+
+// Site config
+const siteName = 'mkrew';
+const siteUrl = Astro.site || new URL(Astro.url.origin);
+
+// Construct full URLs for Open Graph
+const fullOgImage = new URL(ogImage, siteUrl).href;
+const fullCanonicalUrl = new URL(canonicalUrl, siteUrl).href;
+---
+
+<!-- Primary Meta Tags -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="generator" content={Astro.generator} />
+<title>{title}</title>
+<meta name="title" content={title} />
+<meta name="description" content={description} />
+<meta name="keywords" content={keywords} />
+<meta name="author" content="mkrew" />
+
+<!-- Canonical URL -->
+<link rel="canonical" href={fullCanonicalUrl} />
+
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content={ogType} />
+<meta property="og:url" content={fullCanonicalUrl} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={fullOgImage} />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:locale" content="pl_PL" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content={twitterCard} />
+<meta name="twitter:url" content={fullCanonicalUrl} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={fullOgImage} />
+
+<!-- Additional SEO -->
+<meta name="robots" content="index, follow" />
+<meta name="language" content="Polish" />
+<meta name="revisit-after" content="7 days" />
+
+<!-- Theme Color -->
+<meta name="theme-color" content="#dc2626" />
