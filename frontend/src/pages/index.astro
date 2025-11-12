@@ -1,11 +1,32 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import SEO from '../components/SEO.astro';
+import Hero from '../components/landing/Hero.astro';
+import HowItWorks from '../components/landing/HowItWorks.astro';
+import FeaturesList from '../components/landing/FeaturesList.astro';
+import Testimonials from '../components/landing/Testimonials.astro';
+import CTASection from '../components/landing/CTASection.astro';
+import Footer from '../components/landing/Footer.astro';
 ---
 
-<Layout>
-	<Welcome />
+<Layout
+  title="mkrew - Platforma dla dawców krwi w Polsce"
+  description="Monitoruj stany krwi w RCKiK, prowadź dziennik donacji i otrzymuj powiadomienia. Aplikacja dla dawców krwi w Polsce."
+>
+  <SEO
+    slot="head"
+    title="mkrew - Platforma dla dawców krwi w Polsce"
+    description="Monitoruj stany krwi w RCKiK, prowadź dziennik donacji i otrzymuj powiadomienia. Aplikacja dla dawców krwi w Polsce."
+    keywords="dawca krwi, RCKiK, donacja krwi, krwiodawstwo, stan zapasów krwi, powiadomienia, dziennik donacji"
+  />
+
+  <main>
+    <Hero />
+    <HowItWorks />
+    <FeaturesList />
+    <Testimonials />
+    <CTASection />
+  </main>
+
+  <Footer />
 </Layout>
