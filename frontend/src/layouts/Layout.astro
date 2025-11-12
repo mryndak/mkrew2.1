@@ -1,14 +1,20 @@
 ---
 import '../styles/global.css';
+import Navbar from '../components/layout/Navbar.astro';
+import Footer from '../components/layout/Footer.astro';
 
 interface Props {
   title?: string;
   description?: string;
+  includeNavbar?: boolean;
+  includeFooter?: boolean;
 }
 
 const {
   title = 'mkrew - Platforma dla dawców krwi w Polsce',
-  description = 'Monitoruj stany krwi w RCKiK, prowadź dziennik donacji i otrzymuj powiadomienia'
+  description = 'Monitoruj stany krwi w RCKiK, prowadź dziennik donacji i otrzymuj powiadomienia',
+  includeNavbar = true,
+  includeFooter = true
 } = Astro.props;
 ---
 
@@ -20,7 +26,9 @@ const {
 		<meta name="generator" content={Astro.generator} />
 		<slot name="head" />
 	</head>
-	<body>
+	<body class="flex flex-col min-h-screen">
+		{includeNavbar && <Navbar />}
 		<slot />
+		{includeFooter && <Footer />}
 	</body>
 </html>
