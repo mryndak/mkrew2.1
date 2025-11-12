@@ -1,0 +1,62 @@
+---
+import type { ButtonProps } from '../../types/landing';
+
+interface Props extends ButtonProps {
+  children?: any;
+}
+
+const {
+  variant = 'primary',
+  size = 'medium',
+  href,
+  disabled = false,
+  ariaLabel,
+  class: className = '',
+} = Astro.props;
+
+// Build class string based on props
+const variantClasses = {
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  outline: 'btn-outline',
+};
+
+const sizeClasses = {
+  small: 'btn-small',
+  medium: 'btn-medium',
+  large: 'btn-large',
+};
+
+const buttonClasses = [
+  'btn-base',
+  variantClasses[variant],
+  sizeClasses[size],
+  className,
+].filter(Boolean).join(' ');
+
+// Determine element type
+const Element = href && !disabled ? 'a' : 'button';
+
+// Additional attributes
+const linkAttrs = href ? { href } : {};
+const buttonAttrs = !href ? { type: 'button' as const, disabled } : {};
+const ariaAttrs = ariaLabel ? { 'aria-label': ariaLabel } : {};
+---
+
+{Element === 'a' ? (
+  <a
+    class={buttonClasses}
+    {...linkAttrs}
+    {...ariaAttrs}
+  >
+    <slot />
+  </a>
+) : (
+  <button
+    class={buttonClasses}
+    {...buttonAttrs}
+    {...ariaAttrs}
+  >
+    <slot />
+  </button>
+)}
