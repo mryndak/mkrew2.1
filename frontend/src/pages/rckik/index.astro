@@ -1,0 +1,106 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SEO from '../../components/SEO.astro';
+import RckikListApp from '../../components/rckik/RckikListApp';
+import { fetchRckikList, fetchAvailableCities } from '../../lib/api/endpoints/rckik';
+import type { RckikSearchParams, RckikListApiResponse } from '../../types/rckik';
+import { DEFAULT_RCKIK_SEARCH_PARAMS } from '../../types/rckik';
+
+// ===== SSG Configuration =====
+// Prerender this page at build time with ISR (Incremental Static Regeneration)
+// Revalidate every 5 minutes to keep data fresh
+export const prerender = true;
+
+// Note: Astro doesn't have built-in ISR revalidation like Next.js
+// For true ISR, you would need a hosting platform that supports it (Vercel, Netlify)
+// or implement a custom solution with on-demand revalidation
+
+// ===== Parse Query Parameters =====
+const searchParams = Astro.url.searchParams;
+
+// Sanitize and validate query params
+const params: RckikSearchParams = {
+  page: Math.max(0, parseInt(searchParams.get('page') || '0')),
+  size: Math.min(100, Math.max(1, parseInt(searchParams.get('size') || '20'))),
+  search: (searchParams.get('search') || '').trim().slice(0, 100), // max 100 chars
+  city: searchParams.get('city')?.slice(0, 100) || null, // max 100 chars
+  active: searchParams.get('active') !== 'false', // default true
+  sortBy: (['name', 'city', 'code'].includes(searchParams.get('sortBy') || '')
+    ? searchParams.get('sortBy')
+    : 'name') as 'name' | 'city' | 'code',
+  sortOrder: (['ASC', 'DESC'].includes(searchParams.get('sortOrder') || '')
+    ? searchParams.get('sortOrder')
+    : 'ASC') as 'ASC' | 'DESC'
+};
+
+// ===== Server-side Data Fetching =====
+let initialData: RckikListApiResponse | null = null;
+let availableCities: string[] = [];
+let fetchError: Error | null = null;
+
+try {
+  // Parallel fetch dla lepszej wydajności
+  const [rckikData, citiesData] = await Promise.all([
+    fetchRckikList(params),
+    fetchAvailableCities()
+  ]);
+
+  initialData = rckikData;
+  availableCities = citiesData;
+} catch (error) {
+  console.error('Failed to fetch RCKiK data during SSR:', error);
+  fetchError = error as Error;
+
+  // W przypadku błędu, ustawmy puste dane
+  // Client-side React app spróbuje ponownie
+  initialData = null;
+  availableCities = [];
+}
+
+// ===== SEO Metadata =====
+const pageTitle = params.city
+  ? `Centra krwiodawstwa - ${params.city} | mkrew`
+  : 'Centra krwiodawstwa w Polsce - Aktualne stany krwi | mkrew';
+
+const pageDescription = params.city
+  ? `Sprawdź aktualne stany zapasów krwi w centrach krwiodawstwa (RCKiK) w mieście ${params.city}. Monitoruj poziomy krwi we wszystkich grupach.`
+  : 'Przeglądaj listę centrów krwiodawstwa (RCKiK) w Polsce. Sprawdź aktualne stany zapasów krwi i znajdź najbliższe centrum.';
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <SEO
+    slot="head"
+    title={pageTitle}
+    description={pageDescription}
+    keywords="centra krwiodawstwa, RCKiK, stany krwi, zapasy krwi, donacja krwi, krwiodawstwo, Polska"
+  />
+
+  <main class="min-h-screen bg-gray-50 py-8">
+    <div class="container-custom">
+      <!-- Page Header -->
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">
+          Centra krwiodawstwa w Polsce
+        </h1>
+        <p class="text-lg text-gray-600">
+          Przeglądaj aktualne stany zapasów krwi we wszystkich centrach RCKiK w Polsce
+        </p>
+      </header>
+
+      <!-- React App (Client-side hydration) -->
+      <RckikListApp
+        client:load
+        initialData={initialData}
+        initialParams={params}
+        availableCities={availableCities}
+      />
+    </div>
+  </main>
+</Layout>
+
+<style>
+  /* Dodatkowe style specyficzne dla strony (jeśli potrzebne) */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+</style>
