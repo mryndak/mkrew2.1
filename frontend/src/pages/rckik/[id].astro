@@ -1,0 +1,42 @@
+---
+/**
+ * Widok szczegółów RCKiK
+ * Route: /rckik/[id]
+ *
+ * User Story: US-008 - "Szczegóły RCKiK: Jako użytkownik chcę zobaczyć szczegóły konkretnego RCKiK,
+ * historię snapshotów i trend."
+ *
+ * Strategia renderowania:
+ * - SSG (Static Site Generation) - strony generowane podczas build time
+ * - ISR (Incremental Static Regeneration) - rewalidacja co 5 minut
+ * - Publiczny dostęp (bez wymaganej autoryzacji)
+ */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+
+// Placeholder - będzie rozbudowane w kolejnych krokach
+const { id } = Astro.params;
+
+// TODO: Fetch RCKiK details from API
+// TODO: Check if user is authenticated
+// TODO: Check if RCKiK is in user's favorites
+
+const title = `RCKiK Details - ${id}`;
+const description = 'Szczegóły centrum krwiodawstwa';
+---
+
+<BaseLayout>
+  <SEO slot="head" title={title} description={description} />
+
+  <main class="container mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto">
+      <h1 class="text-3xl font-bold mb-6">Szczegóły RCKiK #{id}</h1>
+
+      <!-- TODO: Implementacja komponentów -->
+      <div class="text-gray-600">
+        <p>Widok w trakcie implementacji...</p>
+      </div>
+    </div>
+  </main>
+</BaseLayout>

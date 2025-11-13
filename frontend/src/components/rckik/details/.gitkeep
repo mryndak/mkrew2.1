@@ -1,0 +1,9 @@
+# Folder for RCKiK Details View Components
+#
+# Components to be implemented:
+# - RckikHeader.tsx
+# - BloodLevelChart.tsx
+# - BloodGroupSelector.tsx
+# - HistoryTable.tsx
+# - ScraperStatus.tsx
+# - FavoriteButton.tsx
