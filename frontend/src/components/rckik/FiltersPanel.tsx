@@ -1,11 +1,9 @@
-import { CityFilter } from './CityFilter';
 import { Select } from '../ui/Select';
 import { Button } from '../ui/Button';
 import type { FiltersPanelProps } from '../../types/rckik';
 
 /**
  * FiltersPanel - panel z wszystkimi filtrami
- * - CityFilter (dropdown miasta)
  * - SortBy filter (Select: name, city, code)
  * - SortOrder toggle (ASC/DESC)
  * - Reset filters button
@@ -19,7 +17,7 @@ export function FiltersPanel({
   isOpen,
   onClose
 }: FiltersPanelProps) {
-  const { city, sortBy, sortOrder } = initialFilters;
+  const { sortBy, sortOrder } = initialFilters;
 
   // Sort by options
   const sortByOptions = [
@@ -27,11 +25,6 @@ export function FiltersPanel({
     { value: 'city', label: 'Miasto' },
     { value: 'code', label: 'Kod' }
   ];
-
-  // Handle city change
-  const handleCityChange = (newCity: string | null) => {
-    onFiltersChange({ ...initialFilters, city: newCity });
-  };
 
   // Handle sort by change
   const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -47,8 +40,7 @@ export function FiltersPanel({
   // Handle reset filters
   const handleReset = () => {
     onFiltersChange({
-      city: null,
-      active: true,
+      ...initialFilters,
       sortBy: 'name',
       sortOrder: 'ASC'
     });
@@ -111,15 +103,6 @@ export function FiltersPanel({
 
           {/* Filters */}
           <div className="space-y-6 flex-1">
-            {/* City filter */}
-            <div>
-              <CityFilter
-                value={city}
-                cities={availableCities}
-                onChange={handleCityChange}
-              />
-            </div>
-
             {/* Sort by filter */}
             <div>
               <Select

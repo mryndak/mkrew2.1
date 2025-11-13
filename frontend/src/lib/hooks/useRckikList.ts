@@ -54,6 +54,13 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
   });
 
   /**
+   * Helper: sprawdź czy parametry się zmieniły
+   */
+  const paramsChanged = useCallback((oldParams: RckikSearchParams, newParams: RckikSearchParams): boolean => {
+    return JSON.stringify(oldParams) !== JSON.stringify(newParams);
+  }, []);
+
+  /**
    * Fetch data z API with throttling
    */
   const fetchData = useCallback(async (params: RckikSearchParams, skipThrottle = false) => {
@@ -100,16 +107,14 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
       setState(prev => ({
         ...prev,
         data,
-        loading: false,
-        params
+        loading: false
       }));
     } catch (error) {
       console.error('Failed to fetch RCKiK list:', error);
       setState(prev => ({
         ...prev,
         error: error as Error,
-        loading: false,
-        params
+        loading: false
       }));
     }
   }, []);
@@ -118,46 +123,70 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
    * Update URL params i trigger fetch
    */
   const updateParams = useCallback((newParams: Partial<RckikSearchParams>) => {
-    const currentParams = getParamsFromUrl();
-    const updated = { ...currentParams, ...newParams };
+    setState(prev => {
+      const currentParams = prev.params;
+      const updated = { ...currentParams, ...newParams };
 
-    // Reset page do 0 przy zmianie filtrów (nie paginacji)
-    if (
-      newParams.city !== undefined ||
-      newParams.search !== undefined ||
-      newParams.active !== undefined ||
-      newParams.sortBy !== undefined ||
-      newParams.sortOrder !== undefined
-    ) {
-      if (newParams.page === undefined) {
+      console.log('updateParams called:', { newParams, currentParams, updated });
+
+      // Reset page do 0 przy zmianie filtrów (nie paginacji)
+      // WAŻNE: Resetuj tylko gdy wartość faktycznie się zmienia!
+      const filtersChanged =
+        (newParams.city !== undefined && newParams.city !== currentParams.city) ||
+        (newParams.search !== undefined && newParams.search !== currentParams.search) ||
+        (newParams.active !== undefined && newParams.active !== currentParams.active) ||
+        (newParams.sortBy !== undefined && newParams.sortBy !== currentParams.sortBy) ||
+        (newParams.sortOrder !== undefined && newParams.sortOrder !== currentParams.sortOrder);
+
+      if (filtersChanged && newParams.page === undefined) {
+        console.log('Filtry się zmieniły - resetuję page do 0');
         updated.page = 0;
       }
-    }
 
-    // Build URL params
-    const urlParams = new URLSearchParams();
-    Object.entries(updated).forEach(([key, value]) => {
-      const defaultValue = DEFAULT_RCKIK_SEARCH_PARAMS[key as keyof RckikSearchParams];
-
-      // Dodaj tylko wartości różne od default
-      if (value !== null && value !== '' && value !== defaultValue) {
-        urlParams.set(key, String(value));
+      // Sprawdź czy parametry się zmieniły
+      if (!paramsChanged(currentParams, updated)) {
+        console.log('Parametry nie zmieniły się - pomijam fetch');
+        return prev; // Nie zmieniaj stanu
       }
+
+      console.log('Parametry zmieniły się - wykonuję fetch');
+
+      // Build URL params
+      const urlParams = new URLSearchParams();
+      Object.entries(updated).forEach(([key, value]) => {
+        const defaultValue = DEFAULT_RCKIK_SEARCH_PARAMS[key as keyof RckikSearchParams];
+
+        // Dodaj tylko wartości różne od default
+        if (value !== null && value !== '' && value !== defaultValue) {
+          urlParams.set(key, String(value));
+        }
+      });
+
+      // Update URL bez przeładowania strony
+      const newUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
+      window.history.pushState({}, '', newUrl);
+
+      // Reset licznika prób przy nowym wyszukiwaniu
+      fetchAttemptCountRef.current = 0;
+
+      // Fetch nowe dane
+      fetchData(updated);
+
+      // Return updated state with new params
+      return {
+        ...prev,
+        params: updated
+      };
     });
-
-    // Update URL bez przeładowania strony
-    const newUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
-    window.history.pushState({}, '', newUrl);
-
-    // Fetch nowe dane
-    fetchData(updated);
-  }, [getParamsFromUrl, fetchData]);
+  }, [fetchData, paramsChanged]);
 
   /**
-   * Refetch z obecnymi parametrami
+   * Refetch z obecnymi parametrami (force refresh)
    */
   const refetch = useCallback(() => {
-    fetchData(state.params);
+    // Reset licznika prób przy manualnym refresh
+    fetchAttemptCountRef.current = 0;
+    fetchData(state.params, true); // Skip throttle on manual refresh
   }, [fetchData, state.params]);
 
   /**
@@ -165,8 +194,29 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
    */
   useEffect(() => {
     const handlePopState = () => {
-      const params = getParamsFromUrl();
-      fetchData(params);
+      setState(prev => {
+        const params = getParamsFromUrl();
+
+        console.log('popstate triggered:', { prevParams: prev.params, newParams: params });
+
+        // Sprawdź czy parametry się zmieniły
+        if (!paramsChanged(prev.params, params)) {
+          console.log('Parametry nie zmieniły się (popstate) - pomijam fetch');
+          return prev;
+        }
+
+        console.log('Parametry zmieniły się (popstate) - wykonuję fetch');
+
+        // Reset licznika prób przy nawigacji
+        fetchAttemptCountRef.current = 0;
+
+        fetchData(params);
+
+        return {
+          ...prev,
+          params
+        };
+      });
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -174,7 +224,7 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [getParamsFromUrl, fetchData]);
+  }, [getParamsFromUrl, fetchData, paramsChanged]);
 
   /**
    * Effect: fetch initial data jeśli nie ma initialData

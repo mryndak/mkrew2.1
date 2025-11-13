@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 import { SearchBar } from './SearchBar';
 import { FiltersPanel } from './FiltersPanel';
@@ -32,31 +32,31 @@ export default function RckikListApp({
   // Main hook - zarządza stanem listy, fetching, URL sync
   const { data, loading, error, params, updateParams, refetch } = useRckikList(initialData);
 
-  // Handle search change
-  const handleSearchChange = (search: string) => {
+  // Handle search change (memoized to prevent unnecessary SearchBar re-renders)
+  const handleSearchChange = useCallback((search: string) => {
     updateParams({ search });
-  };
+  }, [updateParams]);
 
-  // Handle filters change
-  const handleFiltersChange = (filters: any) => {
+  // Handle filters change (memoized)
+  const handleFiltersChange = useCallback((filters: any) => {
     updateParams(filters);
     // Zamknij drawer na mobile po zmianie filtrów
     if (isMobile) {
       setIsFiltersPanelOpen(false);
     }
-  };
+  }, [updateParams, isMobile]);
 
-  // Handle page change
-  const handlePageChange = (page: number) => {
+  // Handle page change (memoized)
+  const handlePageChange = useCallback((page: number) => {
     updateParams({ page });
     // Scroll to top po zmianie strony
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [updateParams]);
 
-  // Handle page size change
-  const handlePageSizeChange = (size: number) => {
+  // Handle page size change (memoized)
+  const handlePageSizeChange = useCallback((size: number) => {
     updateParams({ size, page: 0 });
-  };
+  }, [updateParams]);
 
   return (
     <ErrorBoundary>
@@ -91,7 +91,7 @@ export default function RckikListApp({
                   />
                 </svg>
                 Filtry
-                {(params.city || params.search) && (
+                {params.search && (
                   <span className="ml-1 px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
                     Aktywne
                   </span>

@@ -29,7 +29,7 @@ export interface RckikSummary {
   active: boolean;
   bloodLevels: BloodLevel[];
   dataStatus: DataStatus;
-  lastUpdate: string; // ISO 8601 timestamp
+  lastUpdate: string | null; // ISO 8601 timestamp (null gdy brak danych)
 }
 
 /**

@@ -12,14 +12,16 @@ import type { RckikCardProps } from '../../types/rckik';
  * - Hover/focus states dla accessibility
  */
 export function RckikCard({ rckik }: RckikCardProps) {
-  // Format last update timestamp
-  const formattedDate = new Date(rckik.lastUpdate).toLocaleString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  // Format last update timestamp (handle null)
+  const formattedDate = rckik.lastUpdate
+    ? new Date(rckik.lastUpdate).toLocaleString('pl-PL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : 'Brak danych';
 
   return (
     <article
@@ -118,10 +120,7 @@ export function RckikCard({ rckik }: RckikCardProps) {
 
         {/* Footer - Last Update */}
         <footer className="pt-4 border-t border-gray-200">
-          <time
-            dateTime={rckik.lastUpdate}
-            className="flex items-center gap-1.5 text-xs text-gray-500"
-          >
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -137,8 +136,14 @@ export function RckikCard({ rckik }: RckikCardProps) {
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Ostatnia aktualizacja: {formattedDate}
-          </time>
+            {rckik.lastUpdate ? (
+              <time dateTime={rckik.lastUpdate}>
+                Ostatnia aktualizacja: {formattedDate}
+              </time>
+            ) : (
+              <span>Ostatnia aktualizacja: {formattedDate}</span>
+            )}
+          </div>
         </footer>
       </a>
     </article>
