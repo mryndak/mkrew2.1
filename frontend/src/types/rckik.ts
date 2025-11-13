@@ -112,6 +112,7 @@ export interface RckikCardProps {
 export interface BloodLevelBadgeProps {
   bloodLevel: BloodLevel;
   size?: 'small' | 'medium' | 'large';
+  onClick?: (bloodGroup: string) => void; // opcjonalne - do filtrowania wykresu/tabeli
 }
 
 /**
@@ -237,4 +238,237 @@ export const DEFAULT_RCKIK_SEARCH_PARAMS: RckikSearchParams = {
   active: true,
   sortBy: 'name',
   sortOrder: 'ASC'
+};
+
+// ===== RCKiK Details View Types =====
+
+/**
+ * Szczegółowe informacje o centrum RCKiK
+ * Endpoint: GET /api/v1/rckik/{id}
+ */
+export interface RckikDetailDto {
+  id: number;
+  name: string;
+  code: string;
+  city: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  aliases: string[];
+  active: boolean;
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
+  currentBloodLevels: BloodLevel[];
+  lastSuccessfulScrape: string; // ISO timestamp
+  scrapingStatus: ScrapingStatus;
+}
+
+/**
+ * Status scrapera
+ */
+export type ScrapingStatus = 'OK' | 'DEGRADED' | 'FAILED' | 'UNKNOWN';
+
+/**
+ * Response z historycznymi snapshotami poziomów krwi
+ * Endpoint: GET /api/v1/rckik/{id}/blood-levels
+ */
+export interface BloodLevelHistoryResponse {
+  rckikId: number;
+  rckikName: string;
+  snapshots: BloodLevelHistoryDto[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
+/**
+ * Pojedynczy snapshot historyczny poziomu krwi
+ */
+export interface BloodLevelHistoryDto {
+  id: number;
+  snapshotDate: string; // ISO date "2025-01-08"
+  bloodGroup: BloodGroup;
+  levelPercentage: number;
+  levelStatus: BloodLevelStatus;
+  scrapedAt: string; // ISO timestamp
+  isManual: boolean;
+}
+
+/**
+ * Favorite RCKiK DTO
+ * Endpoint: POST /api/v1/users/me/favorites
+ */
+export interface FavoriteRckikDto {
+  id: number; // favorite entry ID
+  rckikId: number;
+  name: string;
+  code: string;
+  city: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  active: boolean;
+  priority: number | null;
+  addedAt: string; // ISO timestamp
+  currentBloodLevels: BloodLevel[];
+}
+
+/**
+ * Props dla strony szczegółów RCKiK
+ */
+export interface RckikDetailsPageProps {
+  rckik: RckikDetailDto;
+  isFavorite: boolean;
+  isAuthenticated: boolean;
+}
+
+/**
+ * Punkt danych dla wykresu
+ */
+export interface ChartDataPoint {
+  date: string; // "08.01" formatted
+  fullDate: string; // "2025-01-08" dla referencji
+  percentage: number; // 45.5
+  status: BloodLevelStatus;
+  timestamp: string; // pełny timestamp dla tooltip
+}
+
+/**
+ * Stan tabeli historii
+ */
+export interface HistoryTableState {
+  data: BloodLevelHistoryDto[];
+  filters: HistoryTableFilters;
+  sort: TableSortConfig;
+  pagination: {
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+  };
+  loading: boolean;
+  error: string | null;
+}
+
+/**
+ * Filtry dla tabeli historii
+ */
+export interface HistoryTableFilters {
+  bloodGroup?: BloodGroup;
+  fromDate?: string; // ISO date
+  toDate?: string; // ISO date
+}
+
+/**
+ * Konfiguracja sortowania tabeli
+ */
+export interface TableSortConfig {
+  sortBy: 'snapshotDate' | 'bloodGroup' | 'levelPercentage';
+  sortOrder: 'ASC' | 'DESC';
+}
+
+/**
+ * Opcja selectora grup krwi
+ */
+export interface BloodGroupOption {
+  value: BloodGroup;
+  label: string; // "A+ (45.5%)"
+  currentLevel?: number;
+  status?: BloodLevelStatus;
+}
+
+// ===== Component Props for Details View =====
+
+/**
+ * Props dla RckikHeader
+ */
+export interface RckikHeaderProps {
+  rckik: RckikDetailDto;
+  isFavorite: boolean;
+  isAuthenticated: boolean;
+  onToggleFavorite?: () => void;
+}
+
+/**
+ * Props dla BloodGroupSelector
+ */
+export interface BloodGroupSelectorProps {
+  selectedBloodGroup: BloodGroup;
+  availableGroups: BloodGroup[];
+  currentLevels?: BloodLevel[];
+  onChange: (bloodGroup: BloodGroup) => void;
+}
+
+/**
+ * Props dla BloodLevelChart
+ */
+export interface BloodLevelChartProps {
+  rckikId: number;
+  initialBloodGroup?: BloodGroup;
+  historyData: BloodLevelHistoryDto[];
+  onBloodGroupChange?: (bloodGroup: BloodGroup) => void;
+}
+
+/**
+ * Props dla HistoryTable
+ */
+export interface HistoryTableProps {
+  rckikId: number;
+  initialPage?: number;
+  initialPageSize?: number;
+  initialFilters?: HistoryTableFilters;
+}
+
+/**
+ * Props dla ScraperStatus
+ */
+export interface ScraperStatusProps {
+  lastSuccessfulScrape: string | null;
+  scrapingStatus: ScrapingStatus;
+  errorMessage?: string;
+}
+
+/**
+ * Props dla FavoriteButton
+ */
+export interface FavoriteButtonProps {
+  rckikId: number;
+  initialIsFavorite: boolean;
+  isAuthenticated: boolean;
+  onAuthRequired?: () => void;
+}
+
+// ===== Scraping Status Configuration =====
+
+/**
+ * Konfiguracja statusów scrapera
+ */
+export const SCRAPING_STATUS_CONFIG: Record<ScrapingStatus, {
+  color: string;
+  icon: string;
+  label: string;
+}> = {
+  OK: {
+    color: 'bg-green-100 text-green-800 border-green-300',
+    icon: 'check-circle',
+    label: 'Dane aktualne'
+  },
+  DEGRADED: {
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    icon: 'alert-triangle',
+    label: 'Dane częściowo dostępne'
+  },
+  FAILED: {
+    color: 'bg-red-100 text-red-800 border-red-300',
+    icon: 'x-circle',
+    label: 'Błąd pobierania danych'
+  },
+  UNKNOWN: {
+    color: 'bg-gray-100 text-gray-800 border-gray-300',
+    icon: 'help-circle',
+    label: 'Status nieznany'
+  }
 };

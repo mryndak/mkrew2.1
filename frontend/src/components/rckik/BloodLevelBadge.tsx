@@ -1,3 +1,5 @@
+import { memo } from 'react';
+import { Tooltip } from '../ui/Tooltip';
 import type { BloodLevelBadgeProps } from '../../types/rckik';
 import { BLOOD_LEVEL_STATUS_CONFIG } from '../../types/rckik';
 
@@ -5,9 +7,59 @@ import { BLOOD_LEVEL_STATUS_CONFIG } from '../../types/rckik';
  * BloodLevelBadge - wyświetla poziom konkretnej grupy krwi
  * Używa kolorów + ikon + tekstu dla accessibility (WCAG 2.1 AA)
  * Status: CRITICAL (<20%), IMPORTANT (20-49%), OK (>=50%)
+ *
+ * Rozszerzenia dla widoku szczegółów:
+ * - Tooltip z timestampem lastUpdate
+ * - Opcjonalny onClick handler (np. do filtrowania wykresu/tabeli)
+ *
+ * Performance: Memoized to prevent unnecessary re-renders
  */
-export function BloodLevelBadge({ bloodLevel, size = 'medium' }: BloodLevelBadgeProps) {
-  const config = BLOOD_LEVEL_STATUS_CONFIG[bloodLevel.levelStatus];
+const BloodLevelBadgeComponent = ({ bloodLevel, size = 'medium', onClick }: BloodLevelBadgeProps) => {
+  // Defensive checks for edge cases
+  if (!bloodLevel) {
+    console.error('BloodLevelBadge: bloodLevel prop is required');
+    return null;
+  }
+
+  if (!bloodLevel.bloodGroup || typeof bloodLevel.levelPercentage !== 'number') {
+    console.error('BloodLevelBadge: invalid bloodLevel data', bloodLevel);
+    return null;
+  }
+
+  // Clamp percentage to valid range [0, 100]
+  const clampedPercentage = Math.max(0, Math.min(100, bloodLevel.levelPercentage));
+
+  // Validate and fallback for levelStatus
+  const validStatuses = ['CRITICAL', 'IMPORTANT', 'OK'] as const;
+  const levelStatus = validStatuses.includes(bloodLevel.levelStatus as any)
+    ? bloodLevel.levelStatus
+    : clampedPercentage < 20
+    ? 'CRITICAL'
+    : clampedPercentage < 50
+    ? 'IMPORTANT'
+    : 'OK';
+
+  const config = BLOOD_LEVEL_STATUS_CONFIG[levelStatus];
+
+  // Format timestamp dla tooltip
+  const formatTimestamp = (isoString: string | null | undefined) => {
+    if (!isoString) {
+      return 'Data niedostępna';
+    }
+
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleString('pl-PL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return 'Data niedostępna';
+    }
+  };
 
   // Mapowanie rozmiarów
   const sizeClasses = {
@@ -80,28 +132,75 @@ export function BloodLevelBadge({ bloodLevel, size = 'medium' }: BloodLevelBadge
   const badgeClasses = [
     'inline-flex items-center gap-1.5 rounded-lg border font-medium',
     config.color,
-    sizeClasses[size]
-  ].join(' ');
+    sizeClasses[size],
+    onClick && 'cursor-pointer hover:opacity-80 transition-opacity duration-200',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-  return (
-    <div className={badgeClasses} title={`${bloodLevel.bloodGroup}: ${config.label}`}>
+  // Tooltip content z timestampem
+  const tooltipContent = (
+    <div className="text-center">
+      <div className="font-medium mb-1">
+        {bloodLevel.bloodGroup}: {config.label}
+      </div>
+      <div className="text-xs opacity-90">
+        Ostatnia aktualizacja:
+        <br />
+        {formatTimestamp(bloodLevel.lastUpdate)}
+      </div>
+    </div>
+  );
+
+  const badgeElement = (
+    <div
+      className={badgeClasses}
+      onClick={onClick ? () => onClick(bloodLevel.bloodGroup) : undefined}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick(bloodLevel.bloodGroup);
+              }
+            }
+          : undefined
+      }
+      aria-label={
+        onClick
+          ? `${bloodLevel.bloodGroup} ${clampedPercentage.toFixed(1)}% - ${config.label}. Kliknij aby filtrować`
+          : `${bloodLevel.bloodGroup} ${clampedPercentage.toFixed(1)}% - ${config.label}`
+      }
+    >
       {/* Status icon */}
       {icons[config.icon as keyof typeof icons]}
 
       {/* Blood group label */}
-      <span className="font-semibold">
-        {bloodLevel.bloodGroup}
-      </span>
+      <span className="font-semibold">{bloodLevel.bloodGroup}</span>
 
       {/* Percentage */}
-      <span className="font-normal">
-        {bloodLevel.levelPercentage.toFixed(1)}%
-      </span>
+      <span className="font-normal">{clampedPercentage.toFixed(1)}%</span>
 
       {/* Screen reader only text */}
-      <span className="sr-only">
-        {config.label}
-      </span>
+      <span className="sr-only">{config.label}</span>
     </div>
   );
-}
+
+  // Wrap with Tooltip
+  return <Tooltip content={tooltipContent}>{badgeElement}</Tooltip>;
+};
+
+// Memoize component to prevent re-renders when props haven't changed
+export const BloodLevelBadge = memo(BloodLevelBadgeComponent, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return (
+    prevProps.bloodLevel.bloodGroup === nextProps.bloodLevel.bloodGroup &&
+    prevProps.bloodLevel.levelPercentage === nextProps.bloodLevel.levelPercentage &&
+    prevProps.bloodLevel.levelStatus === nextProps.bloodLevel.levelStatus &&
+    prevProps.bloodLevel.lastUpdate === nextProps.bloodLevel.lastUpdate &&
+    prevProps.size === nextProps.size &&
+    prevProps.onClick === nextProps.onClick
+  );
+});

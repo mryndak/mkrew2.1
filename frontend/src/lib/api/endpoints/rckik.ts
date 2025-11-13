@@ -1,5 +1,10 @@
 import { apiClient } from '../client';
-import type { RckikListApiResponse, RckikSearchParams } from '../../../types/rckik';
+import type {
+  RckikListApiResponse,
+  RckikSearchParams,
+  RckikDetailDto,
+  BloodLevelHistoryResponse
+} from '../../../types/rckik';
 
 /**
  * Fetch lista RCKiK z filtrowaniem i paginacją
@@ -60,4 +65,59 @@ export async function fetchAvailableCities(): Promise<string[]> {
     console.error('Failed to fetch available cities:', error);
     return [];
   }
+}
+
+/**
+ * Fetch szczegółowe dane centrum RCKiK
+ * Endpoint: GET /api/v1/rckik/{id}
+ *
+ * @param id - ID centrum RCKiK
+ * @returns Promise ze szczegółowymi danymi centrum
+ */
+export async function fetchRckikDetails(id: number): Promise<RckikDetailDto> {
+  const response = await apiClient.get<RckikDetailDto>(`/rckik/${id}`);
+  return response.data;
+}
+
+/**
+ * Fetch historyczne snapshoty poziomów krwi
+ * Endpoint: GET /api/v1/rckik/{id}/blood-levels
+ *
+ * @param id - ID centrum RCKiK
+ * @param params - Parametry filtrowania i paginacji
+ * @returns Promise z paginowaną listą snapshotów historycznych
+ */
+export async function fetchBloodLevelHistory(
+  id: number,
+  params?: {
+    bloodGroup?: string;
+    fromDate?: string;
+    toDate?: string;
+    page?: number;
+    size?: number;
+  }
+): Promise<BloodLevelHistoryResponse> {
+  const queryParams = new URLSearchParams();
+
+  if (params?.bloodGroup) {
+    queryParams.set('bloodGroup', params.bloodGroup);
+  }
+  if (params?.fromDate) {
+    queryParams.set('fromDate', params.fromDate);
+  }
+  if (params?.toDate) {
+    queryParams.set('toDate', params.toDate);
+  }
+  if (params?.page !== undefined) {
+    queryParams.set('page', String(params.page));
+  }
+  if (params?.size !== undefined) {
+    queryParams.set('size', String(params.size));
+  }
+
+  const response = await apiClient.get<BloodLevelHistoryResponse>(
+    `/rckik/${id}/blood-levels${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+  );
+
+  return response.data;
 }

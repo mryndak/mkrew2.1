@@ -1,0 +1,101 @@
+---
+/**
+ * Breadcrumbs component - nawigacja okruszkowa
+ *
+ * Props:
+ * - items: Array<{ label: string, href?: string }>
+ *   - label: tekst do wyświetlenia
+ *   - href: link (undefined dla aktualnej strony)
+ *
+ * Example:
+ * <Breadcrumbs items={[
+ *   { label: 'Home', href: '/' },
+ *   { label: 'Lista RCKiK', href: '/rckik' },
+ *   { label: 'RCKiK Warszawa' } // current page - no href
+ * ]} />
+ */
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav aria-label="Breadcrumb" class="mb-4">
+  <ol class="flex flex-wrap items-center gap-2 text-sm">
+    {items.map((item, index) => {
+      const isLast = index === items.length - 1;
+      const isFirst = index === 0;
+
+      return (
+        <li class="flex items-center gap-2">
+          {/* Separator (skip for first item) */}
+          {!isFirst && (
+            <svg
+              class="w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          )}
+
+          {/* Breadcrumb item */}
+          {isLast ? (
+            <span
+              class="font-medium text-gray-900"
+              aria-current="page"
+            >
+              {item.label}
+            </span>
+          ) : (
+            <a
+              href={item.href}
+              class="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+            >
+              {item.label}
+            </a>
+          )}
+        </li>
+      );
+    })}
+  </ol>
+</nav>
+
+<style>
+  /* Optional: Prevent very long breadcrumb labels from breaking layout */
+  li {
+    max-width: 100%;
+  }
+
+  li a,
+  li span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    max-width: 250px;
+  }
+
+  /* Mobile - allow wrapping */
+  @media (max-width: 640px) {
+    li a,
+    li span {
+      max-width: 150px;
+    }
+  }
+</style>

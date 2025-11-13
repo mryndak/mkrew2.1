@@ -1,0 +1,307 @@
+---
+/**
+ * Widok szczegółów RCKiK
+ * Route: /rckik/[id]
+ *
+ * User Story: US-008 - "Szczegóły RCKiK: Jako użytkownik chcę zobaczyć szczegóły konkretnego RCKiK,
+ * historię snapshotów i trend."
+ *
+ * Strategia renderowania:
+ * - SSG (Static Site Generation) - strony generowane podczas build time
+ * - ISR (Incremental Static Regeneration) - rewalidacja co 5 minut
+ * - Publiczny dostęp (bez wymaganej autoryzacji)
+ */
+
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SEO from '../../components/SEO.astro';
+import Breadcrumbs from '../../components/common/Breadcrumbs.astro';
+import RckikNotFound from '../../components/rckik/details/RckikNotFound.astro';
+import { RckikHeader } from '../../components/rckik/details/RckikHeader';
+import { BloodLevelBadge } from '../../components/rckik/BloodLevelBadge';
+import { BloodLevelChart } from '../../components/rckik/details/BloodLevelChart';
+import { HistoryTable } from '../../components/rckik/details/HistoryTable';
+import { ScraperStatus } from '../../components/rckik/details/ScraperStatus';
+import { ErrorState } from '../../components/common/ErrorState';
+
+// Import API funkcji (będzie potrzebne po skonfigurowaniu backendu)
+// import { fetchRckikDetails } from '../../lib/api/endpoints/rckik';
+
+// ===== Static Site Generation =====
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  // TODO: W production, fetch lista wszystkich RCKiK z API
+  // const rckikList = await fetch('http://localhost:8080/api/v1/rckik?size=100').then(r => r.json());
+  // return rckikList.content.map((rckik: any) => ({
+  //   params: { id: String(rckik.id) },
+  // }));
+
+  // Dla development - przykładowe IDs (zaktualizuj gdy backend będzie gotowy)
+  const exampleIds = [1, 2, 3, 4, 5, 15];
+  return exampleIds.map(id => ({
+    params: { id: String(id) },
+  }));
+};
+
+// ===== Page Component =====
+
+const { id } = Astro.params;
+
+// Validate and parse ID
+if (!id || id.trim() === '') {
+  return Astro.redirect('/404');
+}
+
+const rckikId = parseInt(id as string, 10);
+
+// Validate ID is a positive number
+if (isNaN(rckikId) || rckikId <= 0 || !Number.isInteger(parseFloat(id as string))) {
+  return Astro.redirect('/404');
+}
+
+// TODO: Fetch RCKiK details from API
+// W production, tutaj powinno być:
+// try {
+//   const rckik = await fetchRckikDetails(rckikId);
+// } catch (error) {
+//   if (error.response?.status === 404) {
+//     return Astro.redirect('/404');
+//   }
+//   throw error;
+// }
+
+// Mock data dla development (usuń po podłączeniu backendu)
+// W production, jeśli fetchRckikDetails zwróci 404, pokaż RckikNotFound
+const mockRckikExists = [1, 2, 3, 4, 5, 15].includes(rckikId);
+
+// Jeśli RCKiK nie istnieje, wyświetl 404 component
+if (!mockRckikExists) {
+  // W production to będzie:
+  // if (error.response?.status === 404) { ... }
+}
+
+const mockRckik = {
+  id: rckikId,
+  name: `Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Warszawie`,
+  code: `RCKIK-WAW-${rckikId}`,
+  city: 'Warszawa',
+  address: 'ul. Kasprzaka 17, 01-211 Warszawa',
+  latitude: 52.2319,
+  longitude: 20.9728,
+  aliases: ['RCKiK Warszawa', 'RCKIK WAW'],
+  active: true,
+  createdAt: '2024-01-01T00:00:00',
+  updatedAt: new Date().toISOString(),
+  currentBloodLevels: [
+    {
+      bloodGroup: 'A+',
+      levelPercentage: 45.5,
+      levelStatus: 'IMPORTANT',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      bloodGroup: '0-',
+      levelPercentage: 15.0,
+      levelStatus: 'CRITICAL',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      bloodGroup: 'B+',
+      levelPercentage: 65.0,
+      levelStatus: 'OK',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      bloodGroup: 'AB+',
+      levelPercentage: 30.0,
+      levelStatus: 'IMPORTANT',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      bloodGroup: 'A-',
+      levelPercentage: 55.0,
+      levelStatus: 'OK',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      bloodGroup: '0+',
+      levelPercentage: 12.0,
+      levelStatus: 'CRITICAL',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      bloodGroup: 'B-',
+      levelPercentage: 48.0,
+      levelStatus: 'IMPORTANT',
+      lastUpdate: new Date().toISOString(),
+    },
+    {
+      bloodGroup: 'AB-',
+      levelPercentage: 70.0,
+      levelStatus: 'OK',
+      lastUpdate: new Date().toISOString(),
+    },
+  ],
+  lastSuccessfulScrape: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+  scrapingStatus: 'OK',
+};
+
+const rckik = mockRckik;
+
+// TODO: Check if user is authenticated
+// const isAuthenticated = !!Astro.cookies.get('accessToken')?.value;
+const isAuthenticated = false; // Mock dla development
+
+// TODO: Check if RCKiK is in user's favorites
+// Dla zalogowanych użytkowników, sprawdź w Redux store lub API
+const isFavorite = false; // Mock dla development
+
+// Mock history data (w production z API)
+const mockHistoryData = Array.from({ length: 50 }, (_, i) => {
+  const date = new Date();
+  date.setDate(date.getDate() - i);
+  const bloodGroups = ['A+', '0-', 'B+', 'AB+', 'A-', '0+', 'B-', 'AB-'];
+  const bloodGroup = bloodGroups[i % bloodGroups.length];
+  const percentage = 20 + Math.random() * 60;
+
+  return {
+    id: i + 1,
+    snapshotDate: date.toISOString().split('T')[0],
+    bloodGroup,
+    levelPercentage: percentage,
+    levelStatus: percentage < 20 ? 'CRITICAL' : percentage < 50 ? 'IMPORTANT' : 'OK',
+    scrapedAt: date.toISOString(),
+    isManual: Math.random() > 0.9,
+  };
+});
+
+// SEO
+const title = `${rckik.name} - Szczegóły centrum | mkrew`;
+const description = `Szczegółowe informacje o ${rckik.name}: aktualne stany krwi, historia snapshotów i trend dla wszystkich grup krwi. ${rckik.address}.`;
+
+// Breadcrumbs
+const breadcrumbItems = [
+  { label: 'Strona główna', href: '/' },
+  { label: 'Lista RCKiK', href: '/rckik' },
+  { label: rckik.name },
+];
+---
+
+<BaseLayout>
+  <SEO
+    slot="head"
+    title={mockRckikExists ? title : `RCKiK nie znaleziono | mkrew`}
+    description={mockRckikExists ? description : `Centrum RCKiK o ID ${rckikId} nie zostało znalezione.`}
+  />
+
+  <main class="container mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto">
+
+      {!mockRckikExists ? (
+        <RckikNotFound rckikId={rckikId} />
+      ) : (
+        <>
+          <!-- Breadcrumbs -->
+          <Breadcrumbs items={breadcrumbItems} />
+
+      <!-- RckikHeader -->
+      <RckikHeader
+        rckik={rckik}
+        isFavorite={isFavorite}
+        isAuthenticated={isAuthenticated}
+        onToggleFavorite={() => {
+          // Handler będzie obsługiwany przez React component
+          if (!isAuthenticated) {
+            window.location.href = `/login?returnUrl=/rckik/${rckikId}`;
+          }
+        }}
+        client:load
+      />
+
+      <!-- Current Blood Levels Section -->
+      <section class="mb-8">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">
+          Aktualne stany krwi
+        </h2>
+
+        {rckik.currentBloodLevels && rckik.currentBloodLevels.length > 0 ? (
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {rckik.currentBloodLevels.map((level) => (
+              <BloodLevelBadge
+                bloodLevel={level}
+                size="large"
+                client:load
+              />
+            ))}
+          </div>
+        ) : (
+          <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+            <p class="text-gray-600">Brak aktualnych danych o stanach krwi</p>
+          </div>
+        )}
+
+        {rckik.currentBloodLevels[0]?.lastUpdate && (
+          <p class="text-xs sm:text-sm text-gray-500 mt-3">
+            Ostatnia aktualizacja: {new Date(rckik.currentBloodLevels[0].lastUpdate).toLocaleString('pl-PL', {
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </p>
+        )}
+      </section>
+
+      <!-- Blood Level Chart Section -->
+      <section class="mb-8">
+        <BloodLevelChart
+          rckikId={rckikId}
+          initialBloodGroup="0+"
+          historyData={mockHistoryData}
+          client:visible
+        />
+      </section>
+
+      <!-- History Table Section -->
+      <section class="mb-8">
+        <HistoryTable
+          rckikId={rckikId}
+          initialPage={0}
+          initialPageSize={20}
+          client:idle
+        />
+      </section>
+
+      <!-- Scraper Status Section -->
+      <section class="mb-8">
+        <ScraperStatus
+          lastSuccessfulScrape={rckik.lastSuccessfulScrape}
+          scrapingStatus={rckik.scrapingStatus as any}
+          client:load
+        />
+      </section>
+        </>
+      )}
+
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  /* Global styles dla strony */
+  main {
+    min-height: calc(100vh - 200px);
+  }
+
+  /* Smooth scroll dla anchor links */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus visible dla keyboard navigation */
+  *:focus-visible {
+    outline: 2px solid theme('colors.blue.500');
+    outline-offset: 2px;
+  }
+</style>

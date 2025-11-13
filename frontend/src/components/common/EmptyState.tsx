@@ -14,7 +14,7 @@ export function EmptyState({
   onReset
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center" role="status" aria-live="polite">
       {/* Empty icon */}
       <div className="mb-6 text-gray-300">
         <svg

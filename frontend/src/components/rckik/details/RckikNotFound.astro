@@ -1,0 +1,112 @@
+---
+/**
+ * RckikNotFound - strona błędu 404 dla nieistniejącego RCKiK
+ *
+ * Wyświetlana gdy:
+ * - ID nie istnieje w bazie danych
+ * - RCKiK zostało usunięte
+ * - Nieprawidłowy format ID
+ */
+
+interface Props {
+  rckikId?: number | string;
+}
+
+const { rckikId } = Astro.props;
+---
+
+<div class="min-h-[60vh] flex flex-col items-center justify-center px-4 py-16">
+  <!-- 404 Icon -->
+  <div class="mb-8">
+    <svg
+      class="w-32 h-32 text-gray-300"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  </div>
+
+  <!-- Title -->
+  <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+    404
+  </h1>
+
+  <!-- Message -->
+  <h2 class="text-xl sm:text-2xl font-semibold text-gray-700 mb-3">
+    Centrum nie zostało znalezione
+  </h2>
+
+  {rckikId && (
+    <p class="text-gray-600 mb-8 max-w-md text-center">
+      Centrum RCKiK o ID <span class="font-semibold text-gray-900">{rckikId}</span> nie istnieje
+      lub zostało usunięte z bazy danych.
+    </p>
+  )}
+  {!rckikId && (
+    <p class="text-gray-600 mb-8 max-w-md text-center">
+      Podane centrum krwiodawstwa nie istnieje lub zostało usunięte z bazy danych.
+    </p>
+  )}
+
+  <!-- Actions -->
+  <div class="flex flex-col sm:flex-row gap-4">
+    <a
+      href="/rckik"
+      class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width={2}
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+        />
+      </svg>
+      <span>Przeglądaj wszystkie centra</span>
+    </a>
+
+    <a
+      href="/"
+      class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 font-medium border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+    >
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width={2}
+          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+        />
+      </svg>
+      <span>Wróć do strony głównej</span>
+    </a>
+  </div>
+
+  <!-- Help text -->
+  <p class="text-sm text-gray-500 mt-12 max-w-lg text-center">
+    Jeśli uważasz, że to błąd, skontaktuj się z nami poprzez
+    <a href="/contact" class="text-blue-600 hover:text-blue-700 underline">formularz kontaktowy</a>.
+  </p>
+</div>
