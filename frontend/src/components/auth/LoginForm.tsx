@@ -1,0 +1,99 @@
+import React from 'react';
+import { useLoginForm } from '@/lib/hooks/useLoginForm';
+import { EmailInput } from '@/components/forms/EmailInput';
+import { PasswordInput } from '@/components/forms/PasswordInput';
+import { RememberMeCheckbox } from '@/components/forms/RememberMeCheckbox';
+import { SubmitButton } from '@/components/forms/SubmitButton';
+import { ErrorMessage } from '@/components/forms/ErrorMessage';
+import { RateLimitNotice } from './RateLimitNotice';
+import type { LoginFormProps } from '@/types/auth';
+
+/**
+ * LoginForm component
+ * Główny formularz logowania - React island (client:load)
+ * Zarządza stanem formularza, walidacją, submitem do API, rate limitingiem
+ *
+ * Features:
+ * - Email + password validation (Zod schema)
+ * - Rate limiting (5 attempts → 5 min lockout)
+ * - CAPTCHA after 3 failed attempts (TODO)
+ * - Redux integration (saves auth state)
+ * - Error handling (API errors, network errors)
+ * - Redirect after successful login
+ *
+ * @param redirectUrl - URL przekierowania po logowaniu (default: /dashboard)
+ * @param onSuccess - Callback po pomyślnym logowaniu (opcjonalny)
+ *
+ * @example
+ * <LoginForm client:load redirectUrl="/dashboard" />
+ */
+export function LoginForm({ redirectUrl, onSuccess }: LoginFormProps) {
+  const {
+    register,
+    handleSubmit,
+    errors,
+    isSubmitting,
+    globalError,
+    isLocked,
+    lockedUntil,
+    showCaptcha,
+    setValue,
+  } = useLoginForm(redirectUrl, onSuccess);
+
+  return (
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      {/* Global error message (API errors) */}
+      {globalError && (
+        <ErrorMessage message={globalError.message} type="error" />
+      )}
+
+      {/* Rate limit notice (lockout) */}
+      {isLocked && lockedUntil && (
+        <RateLimitNotice
+          lockedUntil={lockedUntil}
+          onUnlock={() => {
+            // Auto-unlock handled by useRateLimit hook
+          }}
+        />
+      )}
+
+      {/* Email field */}
+      <EmailInput
+        {...register('email')}
+        error={errors.email?.message}
+        disabled={isSubmitting || isLocked}
+      />
+
+      {/* Password field */}
+      <PasswordInput
+        {...register('password')}
+        error={errors.password?.message}
+        disabled={isSubmitting || isLocked}
+      />
+
+      {/* Remember me checkbox */}
+      <RememberMeCheckbox
+        {...register('rememberMe')}
+        disabled={isSubmitting || isLocked}
+      />
+
+      {/* CAPTCHA (TODO - pokazywany po 3 nieudanych próbach) */}
+      {showCaptcha && (
+        <div className="p-4 bg-gray-50 border border-gray-300 rounded-lg">
+          <p className="text-sm text-gray-600 mb-2">
+            CAPTCHA będzie tutaj (TODO: integracja z Google reCAPTCHA)
+          </p>
+          <div className="h-20 bg-gray-200 rounded flex items-center justify-center text-gray-500">
+            reCAPTCHA widget
+          </div>
+        </div>
+      )}
+
+      {/* Submit button */}
+      <SubmitButton
+        loading={isSubmitting}
+        disabled={isSubmitting || isLocked}
+      />
+    </form>
+  );
+}

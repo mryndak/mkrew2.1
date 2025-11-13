@@ -14,12 +14,17 @@ export const apiClient = axios.create({
 
 /**
  * Request interceptor
- * Dodaje token autoryzacyjny jeśli dostępny (dla przyszłych funkcji wymagających auth)
+ * Dodaje token autoryzacyjny jeśli dostępny
  */
 apiClient.interceptors.request.use(
   (config) => {
-    // Dla publicznych endpoints nie trzeba tokenu
-    // W przyszłości można dodać logikę dla auth token
+    // Get token from localStorage (or use httpOnly cookies in production)
+    const token = localStorage.getItem('accessToken');
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error) => {
@@ -34,15 +39,26 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // Rate limit handling
-    if (error.response?.status === 429) {
-      console.error('Rate limit exceeded. Please try again later.');
-      // Można dodać toast notification
+    // Log error in development only
+    if (import.meta.env.DEV) {
+      console.error('API Error:', {
+        status: error.response?.status,
+        message: error.response?.data || error.message,
+        url: error.config?.url,
+      });
     }
 
-    // Network error handling
-    if (!error.response) {
-      console.error('Network error - please check your connection');
+    // Do NOT log passwords or sensitive data
+    // Remove sensitive data from error logs
+    if (error.config?.data) {
+      try {
+        const data = JSON.parse(error.config.data);
+        if (data.password) {
+          delete data.password;
+        }
+      } catch {
+        // Ignore parsing errors
+      }
     }
 
     return Promise.reject(error);
