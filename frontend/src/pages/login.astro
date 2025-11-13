@@ -1,0 +1,130 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { LoginForm } from '@/components/auth/LoginForm';
+import { VerificationSuccessMessage } from '@/components/auth/VerificationSuccessMessage';
+import { ReduxProvider } from '@/components/common/ReduxProvider';
+
+/**
+ * Login Page
+ * Server-Side Rendered (SSR) page z React islands
+ *
+ * Features:
+ * - SSR dla lepszej wydajności i SEO
+ * - React island dla LoginForm (client:load)
+ * - Redux Provider dla zarządzania stanem
+ * - Query params: verified (boolean), redirect (string)
+ * - Sanityzacja redirect URL (prevent open redirect)
+ */
+
+// Parse query params
+const verified = Astro.url.searchParams.get('verified') === 'true';
+const redirectParam = Astro.url.searchParams.get('redirect') || '/dashboard';
+
+/**
+ * Sanitize redirect URL to prevent open redirect attacks
+ * Only allow internal paths (starting with /)
+ * Prevent redirect to /login (loop)
+ * Prevent external URLs (http://, https://)
+ */
+function sanitizeRedirectUrl(url: string): string {
+  // Default to dashboard
+  if (!url || url === '/login') {
+    return '/dashboard';
+  }
+
+  // Prevent external URLs
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
+    return '/dashboard';
+  }
+
+  // Only allow internal paths
+  if (url.startsWith('/')) {
+    return url;
+  }
+
+  return '/dashboard';
+}
+
+const safeRedirectUrl = sanitizeRedirectUrl(redirectParam);
+
+// SSR configuration
+export const prerender = false; // Enable SSR
+---
+
+<Layout
+  title="Zaloguj się | mkrew"
+  description="Zaloguj się do platformy mkrew i zarządzaj swoimi donacjami krwi."
+  includeNavbar={true}
+  includeFooter={true}
+>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <main class="flex-1 flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+
+      {/* Success message - email verification */}
+      {verified && (
+        <VerificationSuccessMessage client:load />
+      )}
+
+      {/* Login form card */}
+      <div class="bg-white shadow-md rounded-lg p-8">
+        {/* Header */}
+        <header class="mb-6 text-center">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Zaloguj się
+          </h1>
+          <p class="text-sm text-gray-600">
+            Wprowadź swoje dane, aby kontynuować
+          </p>
+        </header>
+
+        {/* Login Form - React island with Redux */}
+        <ReduxProvider client:only="react">
+          <LoginForm
+            client:load
+            redirectUrl={safeRedirectUrl}
+          />
+        </ReduxProvider>
+
+        {/* Links section */}
+        <div class="mt-6 space-y-4">
+          {/* Forgot password link */}
+          <div class="text-center text-sm">
+            <a
+              href="/reset-password"
+              class="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+            >
+              Nie pamiętasz hasła?
+            </a>
+          </div>
+
+          {/* Register link */}
+          <div class="text-center text-sm text-gray-600">
+            Nie masz konta?{' '}
+            <a
+              href="/register"
+              class="text-blue-600 hover:text-blue-700 hover:underline font-semibold"
+            >
+              Zarejestruj się
+            </a>
+          </div>
+        </div>
+
+        {/* Security notice */}
+        <div class="mt-6 text-xs text-gray-500 text-center">
+          Logując się, akceptujesz nasze{' '}
+          <a href="/regulamin" class="underline hover:text-gray-700">
+            Regulamin
+          </a>
+          {' '}i{' '}
+          <a href="/polityka-prywatnosci" class="underline hover:text-gray-700">
+            Politykę prywatności
+          </a>.
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
