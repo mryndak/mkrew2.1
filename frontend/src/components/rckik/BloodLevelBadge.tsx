@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Tooltip } from '../ui/Tooltip';
 import type { BloodLevelBadgeProps } from '../../types/rckik';
 import { BLOOD_LEVEL_STATUS_CONFIG } from '../../types/rckik';
@@ -10,8 +11,10 @@ import { BLOOD_LEVEL_STATUS_CONFIG } from '../../types/rckik';
  * Rozszerzenia dla widoku szczegółów:
  * - Tooltip z timestampem lastUpdate
  * - Opcjonalny onClick handler (np. do filtrowania wykresu/tabeli)
+ *
+ * Performance: Memoized to prevent unnecessary re-renders
  */
-export function BloodLevelBadge({ bloodLevel, size = 'medium', onClick }: BloodLevelBadgeProps) {
+const BloodLevelBadgeComponent = ({ bloodLevel, size = 'medium', onClick }: BloodLevelBadgeProps) => {
   // Defensive checks for edge cases
   if (!bloodLevel) {
     console.error('BloodLevelBadge: bloodLevel prop is required');
@@ -187,4 +190,17 @@ export function BloodLevelBadge({ bloodLevel, size = 'medium', onClick }: BloodL
 
   // Wrap with Tooltip
   return <Tooltip content={tooltipContent}>{badgeElement}</Tooltip>;
-}
+};
+
+// Memoize component to prevent re-renders when props haven't changed
+export const BloodLevelBadge = memo(BloodLevelBadgeComponent, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return (
+    prevProps.bloodLevel.bloodGroup === nextProps.bloodLevel.bloodGroup &&
+    prevProps.bloodLevel.levelPercentage === nextProps.bloodLevel.levelPercentage &&
+    prevProps.bloodLevel.levelStatus === nextProps.bloodLevel.levelStatus &&
+    prevProps.bloodLevel.lastUpdate === nextProps.bloodLevel.lastUpdate &&
+    prevProps.size === nextProps.size &&
+    prevProps.onClick === nextProps.onClick
+  );
+});
