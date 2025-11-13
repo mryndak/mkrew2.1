@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { BloodLevelBadge } from '@/components/rckik/BloodLevelBadge';
 import type { FavoriteCardProps } from '@/types/dashboard';
 
@@ -11,6 +12,7 @@ import type { FavoriteCardProps } from '@/types/dashboard';
  * - Klikalna karta → redirect do szczegółów centrum
  * - Hover state
  * - Wyróżnienie poziomów CRITICAL
+ * - Memoized dla optymalizacji performance (porównanie po favorite.id)
  *
  * @example
  * ```tsx
@@ -20,7 +22,7 @@ import type { FavoriteCardProps } from '@/types/dashboard';
  * />
  * ```
  */
-export function FavoriteCard({ favorite, onClick }: FavoriteCardProps) {
+function FavoriteCardComponent({ favorite, onClick }: FavoriteCardProps) {
   const { rckikId, name, city, address, currentBloodLevels } = favorite;
 
   const handleClick = () => {
@@ -160,3 +162,27 @@ export function FavoriteCard({ favorite, onClick }: FavoriteCardProps) {
     </div>
   );
 }
+
+/**
+ * Memoized FavoriteCard
+ * Re-render only if favorite.id or blood levels change
+ */
+export const FavoriteCard = memo(
+  FavoriteCardComponent,
+  (prevProps, nextProps) => {
+    // Compare favorite.id
+    if (prevProps.favorite.id !== nextProps.favorite.id) return false;
+
+    // Compare blood levels (deep comparison of levelStatus which is most important)
+    const prevLevels = prevProps.favorite.currentBloodLevels;
+    const nextLevels = nextProps.favorite.currentBloodLevels;
+
+    if (prevLevels.length !== nextLevels.length) return false;
+
+    return prevLevels.every(
+      (level, index) =>
+        level.bloodGroup === nextLevels[index]?.bloodGroup &&
+        level.levelStatus === nextLevels[index]?.levelStatus
+    );
+  }
+);

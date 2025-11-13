@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import type { NotificationItemProps } from '@/types/dashboard';
 
@@ -12,6 +13,7 @@ import type { NotificationItemProps } from '@/types/dashboard';
  * - Klikalne jeśli ma linkUrl
  * - onClick handler → markAsRead + navigate
  * - Hover state
+ * - Memoized dla optymalizacji performance (porównanie po notification.id i readAt)
  *
  * @example
  * ```tsx
@@ -21,7 +23,7 @@ import type { NotificationItemProps } from '@/types/dashboard';
  * />
  * ```
  */
-export function NotificationItem({ notification, onRead }: NotificationItemProps) {
+function NotificationItemComponent({ notification, onRead }: NotificationItemProps) {
   const { id, type, title, message, linkUrl, readAt, createdAt } = notification;
 
   const isUnread = !readAt;
@@ -223,3 +225,14 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
     </div>
   );
 }
+
+/**
+ * Memoized NotificationItem
+ * Re-render only if notification.id or notification.readAt changes
+ */
+export const NotificationItem = memo(
+  NotificationItemComponent,
+  (prevProps, nextProps) =>
+    prevProps.notification.id === nextProps.notification.id &&
+    prevProps.notification.readAt === nextProps.notification.readAt
+);

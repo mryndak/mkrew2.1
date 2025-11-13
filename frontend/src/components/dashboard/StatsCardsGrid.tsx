@@ -1,6 +1,5 @@
 import { StatsCard } from './StatsCard';
 import type { StatsCardsGridProps } from '@/types/dashboard';
-import { DONATION_TYPE_LABELS } from '@/types/dashboard';
 
 /**
  * StatsCardsGrid - Grid z kartami statystyk Dashboard

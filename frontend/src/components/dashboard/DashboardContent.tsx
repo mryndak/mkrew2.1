@@ -180,8 +180,8 @@ function LoadingSkeleton() {
 
       {/* Stats cards skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-gray-200 rounded-lg h-32 animate-pulse" />
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={`stat-skeleton-${i}`} className="bg-gray-200 rounded-lg h-32 animate-pulse" />
         ))}
       </div>
 
