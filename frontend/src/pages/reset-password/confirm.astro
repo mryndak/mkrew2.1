@@ -1,0 +1,89 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { ResetConfirmForm } from '@/components/auth/ResetConfirmForm';
+
+/**
+ * Password Reset Confirm Page
+ * Static page with React island for interactivity
+ *
+ * Features:
+ * - Static generation for fast loading
+ * - React island dla ResetConfirmForm (client:only)
+ * - Token validation from URL query params
+ * - New password submission with strength requirements
+ * - Real-time password requirements validation
+ * - Password visibility toggle
+ */
+
+// Parse token from URL query params
+const token = Astro.url.searchParams.get('token');
+
+// If no token provided, redirect to request page
+if (!token) {
+  return Astro.redirect('/reset-password', 302);
+}
+---
+
+<Layout
+  title="Ustaw nowe hasło | mkrew"
+  description="Ustaw nowe hasło dla swojego konta w platformie mkrew."
+  includeNavbar={true}
+  includeFooter={true}
+>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <main class="flex-1 flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      {/* Reset confirm form card */}
+      <div class="bg-white shadow-md rounded-lg p-8">
+        {/* Header */}
+        <header class="mb-6 text-center">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            Ustaw nowe hasło
+          </h1>
+          <p class="text-sm text-gray-600">
+            Wprowadź nowe hasło dla swojego konta
+          </p>
+        </header>
+
+        {/* Reset Confirm Form - React island with token from URL */}
+        <ResetConfirmForm client:only="react" />
+
+        {/* Security notice */}
+        <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="flex items-start gap-2">
+            <svg
+              class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <p class="text-xs text-blue-800">
+              <strong>Bezpieczeństwo:</strong> Po zresetowaniu hasła wszystkie aktywne sesje zostaną wylogowane.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Help section */}
+      <div class="text-center">
+        <p class="text-xs text-gray-500">
+          Potrzebujesz pomocy?{' '}
+          <a href="/kontakt" class="underline hover:text-gray-700 font-medium">
+            Skontaktuj się z nami
+          </a>
+        </p>
+      </div>
+    </div>
+  </main>
+</Layout>

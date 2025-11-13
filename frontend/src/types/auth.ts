@@ -796,3 +796,114 @@ export const EMAIL_VERIFICATION_CONFIG = {
   RESEND_KEY: 'resend_attempts',
   VERIFIED_SESSION_TTL_MS: 5 * 60 * 1000, // 5 minutes
 } as const;
+
+// ===== Password Reset Types =====
+
+/**
+ * Request body dla POST /api/v1/auth/password-reset/request
+ * Backend: PasswordResetRequestDto.java
+ */
+export interface PasswordResetRequestDto {
+  email: string; // Required, valid email format, max 255 chars
+}
+
+/**
+ * Request body dla POST /api/v1/auth/password-reset/confirm
+ * Backend: PasswordResetConfirmDto.java
+ */
+export interface PasswordResetConfirmDto {
+  token: string; // Required, token from email
+  newPassword: string; // Required, min 8 chars, must match password regex
+}
+
+/**
+ * Response body z password reset endpoints
+ * Backend: PasswordResetResponse.java
+ */
+export interface PasswordResetResponse {
+  message: string; // Success message
+}
+
+/**
+ * Form data dla ResetRequestForm
+ */
+export interface ResetRequestFormData {
+  email: string;
+}
+
+/**
+ * Form data dla ResetConfirmForm
+ */
+export interface ResetConfirmFormData {
+  token: string;
+  newPassword: string;
+  confirmPassword: string; // Only for client-side, not sent to backend
+}
+
+/**
+ * Validation schema dla Reset Request Form
+ */
+export const resetRequestSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email jest wymagany')
+    .email('Nieprawidłowy format email')
+    .max(255, 'Email jest za długi'),
+});
+
+export type ResetRequestFormSchema = z.infer<typeof resetRequestSchema>;
+
+/**
+ * Validation schema dla Reset Confirm Form
+ */
+export const resetConfirmSchema = z.object({
+  token: z.string().min(1, 'Token jest wymagany'),
+  newPassword: z
+    .string()
+    .min(8, 'Hasło musi mieć co najmniej 8 znaków')
+    .regex(PASSWORD_REGEX, 'Hasło nie spełnia wymagań'),
+  confirmPassword: z.string().min(1, 'Potwierdzenie hasła jest wymagane'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'Hasła muszą być identyczne',
+  path: ['confirmPassword'],
+});
+
+export type ResetConfirmFormSchema = z.infer<typeof resetConfirmSchema>;
+
+/**
+ * State dla ResetRequestForm
+ */
+export interface ResetRequestFormState {
+  email: string;
+  isSubmitting: boolean;
+  error: string | null;
+  success: boolean;
+}
+
+/**
+ * State dla ResetConfirmForm
+ */
+export interface ResetConfirmFormState {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+  showPassword: boolean;
+  showConfirmPassword: boolean;
+  isSubmitting: boolean;
+  error: string | null;
+  success: boolean;
+}
+
+/**
+ * Props dla ResetRequestForm
+ */
+export interface ResetRequestFormProps {
+  className?: string;
+}
+
+/**
+ * Props dla ResetConfirmForm
+ */
+export interface ResetConfirmFormProps {
+  className?: string;
+}
