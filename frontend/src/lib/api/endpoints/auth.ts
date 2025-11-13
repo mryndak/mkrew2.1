@@ -1,5 +1,5 @@
 import { apiClient } from '../client';
-import type { LoginRequest, LoginResponse } from '@/types/auth';
+import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '@/types/auth';
 
 /**
  * Login user
@@ -17,4 +17,38 @@ import type { LoginRequest, LoginResponse } from '@/types/auth';
 export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   const response = await apiClient.post<LoginResponse>('/auth/login', data);
   return response.data;
+}
+
+/**
+ * Register new user
+ * Endpoint: POST /api/v1/auth/register
+ *
+ * @param data - RegisterRequest with user data
+ * @returns Promise<RegisterResponse> with user ID and email
+ *
+ * @throws AxiosError with status codes:
+ * - 400: Validation error (invalid data)
+ * - 409: Email already exists
+ * - 429: Too many registration attempts (rate limit)
+ * - 500: Server error
+ */
+export async function registerUser(data: RegisterRequest): Promise<RegisterResponse> {
+  const response = await apiClient.post<RegisterResponse>('/auth/register', data);
+  return response.data;
+}
+
+/**
+ * Check email uniqueness
+ * Endpoint: GET /api/v1/auth/check-email
+ *
+ * @param email - Email to check
+ * @returns Promise<boolean> - true if email is available, false if taken
+ *
+ * @throws AxiosError on network error
+ */
+export async function checkEmailUniqueness(email: string): Promise<boolean> {
+  const response = await apiClient.get<{ available: boolean }>(
+    `/auth/check-email?email=${encodeURIComponent(email)}`
+  );
+  return response.data.available;
 }
