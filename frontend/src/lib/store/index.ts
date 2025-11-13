@@ -4,6 +4,8 @@ import authReducer from './slices/authSlice';
 import userReducer from './slices/userSlice';
 import rckikReducer from './slices/rckikSlice';
 import favoritesReducer from './slices/favoritesSlice';
+import donationsReducer from './slices/donationsSlice';
+import notificationsReducer from './slices/notificationsSlice';
 
 /**
  * Redux store configuration
@@ -15,6 +17,8 @@ export const store = configureStore({
     user: userReducer,
     rckik: rckikReducer,
     favorites: favoritesReducer,
+    donations: donationsReducer,
+    notifications: notificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
