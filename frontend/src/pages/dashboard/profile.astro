@@ -1,0 +1,89 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { ProfileView } from '@/components/profile/ProfileView';
+import { ReduxProvider } from '@/components/common/ReduxProvider';
+
+/**
+ * Profile Page - User Profile Management
+ * Protected page dla zalogowanych użytkowników
+ *
+ * Features:
+ * - SSR z React islands dla interaktywności
+ * - Redux Provider dla state management
+ * - Auth middleware (wymaga JWT token)
+ * - User Stories: US-005 (Edycja profilu), US-006 (Ustawienia powiadomień), US-016 (GDPR)
+ *
+ * Layout:
+ * - Desktop: max-w-4xl centered
+ * - Mobile: responsive stack
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT
+ * - Redirect do /login jeśli niezalogowany
+ * - CSRF protection przez API
+ */
+
+/**
+ * Client-side auth check (basic - server middleware would be better)
+ * Note: W produkcji powinno być middleware po stronie serwera
+ */
+const accessToken = Astro.cookies.get('accessToken')?.value;
+
+// Jeśli brak tokenu, redirect do login z return URL
+if (!accessToken) {
+  return Astro.redirect(`/login?redirect=/dashboard/profile`);
+}
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Mój profil | mkrew';
+const pageDescription = 'Zarządzaj swoimi danymi osobowymi, preferencjami powiadomień i ustawieniami konta w platformie mkrew.';
+---
+
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  includeNavbar={true}
+  includeFooter={true}
+>
+  <!-- Meta tags -->
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </Fragment>
+
+  <!-- Main Content -->
+  <main class="min-h-screen">
+    {/* ProfileView - React island z Redux */}
+    <ReduxProvider client:only="react">
+      <ProfileView client:load />
+    </ReduxProvider>
+  </main>
+</Layout>
+
+<style>
+  /**
+   * Custom styles dla profile page
+   * Większość stylów w Tailwind, ale dodatkowe CSS jeśli potrzebne
+   */
+  main {
+    background-color: #f9fafb; /* gray-50 */
+  }
+</style>
+
+<script>
+  /**
+   * Client-side auth check (runs in browser)
+   * Sprawdza token w localStorage i redirectuje jeśli brak
+   * Note: To jest dodatkowa warstwa - główna auth powinna być po stronie serwera
+   */
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      // Redirect do login z return URL
+      window.location.href = '/login?redirect=/dashboard/profile';
+    }
+  }
+</script>
