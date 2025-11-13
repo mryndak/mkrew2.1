@@ -162,9 +162,9 @@ export function ScraperStatus({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
       {/* Title */}
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Status scrapera</h2>
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">Status scrapera</h2>
 
       {/* Status Badge */}
       <div className="flex items-center gap-3 mb-4">

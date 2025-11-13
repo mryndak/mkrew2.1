@@ -180,7 +180,8 @@ export function BloodLevelChart({
   // Loading state
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6" role="status" aria-live="polite">
+        <span className="sr-only">Ładowanie wykresu trendu poziomów krwi...</span>
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -233,9 +234,9 @@ export function BloodLevelChart({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
       {/* Title */}
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">
         Trend poziomu krwi - ostatnie 30 dni
       </h2>
 
@@ -250,7 +251,11 @@ export function BloodLevelChart({
       </div>
 
       {/* Chart */}
-      <div className="w-full h-80">
+      <div
+        className="w-full h-64 sm:h-80"
+        role="img"
+        aria-label={`Wykres liniowy pokazujący trend poziomu krwi dla grupy ${selectedBloodGroup} w ciągu ostatnich 30 dni`}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}

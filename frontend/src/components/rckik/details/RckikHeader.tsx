@@ -35,13 +35,13 @@ export function RckikHeader({
     : null;
 
   return (
-    <header className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <header className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         {/* Left side - Main info */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Title with status badge */}
-          <div className="flex flex-wrap items-center gap-3 mb-3">
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 mb-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
               {rckik.name}
             </h1>
             <Badge variant={rckik.active ? 'success' : 'neutral'} size="medium">
@@ -137,14 +137,14 @@ export function RckikHeader({
         </div>
 
         {/* Right side - Action buttons */}
-        <div className="flex flex-row lg:flex-col gap-3">
+        <div className="flex flex-row lg:flex-col gap-2 sm:gap-3 lg:min-w-max">
           {/* Favorite button */}
           {isAuthenticated ? (
             <button
               onClick={onToggleFavorite}
               className={[
-                'inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium',
-                'transition-all duration-200 border-2',
+                'inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium',
+                'transition-all duration-200 border-2 whitespace-nowrap',
                 'focus:outline-none focus:ring-2 focus:ring-offset-2',
                 isFavorite
                   ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100 focus:ring-red-500'
@@ -189,8 +189,8 @@ export function RckikHeader({
           ) : (
             <button
               onClick={onToggleFavorite}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium
-                         bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50
+              className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium
+                         bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 whitespace-nowrap
                          transition-all duration-200 focus:outline-none focus:ring-2
                          focus:ring-offset-2 focus:ring-gray-500"
               aria-label="Zaloguj się, aby dodać do ulubionych"

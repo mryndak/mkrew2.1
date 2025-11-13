@@ -83,11 +83,40 @@ export function useBloodLevelHistory(
         loading: false,
         error: null,
       });
-    } catch (error) {
+    } catch (error: any) {
+      // Enhanced error handling with more specific messages
+      let errorMessage = 'Nie udało się pobrać historii snapshotów';
+
+      if (error.response) {
+        // HTTP error responses
+        switch (error.response.status) {
+          case 404:
+            errorMessage = 'Nie znaleziono historii dla tego centrum';
+            break;
+          case 403:
+            errorMessage = 'Brak dostępu do historii snapshotów';
+            break;
+          case 500:
+            errorMessage = 'Błąd serwera. Spróbuj ponownie później';
+            break;
+          default:
+            errorMessage = error.response.data?.message || errorMessage;
+        }
+      } else if (error.request) {
+        // Network error - no response received
+        errorMessage = 'Brak połączenia z serwerem. Sprawdź połączenie internetowe';
+      } else if (error.message) {
+        // Other errors
+        errorMessage = error.message;
+      }
+
+      const enhancedError = new Error(errorMessage);
+      enhancedError.cause = error;
+
       setState(prev => ({
         ...prev,
         loading: false,
-        error: error as Error,
+        error: enhancedError,
       }));
     }
   }, [rckikId, params.bloodGroup, params.fromDate, params.toDate, params.page, params.size]);

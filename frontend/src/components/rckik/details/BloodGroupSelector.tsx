@@ -89,6 +89,7 @@ export function BloodGroupSelector({
       <div
         role="radiogroup"
         aria-labelledby="blood-group-selector-label"
+        aria-required="false"
         className="grid grid-cols-4 sm:grid-cols-8 gap-2 w-full"
       >
         {ALL_BLOOD_GROUPS.map((bloodGroup) => {

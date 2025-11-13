@@ -18,7 +18,7 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
     : error.message || 'Nie udało się załadować danych. Spróbuj ponownie.';
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center" role="alert" aria-live="assertive">
       {/* Error icon */}
       <div className="mb-6 text-red-500">
         <svg

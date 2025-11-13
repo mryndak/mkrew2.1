@@ -37,8 +37,36 @@ export const fetchRckikDetails = createAsyncThunk(
       const data = await fetchRckikDetailsApi(id);
       return data;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Nie udało się pobrać szczegółów centrum';
-      return rejectWithValue(message);
+      // Enhanced error handling with specific messages
+      let errorMessage = 'Nie udało się pobrać szczegółów centrum';
+
+      if (error.response) {
+        // HTTP error responses
+        switch (error.response.status) {
+          case 404:
+            errorMessage = 'Centrum RCKiK nie zostało znalezione';
+            break;
+          case 403:
+            errorMessage = 'Brak dostępu do szczegółów centrum';
+            break;
+          case 500:
+            errorMessage = 'Błąd serwera. Spróbuj ponownie później';
+            break;
+          case 503:
+            errorMessage = 'Serwis chwilowo niedostępny. Spróbuj ponownie za chwilę';
+            break;
+          default:
+            errorMessage = error.response.data?.message || errorMessage;
+        }
+      } else if (error.request) {
+        // Network error - no response received
+        errorMessage = 'Brak połączenia z serwerem. Sprawdź połączenie internetowe';
+      } else if (error.message) {
+        // Other errors
+        errorMessage = error.message;
+      }
+
+      return rejectWithValue(errorMessage);
     }
   }
 );

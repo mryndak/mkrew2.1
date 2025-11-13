@@ -12,10 +12,38 @@ import { BLOOD_LEVEL_STATUS_CONFIG } from '../../types/rckik';
  * - Opcjonalny onClick handler (np. do filtrowania wykresu/tabeli)
  */
 export function BloodLevelBadge({ bloodLevel, size = 'medium', onClick }: BloodLevelBadgeProps) {
-  const config = BLOOD_LEVEL_STATUS_CONFIG[bloodLevel.levelStatus];
+  // Defensive checks for edge cases
+  if (!bloodLevel) {
+    console.error('BloodLevelBadge: bloodLevel prop is required');
+    return null;
+  }
+
+  if (!bloodLevel.bloodGroup || typeof bloodLevel.levelPercentage !== 'number') {
+    console.error('BloodLevelBadge: invalid bloodLevel data', bloodLevel);
+    return null;
+  }
+
+  // Clamp percentage to valid range [0, 100]
+  const clampedPercentage = Math.max(0, Math.min(100, bloodLevel.levelPercentage));
+
+  // Validate and fallback for levelStatus
+  const validStatuses = ['CRITICAL', 'IMPORTANT', 'OK'] as const;
+  const levelStatus = validStatuses.includes(bloodLevel.levelStatus as any)
+    ? bloodLevel.levelStatus
+    : clampedPercentage < 20
+    ? 'CRITICAL'
+    : clampedPercentage < 50
+    ? 'IMPORTANT'
+    : 'OK';
+
+  const config = BLOOD_LEVEL_STATUS_CONFIG[levelStatus];
 
   // Format timestamp dla tooltip
-  const formatTimestamp = (isoString: string) => {
+  const formatTimestamp = (isoString: string | null | undefined) => {
+    if (!isoString) {
+      return 'Data niedostępna';
+    }
+
     try {
       const date = new Date(isoString);
       return date.toLocaleString('pl-PL', {
@@ -139,8 +167,8 @@ export function BloodLevelBadge({ bloodLevel, size = 'medium', onClick }: BloodL
       }
       aria-label={
         onClick
-          ? `${bloodLevel.bloodGroup} ${bloodLevel.levelPercentage.toFixed(1)}% - ${config.label}. Kliknij aby filtrować`
-          : `${bloodLevel.bloodGroup} ${bloodLevel.levelPercentage.toFixed(1)}% - ${config.label}`
+          ? `${bloodLevel.bloodGroup} ${clampedPercentage.toFixed(1)}% - ${config.label}. Kliknij aby filtrować`
+          : `${bloodLevel.bloodGroup} ${clampedPercentage.toFixed(1)}% - ${config.label}`
       }
     >
       {/* Status icon */}
@@ -150,7 +178,7 @@ export function BloodLevelBadge({ bloodLevel, size = 'medium', onClick }: BloodL
       <span className="font-semibold">{bloodLevel.bloodGroup}</span>
 
       {/* Percentage */}
-      <span className="font-normal">{bloodLevel.levelPercentage.toFixed(1)}%</span>
+      <span className="font-normal">{clampedPercentage.toFixed(1)}%</span>
 
       {/* Screen reader only text */}
       <span className="sr-only">{config.label}</span>

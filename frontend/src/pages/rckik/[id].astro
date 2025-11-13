@@ -16,6 +16,7 @@ import type { GetStaticPaths } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SEO from '../../components/SEO.astro';
 import Breadcrumbs from '../../components/common/Breadcrumbs.astro';
+import RckikNotFound from '../../components/rckik/details/RckikNotFound.astro';
 import { RckikHeader } from '../../components/rckik/details/RckikHeader';
 import { BloodLevelBadge } from '../../components/rckik/BloodLevelBadge';
 import { BloodLevelChart } from '../../components/rckik/details/BloodLevelChart';
@@ -46,9 +47,15 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 const { id } = Astro.params;
 
-// Parse ID
+// Validate and parse ID
+if (!id || id.trim() === '') {
+  return Astro.redirect('/404');
+}
+
 const rckikId = parseInt(id as string, 10);
-if (isNaN(rckikId)) {
+
+// Validate ID is a positive number
+if (isNaN(rckikId) || rckikId <= 0 || !Number.isInteger(parseFloat(id as string))) {
   return Astro.redirect('/404');
 }
 
@@ -64,6 +71,15 @@ if (isNaN(rckikId)) {
 // }
 
 // Mock data dla development (usuń po podłączeniu backendu)
+// W production, jeśli fetchRckikDetails zwróci 404, pokaż RckikNotFound
+const mockRckikExists = [1, 2, 3, 4, 5, 15].includes(rckikId);
+
+// Jeśli RCKiK nie istnieje, wyświetl 404 component
+if (!mockRckikExists) {
+  // W production to będzie:
+  // if (error.response?.status === 404) { ... }
+}
+
 const mockRckik = {
   id: rckikId,
   name: `Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Warszawie`,
@@ -174,15 +190,19 @@ const breadcrumbItems = [
 <BaseLayout>
   <SEO
     slot="head"
-    title={title}
-    description={description}
+    title={mockRckikExists ? title : `RCKiK nie znaleziono | mkrew`}
+    description={mockRckikExists ? description : `Centrum RCKiK o ID ${rckikId} nie zostało znalezione.`}
   />
 
   <main class="container mx-auto px-4 py-8">
     <div class="max-w-7xl mx-auto">
 
-      <!-- Breadcrumbs -->
-      <Breadcrumbs items={breadcrumbItems} />
+      {!mockRckikExists ? (
+        <RckikNotFound rckikId={rckikId} />
+      ) : (
+        <>
+          <!-- Breadcrumbs -->
+          <Breadcrumbs items={breadcrumbItems} />
 
       <!-- RckikHeader -->
       <RckikHeader
@@ -200,12 +220,12 @@ const breadcrumbItems = [
 
       <!-- Current Blood Levels Section -->
       <section class="mb-8">
-        <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">
           Aktualne stany krwi
         </h2>
 
         {rckik.currentBloodLevels && rckik.currentBloodLevels.length > 0 ? (
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {rckik.currentBloodLevels.map((level) => (
               <BloodLevelBadge
                 bloodLevel={level}
@@ -220,9 +240,17 @@ const breadcrumbItems = [
           </div>
         )}
 
-        <p class="text-sm text-gray-500 mt-3">
-          Ostatnia aktualizacja: {new Date(rckik.currentBloodLevels[0]?.lastUpdate).toLocaleString('pl-PL')}
-        </p>
+        {rckik.currentBloodLevels[0]?.lastUpdate && (
+          <p class="text-xs sm:text-sm text-gray-500 mt-3">
+            Ostatnia aktualizacja: {new Date(rckik.currentBloodLevels[0].lastUpdate).toLocaleString('pl-PL', {
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </p>
+        )}
       </section>
 
       <!-- Blood Level Chart Section -->
@@ -253,6 +281,8 @@ const breadcrumbItems = [
           client:load
         />
       </section>
+        </>
+      )}
 
     </div>
   </main>

@@ -230,7 +230,8 @@ export function HistoryTable({
   // Loading state
   if (loading && !snapshots) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6" role="status" aria-live="polite">
+        <span className="sr-only">Ładowanie historii snapshotów...</span>
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3"></div>
           <div className="h-10 bg-gray-200 rounded"></div>
@@ -257,76 +258,78 @@ export function HistoryTable({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
       {/* Title */}
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">
         Historia snapshotów
       </h2>
 
       {/* Filters Bar */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        {/* Blood Group Filter */}
-        <div className="flex-1 min-w-[200px]">
-          <label
-            htmlFor="bloodGroupFilter"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Grupa krwi
-          </label>
-          <Select
-            id="bloodGroupFilter"
-            value={filters.bloodGroup || ''}
-            onChange={(e) =>
-              handleFilterChange(
-                'bloodGroup',
-                e.target.value ? (e.target.value as BloodGroup) : undefined
-              )
-            }
-          >
-            <option value="">Wszystkie grupy</option>
-            {ALL_BLOOD_GROUPS.map((group) => (
-              <option key={group} value={group}>
-                {group}
-              </option>
-            ))}
-          </Select>
-        </div>
+      <div className="mb-6 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Blood Group Filter */}
+          <div>
+            <label
+              htmlFor="bloodGroupFilter"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Grupa krwi
+            </label>
+            <Select
+              id="bloodGroupFilter"
+              value={filters.bloodGroup || ''}
+              onChange={(e) =>
+                handleFilterChange(
+                  'bloodGroup',
+                  e.target.value ? (e.target.value as BloodGroup) : undefined
+                )
+              }
+            >
+              <option value="">Wszystkie grupy</option>
+              {ALL_BLOOD_GROUPS.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </Select>
+          </div>
 
-        {/* Date From Filter */}
-        <div className="flex-1 min-w-[200px]">
-          <label
-            htmlFor="fromDateFilter"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Data od
-          </label>
-          <Input
-            id="fromDateFilter"
-            type="date"
-            value={filters.fromDate || ''}
-            onChange={(e) => handleFilterChange('fromDate', e.target.value || undefined)}
-          />
-        </div>
+          {/* Date From Filter */}
+          <div>
+            <label
+              htmlFor="fromDateFilter"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Data od
+            </label>
+            <Input
+              id="fromDateFilter"
+              type="date"
+              value={filters.fromDate || ''}
+              onChange={(e) => handleFilterChange('fromDate', e.target.value || undefined)}
+            />
+          </div>
 
-        {/* Date To Filter */}
-        <div className="flex-1 min-w-[200px]">
-          <label
-            htmlFor="toDateFilter"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Data do
-          </label>
-          <Input
-            id="toDateFilter"
-            type="date"
-            value={filters.toDate || ''}
-            onChange={(e) => handleFilterChange('toDate', e.target.value || undefined)}
-          />
+          {/* Date To Filter */}
+          <div>
+            <label
+              htmlFor="toDateFilter"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Data do
+            </label>
+            <Input
+              id="toDateFilter"
+              type="date"
+              value={filters.toDate || ''}
+              onChange={(e) => handleFilterChange('toDate', e.target.value || undefined)}
+            />
+          </div>
         </div>
 
         {/* Clear Filters Button */}
         {(filters.bloodGroup || filters.fromDate || filters.toDate) && (
-          <div className="flex items-end">
+          <div className="flex justify-start">
             <Button variant="outline" size="medium" onClick={clearFilters}>
               Wyczyść filtry
             </Button>
@@ -335,7 +338,7 @@ export function HistoryTable({
       </div>
 
       {/* Table - Responsive wrapper */}
-      <div className="overflow-x-auto -mx-6 px-6">
+      <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
         {sortedSnapshots.length === 0 ? (
           <EmptyState
             title="Brak snapshotów"
@@ -344,7 +347,11 @@ export function HistoryTable({
           />
         ) : (
           <>
-            <table className="min-w-full divide-y divide-gray-200">
+            <table
+              className="min-w-full divide-y divide-gray-200"
+              aria-label="Historia snapshotów poziomów krwi"
+              role="table"
+            >
               <thead className="bg-gray-50">
                 <tr>
                   {/* Data snapshotu */}
@@ -352,6 +359,13 @@ export function HistoryTable({
                     scope="col"
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('snapshotDate')}
+                    aria-sort={
+                      sort.sortBy === 'snapshotDate'
+                        ? sort.sortOrder === 'ASC'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    }
                   >
                     <div className="flex items-center gap-2">
                       <span>Data</span>
@@ -364,6 +378,13 @@ export function HistoryTable({
                     scope="col"
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('bloodGroup')}
+                    aria-sort={
+                      sort.sortBy === 'bloodGroup'
+                        ? sort.sortOrder === 'ASC'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    }
                   >
                     <div className="flex items-center gap-2">
                       <span>Grupa</span>
@@ -376,6 +397,13 @@ export function HistoryTable({
                     scope="col"
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('levelPercentage')}
+                    aria-sort={
+                      sort.sortBy === 'levelPercentage'
+                        ? sort.sortOrder === 'ASC'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    }
                   >
                     <div className="flex items-center gap-2">
                       <span>Poziom</span>
