@@ -1,0 +1,46 @@
+---
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { ReduxProvider } from '@/components/common/ReduxProvider';
+import { DashboardContent } from '@/components/dashboard/DashboardContent';
+
+/**
+ * Dashboard Page - Główna strona panelu użytkownika
+ * Protected page dla zalogowanych użytkowników
+ *
+ * Features:
+ * - React islands dla interaktywności
+ * - Redux Provider dla state management
+ * - Auto-fetch danych z API (useDashboardData hook)
+ * - Sekcje: Welcome, Stats, Favorites, Notifications, Recent Donations, Quick Actions
+ *
+ * Layout:
+ * - Desktop: 2-kolumnowy layout (main content + sidebar widgets)
+ * - Mobile: 1-kolumnowy layout (stack)
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
+ * - Redirect do /login jeśli niezalogowany
+ *
+ * Data Flow:
+ * - DashboardContent używa useDashboardData hook
+ * - useDashboardData automatycznie fetchuje dane z Redux store
+ * - Redux store pobiera dane z API endpoints
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Dashboard | mkrew';
+const pageDescription = 'Panel użytkownika platformy mkrew - przegląd donacji, ulubionych centrów i powiadomień';
+---
+
+<DashboardLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Dashboard Content with Redux Provider -->
+  <ReduxProvider client:only="react">
+    <DashboardContent client:only="react" />
+  </ReduxProvider>
+</DashboardLayout>
