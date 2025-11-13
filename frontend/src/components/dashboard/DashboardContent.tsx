@@ -5,6 +5,7 @@ import { FavoritesWidget } from './FavoritesWidget';
 import { NotificationsWidget } from './NotificationsWidget';
 import { RecentDonationsTimeline } from './RecentDonationsTimeline';
 import { QuickActionsPanel } from './QuickActionsPanel';
+import { MiniMap } from './MiniMap';
 
 /**
  * DashboardContent - Główny komponent Dashboard
@@ -22,7 +23,7 @@ import { QuickActionsPanel } from './QuickActionsPanel';
  * - StatsCardsGrid (full width, 4 cards)
  * - 2-column grid (desktop) / 1-column (mobile):
  *   - Left: RecentDonationsTimeline, QuickActionsPanel
- *   - Right: FavoritesWidget, NotificationsWidget
+ *   - Right: MiniMap, FavoritesWidget, NotificationsWidget
  *
  * @example
  * ```tsx
@@ -126,6 +127,14 @@ export function DashboardContent() {
 
         {/* Right column - 1/3 width on desktop */}
         <div className="lg:col-span-1 space-y-6">
+          {/* Mini Map - Critical Blood Levels */}
+          <MiniMap
+            favorites={favorites}
+            onCenterClick={(rckikId) => {
+              window.location.href = `/rckik/${rckikId}`;
+            }}
+          />
+
           {/* Favorites Widget */}
           <FavoritesWidget favorites={favorites} />
 
