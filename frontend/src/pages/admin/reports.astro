@@ -76,17 +76,6 @@ const mockRckikOptions = [
     <meta name="robots" content="noindex, nofollow" />
   </Fragment>
 
-  <!-- Reports Header -->
-  <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">Raporty Użytkowników</h1>
-    <p class="mt-1 text-sm text-gray-600">
-      Zarządzaj zgłoszeniami problemów z jakością danych od użytkowników
-    </p>
-  </div>
-
-  <!-- Reports Statistics -->
-  <div id="reports-statistics-container"></div>
-
   <!-- Reports View Container -->
   <div
     id="reports-view-container"
@@ -105,14 +94,13 @@ const mockRckikOptions = [
 
   <!-- React Components Script -->
   <script>
-    import React from 'react';
+    import React, { useState } from 'react';
     import { createRoot } from 'react-dom/client';
     import { ToastContainer } from 'react-toastify';
     import 'react-toastify/dist/ReactToastify.css';
 
-    // TODO: Import components after they are created
-    // import { ReportsView } from '@/components/admin/reports/ReportsView';
-    // import { ReportDetailsModal } from '@/components/admin/reports/ReportDetailsModal';
+    import { ReportsView } from '@/components/admin/reports/ReportsView';
+    import { ReportDetailsModal } from '@/components/admin/reports/ReportDetailsModal';
 
     // Wait for DOM to be ready
     document.addEventListener('DOMContentLoaded', () => {
@@ -136,26 +124,75 @@ const mockRckikOptions = [
         );
       }
 
-      // TODO: Initialize ReportsView component after it's created
-      // const reportsViewContainer = document.getElementById('reports-view-container');
-      // if (reportsViewContainer) {
-      //   const initialReports = JSON.parse(reportsViewContainer.dataset.initialReports || '[]');
-      //   const initialPage = parseInt(reportsViewContainer.dataset.initialPage || '0');
-      //   const initialTotalPages = parseInt(reportsViewContainer.dataset.initialTotalPages || '0');
-      //   const initialTotalElements = parseInt(reportsViewContainer.dataset.initialTotalElements || '0');
-      //   const rckikOptions = JSON.parse(reportsViewContainer.dataset.rckikOptions || '[]');
-      //
-      //   const reportsViewRoot = createRoot(reportsViewContainer);
-      //   reportsViewRoot.render(
-      //     React.createElement(ReportsView, {
-      //       initialReports,
-      //       initialPage,
-      //       initialTotalPages,
-      //       initialTotalElements,
-      //       rckikOptions,
-      //     })
-      //   );
-      // }
+      // Shared state for modal
+      let selectedReportId: number | null = null;
+      let reportDetailsModalRoot: any = null;
+      let reportsViewRoot: any = null;
+
+      const openReportDetailsModal = (reportId: number) => {
+        selectedReportId = reportId;
+        renderReportDetailsModal();
+      };
+
+      const closeReportDetailsModal = () => {
+        selectedReportId = null;
+        renderReportDetailsModal();
+      };
+
+      const handleReportUpdate = () => {
+        // Odśwież ReportsView po aktualizacji
+        // ReportsView sam ma hook który odświeży dane
+        console.log('Report updated, refreshing list...');
+      };
+
+      const renderReportDetailsModal = () => {
+        const modalContainer = document.getElementById('report-details-modal-container');
+        if (modalContainer) {
+          if (!reportDetailsModalRoot) {
+            reportDetailsModalRoot = createRoot(modalContainer);
+          }
+          reportDetailsModalRoot.render(
+            React.createElement(ReportDetailsModal, {
+              reportId: selectedReportId,
+              isOpen: selectedReportId !== null,
+              onClose: closeReportDetailsModal,
+              onUpdate: handleReportUpdate,
+            })
+          );
+        }
+      };
+
+      // Initialize ReportsView component
+      const reportsViewContainer = document.getElementById('reports-view-container');
+      if (reportsViewContainer) {
+        const initialReports = JSON.parse(reportsViewContainer.dataset.initialReports || '[]');
+        const initialPage = parseInt(reportsViewContainer.dataset.initialPage || '0');
+        const initialTotalPages = parseInt(reportsViewContainer.dataset.initialTotalPages || '0');
+        const initialTotalElements = parseInt(reportsViewContainer.dataset.initialTotalElements || '0');
+        const rckikOptions = JSON.parse(reportsViewContainer.dataset.rckikOptions || '[]');
+
+        const initialData = {
+          reports: initialReports,
+          page: initialPage,
+          size: 20,
+          totalElements: initialTotalElements,
+          totalPages: initialTotalPages,
+          first: initialPage === 0,
+          last: initialPage === initialTotalPages - 1,
+        };
+
+        reportsViewRoot = createRoot(reportsViewContainer);
+        reportsViewRoot.render(
+          React.createElement(ReportsView, {
+            initialData: initialData.reports.length > 0 ? initialData : undefined,
+            rckikOptions,
+            onOpenModal: openReportDetailsModal,
+          })
+        );
+      }
+
+      // Initialize modal renderer
+      renderReportDetailsModal();
     });
   </script>
 </AdminLayout>
