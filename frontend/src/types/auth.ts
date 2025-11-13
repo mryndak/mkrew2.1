@@ -651,3 +651,17 @@ export function clearRegistrationDraft(): void {
     console.warn('Failed to clear registration draft:', error);
   }
 }
+
+// ===== RCKiK Types (for FavoritesPicker in Step3) =====
+
+/**
+ * Basic RCKiK data for favorites picker
+ * Lightweight type używany w Step3Form
+ */
+export interface RckikBasic {
+  id: number;
+  name: string;
+  city: string;
+  latitude: number | null;
+  longitude: number | null;
+}
