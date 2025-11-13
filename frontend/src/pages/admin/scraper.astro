@@ -1,0 +1,220 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+/**
+ * Scraper Monitoring Page - Panel administracyjny do monitorowania scrapingu
+ * Protected page dla użytkowników z rolą ADMIN
+ *
+ * Features:
+ * - Globalny status systemu scrapingu
+ * - Historia uruchomień scrapera (scheduled i manual)
+ * - Szczegółowe logi dla każdego uruchomienia
+ * - Ręczne uruchamianie scrapera
+ * - Alerty o długotrwałych awariach
+ *
+ * User Stories:
+ * - US-017: Manualne uruchomienie parsowania
+ * - US-018: Monitorowanie i alertowanie błędów scraperów
+ * - US-025: Tryb skrajny - brak dostępu do stron RCKiK
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by AdminLayout)
+ * - Wymaga roli ADMIN
+ * - Redirect do /dashboard jeśli brak uprawnień
+ *
+ * Data Flow:
+ * - SSR: Pobieranie początkowych danych z API
+ * - Client: React components z auto-refresh
+ * - Redux store dla zarządzania stanem (opcjonalnie)
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Scraper Monitoring | Admin | mkrew';
+const pageDescription = 'Panel monitorowania systemu web scrapingu - status, logi, ręczne uruchamianie';
+
+/**
+ * TODO: Pobieranie początkowych danych z API (SSR)
+ * Na razie używamy mock danych dla development
+ */
+
+// Import mock data dla development
+const mockGlobalStatus = {
+  globalStatus: 'OK' as const,
+  lastSuccessfulTimestamp: new Date().toISOString(),
+  consecutiveFailures: 0,
+  totalRecentRuns: 5,
+  successfulRecentRuns: 5,
+  failedRecentRuns: 0,
+  message: 'System scrapingu działa prawidłowo',
+  requiresAdminAlert: false,
+};
+
+const mockRuns = {
+  runs: [],
+  page: 0,
+  totalElements: 0,
+  totalPages: 0,
+};
+---
+
+<AdminLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Scraper Header -->
+  <header class="mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Scraper Monitoring</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Monitorowanie i zarządzanie systemem web scrapingu
+        </p>
+      </div>
+
+      <!-- Manual Trigger Button Placeholder -->
+      <div class="mt-4 sm:mt-0">
+        <button
+          type="button"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          disabled
+        >
+          <svg
+            class="h-5 w-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Uruchom Scraper
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Global Status Section - Placeholder -->
+  <section class="mb-8">
+    <div class="bg-white shadow rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Status Globalny</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Status Card -->
+        <div class="border border-gray-200 rounded-lg p-4">
+          <div class="text-sm font-medium text-gray-500 mb-2">Status</div>
+          <div class="flex items-center">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+              <svg class="h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+              OK
+            </span>
+          </div>
+          <p class="mt-2 text-xs text-gray-600">{mockGlobalStatus.message}</p>
+        </div>
+
+        <!-- Last Successful Run -->
+        <div class="border border-gray-200 rounded-lg p-4">
+          <div class="text-sm font-medium text-gray-500 mb-2">Ostatnie udane uruchomienie</div>
+          <div class="text-lg font-semibold text-gray-900">Przed chwilą</div>
+          <p class="mt-1 text-xs text-gray-500">
+            {new Date(mockGlobalStatus.lastSuccessfulTimestamp).toLocaleString('pl-PL')}
+          </p>
+        </div>
+
+        <!-- Recent Runs -->
+        <div class="border border-gray-200 rounded-lg p-4">
+          <div class="text-sm font-medium text-gray-500 mb-2">Ostatnie uruchomienia</div>
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center">
+              <span class="text-2xl font-bold text-green-600">{mockGlobalStatus.successfulRecentRuns}</span>
+              <span class="ml-1 text-sm text-gray-500">sukces</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-2xl font-bold text-red-600">{mockGlobalStatus.failedRecentRuns}</span>
+              <span class="ml-1 text-sm text-gray-500">błąd</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Runs List Section - Placeholder -->
+  <section>
+    <div class="bg-white shadow rounded-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Historia uruchomień</h2>
+        <span class="text-sm text-gray-500">
+          Łącznie: {mockRuns.totalElements} uruchomień
+        </span>
+      </div>
+
+      <!-- Empty State -->
+      <div class="text-center py-12">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">Brak uruchomień</h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Nie znaleziono żadnych uruchomień scrapera w systemie.
+        </p>
+        <div class="mt-6">
+          <button
+            type="button"
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            disabled
+          >
+            <svg
+              class="-ml-1 mr-2 h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Uruchom pierwszy scraping
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TODO: Dodać React components z client:load -->
+  <!--
+  <ReduxProvider client:only="react">
+    <ScraperGlobalStatus initialData={globalStatus} client:load />
+    <ScraperRunsList initialRuns={runs} client:idle />
+  </ReduxProvider>
+  -->
+</AdminLayout>
