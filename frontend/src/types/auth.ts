@@ -328,3 +328,326 @@ function formatRetryAfter(seconds: number): string {
   }
   return `${secs} sekund`;
 }
+
+// ===== Register View Types =====
+
+/**
+ * Request body dla POST /api/v1/auth/register
+ * Backend: RegisterRequest.java
+ */
+export interface RegisterRequest {
+  email: string; // Required, valid email, max 255, unique
+  password: string; // Required, min 8, must match regex pattern
+  firstName: string; // Required, max 100
+  lastName: string; // Required, max 100
+  bloodGroup: BloodGroup | null; // Optional, must be one of 8 values
+  favoriteRckikIds: number[]; // Optional, IDs must exist
+  consentVersion: string; // Required, max 20 (current version: "1.0")
+  consentAccepted: boolean; // Required, must be true
+}
+
+/**
+ * Response body z POST /api/v1/auth/register
+ * Backend: RegisterResponse.java
+ */
+export interface RegisterResponse {
+  userId: number;
+  email: string;
+  emailVerified: boolean;
+  message: string;
+}
+
+/**
+ * Blood group type
+ */
+export type BloodGroup = '0+' | '0-' | 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-';
+
+/**
+ * Valid blood groups array (for dropdown options)
+ */
+export const BLOOD_GROUPS: BloodGroup[] = [
+  '0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'
+];
+
+/**
+ * Full register form data (all steps combined)
+ */
+export interface RegisterFormData {
+  // Step 1
+  email: string;
+  password: string;
+  confirmPassword: string;
+  consentAccepted: boolean;
+  marketingConsent: boolean;
+  // Step 2
+  firstName: string;
+  lastName: string;
+  bloodGroup: BloodGroup | null;
+  // Step 3
+  favoriteRckikIds: number[];
+}
+
+/**
+ * Step 1 form data
+ */
+export interface Step1FormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  consentAccepted: boolean;
+  marketingConsent: boolean;
+}
+
+/**
+ * Step 2 form data
+ */
+export interface Step2FormData {
+  firstName: string;
+  lastName: string;
+  bloodGroup: BloodGroup | null;
+}
+
+/**
+ * Step 3 form data
+ */
+export interface Step3FormData {
+  favoriteRckikIds: number[];
+}
+
+/**
+ * Password regex pattern (same as backend)
+ * Must contain: uppercase, lowercase, digit, special char
+ */
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]+$/;
+
+/**
+ * Name regex pattern (only letters, hyphens, apostrophes, Polish characters)
+ */
+const NAME_REGEX = /^[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ\s'-]+$/;
+
+/**
+ * Step 1 validation schema
+ */
+export const step1Schema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email jest wymagany')
+    .email('Wprowadź prawidłowy adres email')
+    .max(255, 'Email jest zbyt długi'),
+  password: z
+    .string()
+    .min(8, 'Hasło musi mieć co najmniej 8 znaków')
+    .regex(PASSWORD_REGEX, 'Hasło nie spełnia wymagań złożoności'),
+  confirmPassword: z.string().min(1, 'Potwierdź hasło'),
+  consentAccepted: z
+    .boolean()
+    .refine((val) => val === true, 'Musisz zaakceptować politykę prywatności'),
+  marketingConsent: z.boolean().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Hasła muszą się zgadzać',
+  path: ['confirmPassword'],
+});
+
+export type Step1FormSchema = z.infer<typeof step1Schema>;
+
+/**
+ * Step 2 validation schema
+ */
+export const step2Schema = z.object({
+  firstName: z
+    .string()
+    .min(1, 'Imię jest wymagane')
+    .max(100, 'Imię jest zbyt długie')
+    .regex(NAME_REGEX, 'Imię może zawierać tylko litery'),
+  lastName: z
+    .string()
+    .min(1, 'Nazwisko jest wymagane')
+    .max(100, 'Nazwisko jest zbyt długie')
+    .regex(NAME_REGEX, 'Nazwisko może zawierać tylko litery'),
+  bloodGroup: z
+    .enum(['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'])
+    .nullable()
+    .optional(),
+});
+
+export type Step2FormSchema = z.infer<typeof step2Schema>;
+
+/**
+ * Step 3 validation schema (no validation, optional)
+ */
+export const step3Schema = z.object({
+  favoriteRckikIds: z.array(z.number()).optional().default([]),
+});
+
+export type Step3FormSchema = z.infer<typeof step3Schema>;
+
+/**
+ * State hooka useRegisterForm
+ */
+export interface RegisterFormState {
+  currentStep: number; // 1, 2, or 3
+  formData: RegisterFormData;
+  errors: Record<string, string>; // field errors
+  isSubmitting: boolean;
+  globalError: string | null; // API error message
+  emailCheckStatus: EmailCheckStatus;
+  isEmailUnique: boolean | null; // null = not checked yet
+}
+
+/**
+ * Email uniqueness check status
+ */
+export type EmailCheckStatus = 'idle' | 'checking' | 'available' | 'taken' | 'error';
+
+/**
+ * Password strength levels
+ */
+export type PasswordStrength = 'weak' | 'medium' | 'strong';
+
+/**
+ * Password requirements check result
+ */
+export interface PasswordRequirements {
+  minLength: boolean; // >= 8 chars
+  hasUppercase: boolean;
+  hasLowercase: boolean;
+  hasDigit: boolean;
+  hasSpecialChar: boolean;
+}
+
+/**
+ * Props dla RegisterForm
+ */
+export interface RegisterFormProps {
+  onSuccess?: (response: RegisterResponse) => void;
+}
+
+/**
+ * Props dla ProgressBar
+ */
+export interface ProgressBarProps {
+  currentStep: number;
+  completedSteps: number[];
+}
+
+/**
+ * Props dla Step1Form
+ */
+export interface Step1FormProps {
+  formData: Step1FormData;
+  errors: Record<string, string>;
+  emailCheckStatus: EmailCheckStatus;
+  onChange: (field: string, value: any) => void;
+  onNext: () => void;
+}
+
+/**
+ * Props dla Step2Form
+ */
+export interface Step2FormProps {
+  formData: Step2FormData;
+  errors: Record<string, string>;
+  onChange: (field: string, value: any) => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}
+
+/**
+ * Props dla Step3Form
+ */
+export interface Step3FormProps {
+  formData: Step3FormData;
+  onChange: (field: string, value: any) => void;
+  onPrevious: () => void;
+  onSkip: () => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+}
+
+/**
+ * Calculate password strength
+ */
+export function calculatePasswordStrength(password: string): PasswordStrength {
+  if (!password) return 'weak';
+
+  let score = 0;
+
+  // Length
+  if (password.length >= 8) score += 20;
+  if (password.length >= 12) score += 10;
+  if (password.length >= 16) score += 10;
+
+  // Character variety
+  if (/[a-z]/.test(password)) score += 15;
+  if (/[A-Z]/.test(password)) score += 15;
+  if (/\d/.test(password)) score += 15;
+  if (/[@$!%*?&#]/.test(password)) score += 15;
+
+  // Penalty for common patterns
+  if (/^password/i.test(password)) score -= 20;
+  if (/123/.test(password)) score -= 10;
+  if (/^(.)\1+$/.test(password)) score -= 20; // all same character
+
+  if (score < 40) return 'weak';
+  if (score < 70) return 'medium';
+  return 'strong';
+}
+
+/**
+ * Check password requirements
+ */
+export function checkPasswordRequirements(password: string): PasswordRequirements {
+  return {
+    minLength: password.length >= 8,
+    hasUppercase: /[A-Z]/.test(password),
+    hasLowercase: /[a-z]/.test(password),
+    hasDigit: /\d/.test(password),
+    hasSpecialChar: /[@$!%*?&#]/.test(password),
+  };
+}
+
+/**
+ * Get session storage key for draft
+ */
+export const REGISTER_DRAFT_KEY = 'register_draft';
+
+/**
+ * Save registration draft to sessionStorage (bez hasła!)
+ */
+export function saveRegistrationDraft(formData: RegisterFormData): void {
+  try {
+    const draftData = {
+      ...formData,
+      password: '', // NEVER store password
+      confirmPassword: '', // NEVER store password
+    };
+    sessionStorage.setItem(REGISTER_DRAFT_KEY, JSON.stringify(draftData));
+  } catch (error) {
+    console.warn('Failed to save registration draft:', error);
+  }
+}
+
+/**
+ * Load registration draft from sessionStorage
+ */
+export function loadRegistrationDraft(): Partial<RegisterFormData> | null {
+  try {
+    const stored = sessionStorage.getItem(REGISTER_DRAFT_KEY);
+    if (!stored) return null;
+    return JSON.parse(stored);
+  } catch (error) {
+    console.warn('Failed to load registration draft:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear registration draft from sessionStorage
+ */
+export function clearRegistrationDraft(): void {
+  try {
+    sessionStorage.removeItem(REGISTER_DRAFT_KEY);
+  } catch (error) {
+    console.warn('Failed to clear registration draft:', error);
+  }
+}
