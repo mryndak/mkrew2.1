@@ -1,0 +1,40 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { VerificationPendingStatus } from '@/components/auth/verification/VerificationPendingStatus';
+
+/**
+ * Email Verification Pending Page
+ * Shown after successful registration - tells user to check email
+ *
+ * Features:
+ * - SSR dla szybkiego ładowania
+ * - React island dla VerificationPendingStatus (client:load)
+ * - Wyświetla instrukcje sprawdzenia emaila
+ * - Pozwala na resend emaila weryfikacyjnego
+ * - Link do strony logowania
+ *
+ * Query Parameters:
+ * - email (optional) - Email użytkownika z rejestracji
+ *
+ * Example URL:
+ * https://mkrew.pl/verify-email-pending?email=user@example.com
+ */
+
+// Get email from query params
+const url = new URL(Astro.request.url);
+const email = url.searchParams.get('email') || undefined;
+---
+
+<Layout
+  title="Sprawdź Email | mKrew"
+  description="Sprawdź swoją skrzynkę odbiorczą i kliknij link weryfikacyjny, aby aktywować konto."
+  includeNavbar={false}
+  includeFooter={false}
+>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  {/* VerificationPendingStatus - React island with client:load */}
+  <VerificationPendingStatus client:load email={email} />
+</Layout>
