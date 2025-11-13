@@ -1,0 +1,37 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { VerificationStatus } from '@/components/auth/verification/VerificationStatus';
+
+/**
+ * Email Verification Page
+ * Static page with React island for email verification
+ *
+ * Features:
+ * - SSR dla szybkiego ładowania
+ * - React island dla VerificationStatus (client:load)
+ * - Automatyczna weryfikacja tokenu z URL query params
+ * - Obsługa wszystkich stanów weryfikacji (loading, success, error, expired, etc.)
+ * - Przekierowania do /login lub /register
+ * - Bezpieczeństwo: usunięcie tokenu z URL po przetworzeniu
+ *
+ * Query Parameters:
+ * - token (required) - Token weryfikacyjny z emaila
+ *
+ * Example URL:
+ * https://mkrew.pl/verify-email?token=abc123def456...
+ */
+---
+
+<Layout
+  title="Weryfikacja Email | mkrew"
+  description="Weryfikuj swój adres email, aby aktywować konto w platformie mkrew."
+  includeNavbar={false}
+  includeFooter={false}
+>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  {/* VerificationStatus - React island with client:load */}
+  <VerificationStatus client:load />
+</Layout>
