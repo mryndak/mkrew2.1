@@ -9,19 +9,24 @@ import {
 } from '@/lib/store/slices/favoritesSlice';
 import { toast } from 'sonner';
 import { ConfirmModal } from './ConfirmModal';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 /**
- * FavoriteCardItem - Karta pojedynczego ulubionego centrum
+ * FavoriteCardItem - Karta pojedynczego ulubionego centrum (sortable)
  *
  * Features:
+ * - Drag-and-drop (useSortable hook)
+ * - Drag handle (ikona uchwytu) z hover effect
  * - Nazwa centrum, miasto, kod, adres
  * - Aktualne poziomy krwi (BloodLevelBadge x 8)
  * - Alert dla krytycznych poziomów krwi
  * - Przycisk "Zobacz szczegóły" → /rckik/[id]
  * - Przycisk "Usuń" z modalem potwierdzenia
  * - Wskaźnik priorytetu (opcjonalny)
- * - Hover effects
+ * - Hover effects i dragging state
  * - Optimistic updates z rollback
+ * - Keyboard navigation dla drag-and-drop
  *
  * @example
  * ```tsx
@@ -40,6 +45,21 @@ export function FavoriteCardItem({ favorite, index }: FavoriteCardItemProps) {
   const [isRemoving, setIsRemoving] = useState(false);
 
   const { rckikId, name, city, code, address, currentBloodLevels, priority } = favorite;
+
+  // Sortable hook for drag-and-drop
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: favorite.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   // Check for critical blood levels
   const hasCriticalLevels = currentBloodLevels?.some(
@@ -69,14 +89,47 @@ export function FavoriteCardItem({ favorite, index }: FavoriteCardItemProps) {
   return (
     <>
       <div
+        ref={setNodeRef}
+        style={style}
         className={`
           bg-white rounded-lg border shadow-sm
           transition-all duration-200
           ${hasCriticalLevels ? 'border-red-300' : 'border-gray-200'}
           ${isRemoving ? 'opacity-50 pointer-events-none' : 'hover:shadow-md'}
+          ${isDragging ? 'opacity-50 z-50' : ''}
         `}
       >
         <div className="p-6">
+          {/* Drag Handle - visible on hover */}
+          <div className="flex items-start gap-3 mb-4">
+            <button
+              className="mt-1 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing focus:outline-none focus:ring-2 focus:ring-primary-500 rounded transition-colors"
+              {...attributes}
+              {...listeners}
+              aria-label="Przeciągnij aby zmienić kolejność"
+              title="Przeciągnij aby zmienić kolejność"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8h16M4 16h16"
+                />
+              </svg>
+            </button>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-500 font-medium">
+                Przeciągnij, aby zmienić kolejność
+              </p>
+            </div>
+          </div>
+
           {/* Critical Alert Banner */}
           {hasCriticalLevels && (
             <div className="flex items-center gap-2 mb-4 px-3 py-2 bg-red-50 border border-red-200 rounded-md">
