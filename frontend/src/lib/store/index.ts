@@ -2,6 +2,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import authReducer from './slices/authSlice';
 import userReducer from './slices/userSlice';
+import rckikReducer from './slices/rckikSlice';
+import favoritesReducer from './slices/favoritesSlice';
 
 /**
  * Redux store configuration
@@ -11,6 +13,8 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
+    rckik: rckikReducer,
+    favorites: favoritesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
