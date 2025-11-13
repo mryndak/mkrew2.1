@@ -1,16 +1,17 @@
 ---
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
 import { ReduxProvider } from '@/components/common/ReduxProvider';
+import { DashboardContent } from '@/components/dashboard/DashboardContent';
 
 /**
  * Dashboard Page - Główna strona panelu użytkownika
  * Protected page dla zalogowanych użytkowników
  *
  * Features:
- * - SSR dla danych początkowych (future: pre-fetch z API)
  * - React islands dla interaktywności
  * - Redux Provider dla state management
- * - Sekcje: Stats, Favorites, Notifications, Recent Donations, Quick Actions
+ * - Auto-fetch danych z API (useDashboardData hook)
+ * - Sekcje: Welcome, Stats, Favorites, Notifications, Recent Donations, Quick Actions
  *
  * Layout:
  * - Desktop: 2-kolumnowy layout (main content + sidebar widgets)
@@ -19,6 +20,11 @@ import { ReduxProvider } from '@/components/common/ReduxProvider';
  * Security:
  * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
  * - Redirect do /login jeśli niezalogowany
+ *
+ * Data Flow:
+ * - DashboardContent używa useDashboardData hook
+ * - useDashboardData automatycznie fetchuje dane z Redux store
+ * - Redux store pobiera dane z API endpoints
  */
 
 /**
@@ -33,147 +39,8 @@ const pageDescription = 'Panel użytkownika platformy mkrew - przegląd donacji,
     <meta name="robots" content="noindex, nofollow" />
   </Fragment>
 
-  <!-- Dashboard Content -->
-  <div class="space-y-6">
-    <!-- Page Header -->
-    <header>
-      <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-      <p class="mt-2 text-sm text-gray-600">
-        Witaj ponownie! Oto Twój przegląd aktywności.
-      </p>
-    </header>
-
-    <!-- Main Dashboard Content -->
-    <ReduxProvider client:only="react">
-      <!-- Dashboard will be implemented in React components -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">
-          🚧 Dashboard w budowie
-        </h2>
-        <p class="text-gray-600">
-          Sekcje Dashboard (Stats, Favorites, Notifications, Recent Donations) będą wkrótce dostępne.
-        </p>
-
-        <!-- Placeholder sections -->
-        <div class="mt-6 space-y-4">
-          <!-- Stats Cards Grid -->
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-3">
-              📊 Statystyki
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <p class="text-sm text-gray-600">Liczba donacji</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
-              </div>
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <p class="text-sm text-gray-600">Całkowita ilość</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">— ml</p>
-              </div>
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <p class="text-sm text-gray-600">Ostatnia donacja</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
-              </div>
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <p class="text-sm text-gray-600">Następna możliwa</p>
-                <p class="text-2xl font-bold text-gray-900 mt-1">—</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Favorites Widget -->
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg font-medium text-gray-900">
-                ⭐ Ulubione centra
-              </h3>
-              <a href="/dashboard/favorites" class="text-sm text-primary-600 hover:text-primary-700">
-                Zobacz wszystkie →
-              </a>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
-              <p class="text-gray-600">Brak ulubionych centrów</p>
-              <a
-                href="/rckik"
-                class="inline-block mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
-              >
-                Dodaj ulubione centrum
-              </a>
-            </div>
-          </div>
-
-          <!-- Notifications Widget -->
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg font-medium text-gray-900">
-                🔔 Powiadomienia
-              </h3>
-              <a href="/dashboard/notifications" class="text-sm text-primary-600 hover:text-primary-700">
-                Zobacz wszystkie →
-              </a>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
-              <p class="text-gray-600">Brak nowych powiadomień</p>
-            </div>
-          </div>
-
-          <!-- Recent Donations Timeline -->
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-lg font-medium text-gray-900">
-                🩸 Ostatnie donacje
-              </h3>
-              <a href="/dashboard/donations" class="text-sm text-primary-600 hover:text-primary-700">
-                Zobacz wszystkie →
-              </a>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
-              <p class="text-gray-600">Brak zarejestrowanych donacji</p>
-              <button
-                class="inline-block mt-3 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                Dodaj pierwszą donację
-              </button>
-            </div>
-          </div>
-
-          <!-- Quick Actions Panel -->
-          <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-3">
-              ⚡ Szybkie akcje
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <a
-                href="/dashboard/donations"
-                class="flex items-center justify-center gap-2 bg-primary-600 text-white rounded-lg p-4 hover:bg-primary-700 transition-colors"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span class="font-medium">Dodaj donację</span>
-              </a>
-              <a
-                href="/dashboard/favorites"
-                class="flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                <span class="font-medium">Zobacz ulubione</span>
-              </a>
-              <a
-                href="/rckik"
-                class="flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-300 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span class="font-medium">Szukaj centrum</span>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </ReduxProvider>
-  </div>
+  <!-- Dashboard Content with Redux Provider -->
+  <ReduxProvider client:only="react">
+    <DashboardContent client:only="react" />
+  </ReduxProvider>
 </DashboardLayout>
