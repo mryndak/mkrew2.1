@@ -1,0 +1,148 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+/**
+ * RCKiK Management Page - Panel administracyjny do zarządzania centrami RCKiK
+ * Protected page dla użytkowników z rolą ADMIN
+ *
+ * Features:
+ * - Lista centrów RCKiK z możliwością filtrowania
+ * - Sortowanie i paginacja
+ * - Operacje CRUD (create, read, update, delete/deactivate)
+ * - Zarządzanie metadanymi (nazwa, kod, lokalizacja, aliasy)
+ * - Kontrola statusu aktywności centrów
+ * - Rejestrowanie wszystkich operacji w audyt logu
+ *
+ * User Stories:
+ * - US-019: Zarządzanie kanoniczną listą RCKiK - główna funkcjonalność CRUD
+ * - US-024: Rejestr audytu operacji krytycznych - wszystkie operacje rejestrowane
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by AdminLayout)
+ * - Wymaga roli ADMIN
+ * - Redirect do /dashboard jeśli brak uprawnień
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Zarządzanie centrami RCKiK | Admin | mkrew';
+const pageDescription = 'Panel administracyjny do zarządzania kanoniczną listą Regionalnych Centrów Krwiodawstwa i Krwiolecznictwa';
+
+/**
+ * SSR: Pobieranie początkowych danych z API
+ * TODO: W produkcji pobierz dane z API przez apiClient na serwerze
+ * Na razie używamy pustych danych dla development
+ */
+
+// Mock data dla development (empty state)
+const mockRckikData = {
+  content: [],
+  page: 0,
+  size: 20,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+};
+
+/**
+ * W produkcji:
+ *
+ * import { adminRckikApi } from '@/lib/api/endpoints/admin';
+ *
+ * try {
+ *   const rckikData = await adminRckikApi.list(
+ *     { search: '', city: null, active: null },
+ *     { page: 0, size: 20 },
+ *     { field: 'name', order: 'ASC' }
+ *   );
+ * } catch (error) {
+ *   console.error('Failed to fetch RCKiK data:', error);
+ *   // Użyj mock danych lub wyświetl error state
+ * }
+ */
+
+/**
+ * User role - pobierz z JWT token lub session
+ * TODO: Implement actual role check from auth middleware
+ */
+const userRole = 'ADMIN'; // Mock - w produkcji pobierz z JWT/session
+---
+
+<AdminLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- RCKiK Management View Container -->
+  <div
+    id="rckik-management-container"
+    data-initial-data={JSON.stringify(mockRckikData)}
+    data-user-role={userRole}
+  ></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- React Components Script -->
+  <script>
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { ToastContainer } from 'react-toastify';
+    import 'react-toastify/dist/ReactToastify.css';
+
+    import { RckikManagementView } from '@/components/admin/rckik/RckikManagementView';
+
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toast Container
+      const toastContainer = document.getElementById('toast-container');
+      if (toastContainer) {
+        const toastRoot = createRoot(toastContainer);
+        toastRoot.render(
+          React.createElement(ToastContainer, {
+            position: 'top-right',
+            autoClose: 5000,
+            hideProgressBar: false,
+            newestOnTop: true,
+            closeOnClick: true,
+            rtl: false,
+            pauseOnFocusLoss: true,
+            draggable: true,
+            pauseOnHover: true,
+            theme: 'light',
+          })
+        );
+      }
+
+      // Initialize RckikManagementView component
+      const rckikManagementContainer = document.getElementById('rckik-management-container');
+      if (rckikManagementContainer) {
+        const initialDataStr = rckikManagementContainer.dataset.initialData;
+        const userRole = rckikManagementContainer.dataset.userRole;
+
+        let initialData = undefined;
+        if (initialDataStr) {
+          try {
+            const parsed = JSON.parse(initialDataStr);
+            // Tylko użyj initial data jeśli są jakieś centra
+            if (parsed.content && parsed.content.length > 0) {
+              initialData = parsed;
+            }
+          } catch (error) {
+            console.error('Failed to parse initial data:', error);
+          }
+        }
+
+        const rckikRoot = createRoot(rckikManagementContainer);
+        rckikRoot.render(
+          React.createElement(RckikManagementView, {
+            initialData,
+            userRole: userRole || 'ADMIN',
+          })
+        );
+      }
+    });
+  </script>
+</AdminLayout>
