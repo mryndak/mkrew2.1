@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchRckikList } from '../api/endpoints/rckik';
 import type {
   RckikListState,
@@ -7,9 +7,14 @@ import type {
 } from '../../types/rckik';
 import { DEFAULT_RCKIK_SEARCH_PARAMS } from '../../types/rckik';
 
+// Throttling configuration
+const THROTTLE_DELAY_MS = 1000; // 1 second
+const MAX_ATTEMPTS = 5;
+
 /**
  * Hook do zarządzania listą RCKiK
  * Synchronizuje parametry z URL i wykonuje API calls
+ * Includes throttling (1 request per second, max 5 attempts)
  *
  * @param initialData - Opcjonalne początkowe dane (z SSR)
  * @returns Stan listy RCKiK wraz z funkcjami do zarządzania
@@ -18,6 +23,10 @@ import { DEFAULT_RCKIK_SEARCH_PARAMS } from '../../types/rckik';
  * const { data, loading, error, params, updateParams, refetch } = useRckikList(initialData);
  */
 export function useRckikList(initialData?: RckikListApiResponse | null) {
+  // Throttling refs
+  const lastFetchTimeRef = useRef<number>(0);
+  const fetchAttemptCountRef = useRef<number>(0);
+  const throttleTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Parse params z URL
   const getParamsFromUrl = useCallback((): RckikSearchParams => {
     if (typeof window === 'undefined') {
@@ -45,9 +54,45 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
   });
 
   /**
-   * Fetch data z API
+   * Fetch data z API with throttling
    */
-  const fetchData = useCallback(async (params: RckikSearchParams) => {
+  const fetchData = useCallback(async (params: RckikSearchParams, skipThrottle = false) => {
+    // Check max attempts
+    if (fetchAttemptCountRef.current >= MAX_ATTEMPTS) {
+      console.warn(`Przekroczono limit ${MAX_ATTEMPTS} prób pobierania danych. Pomiń kolejne zapytania.`);
+      setState(prev => ({
+        ...prev,
+        error: new Error(`Przekroczono limit ${MAX_ATTEMPTS} prób. Odśwież stronę, aby spróbować ponownie.`),
+        loading: false
+      }));
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchTimeRef.current;
+
+    // Check throttle (skip on first load or when explicitly skipped)
+    if (!skipThrottle && lastFetchTimeRef.current > 0 && timeSinceLastFetch < THROTTLE_DELAY_MS) {
+      // Clear previous timer if exists
+      if (throttleTimerRef.current) {
+        clearTimeout(throttleTimerRef.current);
+      }
+
+      // Schedule fetch after throttle delay
+      const remainingDelay = THROTTLE_DELAY_MS - timeSinceLastFetch;
+      console.log(`Throttling API request. Następne zapytanie za ${remainingDelay}ms`);
+
+      throttleTimerRef.current = setTimeout(() => {
+        fetchData(params, true); // Skip throttle on scheduled call
+      }, remainingDelay);
+
+      return;
+    }
+
+    // Update throttle tracking
+    lastFetchTimeRef.current = now;
+    fetchAttemptCountRef.current += 1;
+
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
@@ -136,9 +181,20 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
    */
   useEffect(() => {
     if (!initialData) {
-      fetchData(state.params);
+      fetchData(state.params, true); // Skip throttle on initial load
     }
   }, []); // Run only once on mount
+
+  /**
+   * Cleanup effect: clear throttle timer on unmount
+   */
+  useEffect(() => {
+    return () => {
+      if (throttleTimerRef.current) {
+        clearTimeout(throttleTimerRef.current);
+      }
+    };
+  }, []);
 
   return {
     data: state.data,

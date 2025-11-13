@@ -136,8 +136,8 @@ export default function RckikListApp({
             />
           </div>
 
-          {/* Results info */}
-          {data && !loading && (
+          {/* Results info - tylko gdy nie ładujemy */}
+          {!loading && data && (
             <div className="mb-4 text-sm text-gray-600">
               Znaleziono <span className="font-semibold">{data.totalElements}</span>{' '}
               {data.totalElements === 1
@@ -149,7 +149,7 @@ export default function RckikListApp({
           )}
 
           {/* List */}
-          <RckikList data={data} loading={loading} error={error} />
+          <RckikList data={loading ? null : data} loading={loading} error={error} />
 
           {/* Pagination */}
           {data && data.totalPages > 1 && !loading && (
