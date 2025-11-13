@@ -22,6 +22,11 @@ public enum RateLimitType {
     PASSWORD_RESET(3, Duration.ofHours(1)),
 
     /**
+     * Resend verification email: 3 requests per email per hour
+     */
+    RESEND_VERIFICATION(3, Duration.ofHours(1)),
+
+    /**
      * Public API endpoints: 20 requests per IP per minute
      */
     PUBLIC_API(20, Duration.ofMinutes(1)),

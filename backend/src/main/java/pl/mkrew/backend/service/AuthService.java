@@ -39,6 +39,19 @@ public class AuthService {
     private static final int TOKEN_VALIDITY_HOURS = 24;
     private static final int PASSWORD_RESET_TOKEN_VALIDITY_HOURS = 1;
 
+    /**
+     * Check if email is available for registration
+     *
+     * @param email Email to check
+     * @return true if email is available, false if already exists
+     */
+    public boolean isEmailAvailable(String email) {
+        log.debug("Checking email availability: {}", email);
+        boolean exists = userRepository.existsByEmail(email.toLowerCase());
+        log.debug("Email {} exists: {}", email, exists);
+        return !exists;
+    }
+
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
         log.info("Starting registration for email: {}", request.getEmail());
@@ -356,6 +369,48 @@ public class AuthService {
 
         return PasswordResetResponse.builder()
                 .message("Password reset successfully. You can now log in with your new password.")
+                .build();
+    }
+
+    @Transactional
+    public ResendVerificationResponse resendVerificationEmail(ResendVerificationRequestDto request) {
+        String email = request.getEmail().toLowerCase();
+        log.info("Resend verification email request for: {}", email);
+
+        // 0. Check rate limit for resend verification (3 requests per email per hour)
+        rateLimitService.checkEmailLimit(email, pl.mkrew.backend.ratelimit.RateLimitType.RESEND_VERIFICATION);
+
+        // 1. Find user by email (but don't reveal if not exists - security)
+        userRepository.findByEmailAndDeletedAtIsNull(email)
+                .ifPresent(user -> {
+                    // 2. Check if email is already verified
+                    if (user.getEmailVerified()) {
+                        log.info("Email already verified for user: {}, skipping resend", user.getId());
+                        return;
+                    }
+
+                    // 3. Invalidate any existing EMAIL_VERIFICATION tokens for this user
+                    userTokenRepository.findByUserIdAndTokenType(user.getId(), "EMAIL_VERIFICATION")
+                            .forEach(token -> {
+                                if (token.getUsedAt() == null) {
+                                    token.setUsedAt(LocalDateTime.now());
+                                    userTokenRepository.save(token);
+                                    log.debug("Invalidated previous verification token for user: {}", user.getId());
+                                }
+                            });
+
+                    // 4. Generate new EMAIL_VERIFICATION token (24h TTL)
+                    String verificationToken = generateVerificationToken(user);
+                    log.info("New verification token generated for user ID: {}", user.getId());
+
+                    // 5. TODO: Send verification email
+                    // emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+                    log.info("Verification email would be resent to: {} with token: {}", user.getEmail(), verificationToken);
+                });
+
+        // 6. Always return success (prevent email enumeration)
+        return ResendVerificationResponse.builder()
+                .message("If the email exists and is not verified, a verification link has been sent.")
                 .build();
     }
 }

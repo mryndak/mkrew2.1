@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.mkrew.backend.dto.*;
 import pl.mkrew.backend.service.AuthService;
+import pl.mkrew.backend.dto.EmailAvailabilityResponse;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -23,6 +24,46 @@ import pl.mkrew.backend.service.AuthService;
 public class AuthController {
 
     private final AuthService authService;
+
+    /**
+     * US-001: Check Email Availability
+     * GET /api/v1/auth/check-email?email=user@example.com
+     *
+     * Checks if email is available for registration.
+     * Used for live validation during registration form filling.
+     *
+     * @param email Email address to check
+     * @return EmailAvailabilityResponse with availability status
+     */
+    @Operation(
+            summary = "Check email availability",
+            description = "Checks if email is available for registration. Returns true if available, false if already exists."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Email availability check successful",
+                    content = @Content(schema = @Schema(implementation = EmailAvailabilityResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid email format",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/check-email")
+    public ResponseEntity<EmailAvailabilityResponse> checkEmailAvailability(
+            @RequestParam("email") String email) {
+        log.debug("GET /api/v1/auth/check-email - Checking email: {}", email);
+
+        boolean available = authService.isEmailAvailable(email);
+
+        EmailAvailabilityResponse response = EmailAvailabilityResponse.builder()
+                .available(available)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * US-001: Register new user
@@ -230,6 +271,52 @@ public class AuthController {
         PasswordResetResponse response = authService.confirmPasswordReset(request);
 
         log.info("Password reset completed successfully");
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Resend Email Verification
+     * POST /api/v1/auth/resend-verification
+     *
+     * Resends email verification link to user's email.
+     * Invalidates previous unused EMAIL_VERIFICATION tokens.
+     * Always returns success to prevent email enumeration.
+     * Rate limited: 3 requests per email per hour.
+     *
+     * @param request Resend verification request with email
+     * @return ResendVerificationResponse with generic success message
+     */
+    @Operation(
+            summary = "Resend email verification",
+            description = "Resends email verification link. Invalidates previous unused tokens. Always returns success to prevent email enumeration."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Resend request processed",
+                    content = @Content(schema = @Schema(implementation = ResendVerificationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "429",
+                    description = "Too many requests - rate limit exceeded",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ResendVerificationResponse> resendVerification(
+            @Valid @RequestBody ResendVerificationRequestDto request) {
+        log.info("POST /api/v1/auth/resend-verification - Resend verification request for email: {}",
+                request.getEmail());
+
+        ResendVerificationResponse response = authService.resendVerificationEmail(request);
+
+        log.info("Resend verification request processed for email: {}", request.getEmail());
 
         return ResponseEntity.ok(response);
     }

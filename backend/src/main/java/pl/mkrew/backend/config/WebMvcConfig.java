@@ -31,9 +31,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         // Configure CORS for frontend
         registry.addMapping("/api/**")
-                .allowedOrigins(
-                        "http://localhost:3000",
-                        "http://localhost:4321",
+                .allowedOriginPatterns(
+                        "http://localhost:*",
                         "https://mkrew.pl",
                         "https://www.mkrew.pl"
                 )

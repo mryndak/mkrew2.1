@@ -234,8 +234,8 @@ export function useRegisterForm() {
       // Success - clear draft and redirect
       clearRegistrationDraft();
 
-      // Redirect to verify-email-pending page
-      window.location.href = '/verify-email-pending';
+      // Redirect to verify-email-pending page with email as query param
+      window.location.href = `/verify-email-pending?email=${encodeURIComponent(response.email)}`;
     } catch (error: any) {
       console.error('Registration failed:', error);
 
