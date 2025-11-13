@@ -1,8 +1,7 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import { LoginForm } from '@/components/auth/LoginForm';
+import { LoginFormWrapper } from '@/components/auth/LoginFormWrapper';
 import { VerificationSuccessMessage } from '@/components/auth/VerificationSuccessMessage';
-import { ReduxProvider } from '@/components/common/ReduxProvider';
 
 /**
  * Login Page
@@ -80,12 +79,10 @@ const safeRedirectUrl = sanitizeRedirectUrl(redirectParam);
         </header>
 
         {/* Login Form - React island with Redux */}
-        <ReduxProvider client:only="react">
-          <LoginForm
-            client:only="react"
-            redirectUrl={safeRedirectUrl}
-          />
-        </ReduxProvider>
+        <LoginFormWrapper
+          client:load
+          redirectUrl={safeRedirectUrl}
+        />
 
         {/* Links section */}
         <div class="mt-6 space-y-4">

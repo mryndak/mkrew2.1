@@ -1,4 +1,5 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../index';
 import type { RckikDetailDto } from '@/types/rckik';
 import { fetchRckikDetails as fetchRckikDetailsApi } from '@/lib/api/endpoints/rckik';

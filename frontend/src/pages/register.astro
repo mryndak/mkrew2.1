@@ -1,7 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import { RegisterForm } from '@/components/auth/RegisterForm';
-import { ReduxProvider } from '@/components/common/ReduxProvider';
+import { RegisterFormWrapper } from '@/components/auth/RegisterFormWrapper';
 
 /**
  * Register Page
@@ -42,9 +41,7 @@ import { ReduxProvider } from '@/components/common/ReduxProvider';
       </div>
 
       {/* Register Form - React island with Redux */}
-      <ReduxProvider client:only="react">
-        <RegisterForm client:only="react" />
-      </ReduxProvider>
+      <RegisterFormWrapper client:load />
 
       {/* Links section */}
       <div class="mt-8 text-center">
