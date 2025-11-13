@@ -13,7 +13,7 @@
  */
 
 import type { GetStaticPaths } from 'astro';
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import Layout from '../../layouts/Layout.astro';
 import SEO from '../../components/SEO.astro';
 import Breadcrumbs from '../../components/common/Breadcrumbs.astro';
 import RckikNotFound from '../../components/rckik/details/RckikNotFound.astro';
@@ -187,12 +187,18 @@ const breadcrumbItems = [
 ];
 ---
 
-<BaseLayout>
-  <SEO
-    slot="head"
-    title={mockRckikExists ? title : `RCKiK nie znaleziono | mkrew`}
-    description={mockRckikExists ? description : `Centrum RCKiK o ID ${rckikId} nie zostało znalezione.`}
-  />
+<Layout
+  title={mockRckikExists ? title : `RCKiK nie znaleziono | mkrew`}
+  description={mockRckikExists ? description : `Centrum RCKiK o ID ${rckikId} nie zostało znalezione.`}
+  includeNavbar={true}
+  includeFooter={true}
+>
+  <Fragment slot="head">
+    <SEO
+      title={mockRckikExists ? title : `RCKiK nie znaleziono | mkrew`}
+      description={mockRckikExists ? description : `Centrum RCKiK o ID ${rckikId} nie zostało znalezione.`}
+    />
+  </Fragment>
 
   <main class="container mx-auto px-4 py-8">
     <div class="max-w-7xl mx-auto">
@@ -286,7 +292,7 @@ const breadcrumbItems = [
 
     </div>
   </main>
-</BaseLayout>
+</Layout>
 
 <style>
   /* Global styles dla strony */
