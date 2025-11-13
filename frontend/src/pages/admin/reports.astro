@@ -1,0 +1,161 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+/**
+ * Reports Management Page - Panel administracyjny do zarządzania raportami użytkowników
+ * Protected page dla użytkowników z rolą ADMIN
+ *
+ * Features:
+ * - Lista raportów od użytkowników z możliwością filtrowania
+ * - Sortowanie i paginacja
+ * - Szczegółowy widok raportu
+ * - Aktualizacja statusu raportu (NEW, IN_REVIEW, RESOLVED, REJECTED)
+ * - Dodawanie notatek admina
+ * - Przeglądanie screenshotów zgłoszeń
+ *
+ * User Stories:
+ * - Admin może przeglądać wszystkie zgłoszenia problemów z danymi
+ * - Admin może filtrować raporty według statusu i RCKiK
+ * - Admin może aktualizować status raportu i dodawać notatki
+ * - Admin może rozwiązywać lub odrzucać raporty
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by AdminLayout)
+ * - Wymaga roli ADMIN
+ * - Redirect do /dashboard jeśli brak uprawnień
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Raporty Użytkowników | Admin | mkrew';
+const pageDescription = 'Panel zarządzania raportami problemów z jakością danych - zgłoszenia użytkowników';
+
+/**
+ * SSR: Pobieranie początkowych danych z API
+ * TODO: W produkcji pobierz dane z API przez apiClient na serwerze
+ * Na razie używamy mock danych dla development
+ */
+
+// Mock data dla development
+const mockReportsData = {
+  reports: [],
+  page: 0,
+  size: 20,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+};
+
+const mockRckikOptions = [
+  { id: 1, name: 'RCKiK Warszawa', code: 'RCKIK-WAW', city: 'Warszawa' },
+  { id: 2, name: 'RCKiK Kraków', code: 'RCKIK-KRK', city: 'Kraków' },
+  { id: 3, name: 'RCKiK Wrocław', code: 'RCKIK-WRO', city: 'Wrocław' },
+];
+
+/**
+ * W produkcji:
+ *
+ * import { reportsApi } from '@/lib/api/endpoints/reports';
+ *
+ * try {
+ *   const [reportsData, rckikOptions] = await Promise.all([
+ *     reportsApi.getReports({}, { page: 0, size: 20 }),
+ *     rckikApi.getRckikList()
+ *   ]);
+ * } catch (error) {
+ *   console.error('Failed to fetch reports data:', error);
+ *   // Użyj mock danych lub wyświetl error state
+ * }
+ */
+---
+
+<AdminLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Reports Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Raporty Użytkowników</h1>
+    <p class="mt-1 text-sm text-gray-600">
+      Zarządzaj zgłoszeniami problemów z jakością danych od użytkowników
+    </p>
+  </div>
+
+  <!-- Reports Statistics -->
+  <div id="reports-statistics-container"></div>
+
+  <!-- Reports View Container -->
+  <div
+    id="reports-view-container"
+    data-initial-reports={JSON.stringify(mockReportsData.reports)}
+    data-initial-page={mockReportsData.page}
+    data-initial-total-pages={mockReportsData.totalPages}
+    data-initial-total-elements={mockReportsData.totalElements}
+    data-rckik-options={JSON.stringify(mockRckikOptions)}
+  ></div>
+
+  <!-- Report Details Modal Container -->
+  <div id="report-details-modal-container"></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- React Components Script -->
+  <script>
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { ToastContainer } from 'react-toastify';
+    import 'react-toastify/dist/ReactToastify.css';
+
+    // TODO: Import components after they are created
+    // import { ReportsView } from '@/components/admin/reports/ReportsView';
+    // import { ReportDetailsModal } from '@/components/admin/reports/ReportDetailsModal';
+
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toast Container
+      const toastContainer = document.getElementById('toast-container');
+      if (toastContainer) {
+        const toastRoot = createRoot(toastContainer);
+        toastRoot.render(
+          React.createElement(ToastContainer, {
+            position: 'top-right',
+            autoClose: 5000,
+            hideProgressBar: false,
+            newestOnTop: true,
+            closeOnClick: true,
+            rtl: false,
+            pauseOnFocusLoss: true,
+            draggable: true,
+            pauseOnHover: true,
+            theme: 'light',
+          })
+        );
+      }
+
+      // TODO: Initialize ReportsView component after it's created
+      // const reportsViewContainer = document.getElementById('reports-view-container');
+      // if (reportsViewContainer) {
+      //   const initialReports = JSON.parse(reportsViewContainer.dataset.initialReports || '[]');
+      //   const initialPage = parseInt(reportsViewContainer.dataset.initialPage || '0');
+      //   const initialTotalPages = parseInt(reportsViewContainer.dataset.initialTotalPages || '0');
+      //   const initialTotalElements = parseInt(reportsViewContainer.dataset.initialTotalElements || '0');
+      //   const rckikOptions = JSON.parse(reportsViewContainer.dataset.rckikOptions || '[]');
+      //
+      //   const reportsViewRoot = createRoot(reportsViewContainer);
+      //   reportsViewRoot.render(
+      //     React.createElement(ReportsView, {
+      //       initialReports,
+      //       initialPage,
+      //       initialTotalPages,
+      //       initialTotalElements,
+      //       rckikOptions,
+      //     })
+      //   );
+      // }
+    });
+  </script>
+</AdminLayout>
