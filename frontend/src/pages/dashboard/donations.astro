@@ -1,0 +1,60 @@
+---
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { ReduxProvider } from '@/components/common/ReduxProvider';
+import { DonationsView } from '@/components/dashboard/donations/DonationsView';
+
+/**
+ * Donations Page - Strona zarządzania donacjami krwi
+ * Protected page dla zalogowanych użytkowników
+ *
+ * Features:
+ * - Przegląd tabelaryczny donacji z paginacją
+ * - Filtrowanie donacji (zakres dat, typ donacji, centrum RCKiK)
+ * - Sortowanie donacji (data, centrum, ilość, typ)
+ * - Dodawanie nowej donacji przez formularz modalny
+ * - Edycja istniejącej donacji
+ * - Usuwanie donacji z potwierdzeniem
+ * - Eksport danych do CSV/JSON
+ * - Wyświetlanie statystyk (łączna liczba, ilość ml, ostatnia donacja, następna możliwa)
+ * - Empty state dla braku donacji
+ * - Loading states (skeleton)
+ * - Responsywny mobile-first design
+ * - Accessibility (keyboard navigation, ARIA labels, screen reader support)
+ *
+ * Layout:
+ * - Full-width layout z nagłówkiem, kartami statystyk, toolbar i tabelą
+ * - Modalne formularze (dodawanie/edycja, potwierdzenie usunięcia)
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
+ * - Redirect do /login jeśli niezalogowany
+ * - Dostęp tylko do własnych donacji (weryfikacja po stronie API)
+ *
+ * Data Flow:
+ * - DonationsView używa Redux store (donationsSlice)
+ * - API endpoints z /lib/api/endpoints/donations.ts
+ * - Optimistic updates dla lepszego UX
+ * - Toast notifications dla feedbacku użytkownika
+ *
+ * User Stories:
+ * - US-002: Dziennik donacji krwi
+ * - US-004: Eksport danych donacji
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Moje donacje | mkrew';
+const pageDescription = 'Zarządzaj historią donacji krwi, śledź statystyki i eksportuj dane';
+---
+
+<DashboardLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Donations Content with Redux Provider -->
+  <ReduxProvider client:only="react">
+    <DonationsView client:only="react" />
+  </ReduxProvider>
+</DashboardLayout>
