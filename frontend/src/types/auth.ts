@@ -665,3 +665,134 @@ export interface RckikBasic {
   latitude: number | null;
   longitude: number | null;
 }
+
+// ===== Email Verification Types =====
+
+/**
+ * Response body z GET /api/v1/auth/verify-email
+ * Backend: VerifyEmailResponse.java
+ */
+export interface VerifyEmailResponse {
+  message: string; // "Email verified successfully. You can now log in."
+  email: string; // "user@example.com"
+}
+
+/**
+ * Stan weryfikacji email
+ */
+export type VerificationState =
+  | 'loading'           // Weryfikacja w toku
+  | 'success'           // Weryfikacja udana
+  | 'error'             // Ogólny błąd
+  | 'expired'           // Token wygasł (24h TTL)
+  | 'already_verified'  // Już zweryfikowany (idempotency)
+  | 'invalid'           // Token nieprawidłowy/nieistniejący
+  | 'missing_token';    // Brak tokenu w URL
+
+/**
+ * ViewModel dla VerificationStatus component
+ */
+export interface VerificationViewModel {
+  state: VerificationState;
+  message: string;
+  email: string | null;
+  canResend: boolean;
+  redirectUrl: string | null;
+  error: ErrorResponse | null;
+}
+
+/**
+ * Props dla ResendButton component
+ */
+export interface ResendButtonProps {
+  email?: string;
+  onSuccess?: () => void;
+  onError?: (error: string) => void;
+}
+
+/**
+ * Props dla LoadingState component
+ */
+export interface LoadingStateProps {}
+
+/**
+ * Props dla SuccessState component
+ */
+export interface SuccessStateProps {
+  email: string;
+  onRedirect: () => void;
+}
+
+/**
+ * Props dla ErrorState component
+ */
+export interface ErrorStateProps {
+  title: string;
+  message: string;
+  actionText?: string;
+  onAction?: () => void;
+  showRetry?: boolean;
+}
+
+/**
+ * Props dla ExpiredState component
+ */
+export interface ExpiredStateProps {
+  email?: string;
+}
+
+/**
+ * Props dla AlreadyVerifiedState component
+ */
+export interface AlreadyVerifiedStateProps {
+  onRedirect: () => void;
+}
+
+/**
+ * Hook useEmailVerification return type
+ */
+export interface UseEmailVerificationReturn {
+  state: VerificationState;
+  data: VerifyEmailResponse | null;
+  error: ErrorResponse | null;
+  isLoading: boolean;
+  retry: () => void;
+}
+
+/**
+ * Hook useResendVerification return type
+ */
+export interface UseResendVerificationReturn {
+  resend: (email: string) => Promise<boolean>;
+  isLoading: boolean;
+  error: string | null;
+  canResend: boolean;
+  nextAllowedTime: number | null;
+}
+
+/**
+ * Resend attempts data structure (sessionStorage)
+ */
+export interface ResendAttempts {
+  timestamps: number[];
+  lastAttempt: number;
+}
+
+/**
+ * Email verification sessionStorage data
+ */
+export interface EmailVerifiedSession {
+  email: string;
+  timestamp: number;
+}
+
+/**
+ * Constants for email verification
+ */
+export const EMAIL_VERIFICATION_CONFIG = {
+  MAX_RESEND_ATTEMPTS: 3,
+  RESEND_WINDOW_MS: 10 * 60 * 1000, // 10 minutes
+  SESSION_KEY: 'email_verified',
+  RESEND_KEY: 'resend_attempts',
+  VERIFIED_SESSION_TTL_MS: 5 * 60 * 1000, // 5 minutes
+} as const;
