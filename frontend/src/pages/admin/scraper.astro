@@ -1,0 +1,232 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import ScraperHeader from '@/components/admin/scraper/ScraperHeader.astro';
+
+/**
+ * Scraper Monitoring Page - Panel administracyjny do monitorowania scrapingu
+ * Protected page dla użytkowników z rolą ADMIN
+ *
+ * Features:
+ * - Globalny status systemu scrapingu
+ * - Historia uruchomień scrapera (scheduled i manual)
+ * - Szczegółowe logi dla każdego uruchomienia
+ * - Ręczne uruchamianie scrapera
+ * - Alerty o długotrwałych awariach
+ *
+ * User Stories:
+ * - US-017: Manualne uruchomienie parsowania
+ * - US-018: Monitorowanie i alertowanie błędów scraperów
+ * - US-025: Tryb skrajny - brak dostępu do stron RCKiK
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by AdminLayout)
+ * - Wymaga roli ADMIN
+ * - Redirect do /dashboard jeśli brak uprawnień
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Scraper Monitoring | Admin | mkrew';
+const pageDescription = 'Panel monitorowania systemu web scrapingu - status, logi, ręczne uruchamianie';
+
+/**
+ * SSR: Pobieranie początkowych danych z API
+ * TODO: W produkcji pobierz dane z API przez apiClient na serwerze
+ * Na razie używamy mock danych dla development
+ */
+
+// Mock data dla development
+const mockGlobalStatus = {
+  globalStatus: 'OK' as const,
+  lastSuccessfulTimestamp: new Date().toISOString(),
+  consecutiveFailures: 0,
+  totalRecentRuns: 5,
+  successfulRecentRuns: 5,
+  failedRecentRuns: 0,
+  message: 'System scrapingu działa prawidłowo',
+  requiresAdminAlert: false,
+};
+
+const mockRunsData = {
+  runs: [],
+  page: 0,
+  totalElements: 0,
+  totalPages: 0,
+};
+
+const mockRckikOptions = [
+  { id: 1, name: 'RCKiK Warszawa', code: 'RCKIK-WAW', city: 'Warszawa' },
+  { id: 2, name: 'RCKiK Kraków', code: 'RCKIK-KRK', city: 'Kraków' },
+  { id: 3, name: 'RCKiK Wrocław', code: 'RCKIK-WRO', city: 'Wrocław' },
+];
+
+/**
+ * W produkcji:
+ *
+ * import { scraperApi } from '@/lib/api/endpoints/scraper';
+ *
+ * try {
+ *   const [globalStatus, runsData] = await Promise.all([
+ *     scraperApi.getGlobalStatus(),
+ *     scraperApi.getRuns({}, { page: 0, size: 20 })
+ *   ]);
+ * } catch (error) {
+ *   console.error('Failed to fetch scraper data:', error);
+ *   // Użyj mock danych lub wyświetl error state
+ * }
+ */
+---
+
+<AdminLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Scraper Header with Manual Trigger Button -->
+  <ScraperHeader>
+    <div slot="actions" id="manual-trigger-button-container"></div>
+  </ScraperHeader>
+
+  <!-- Scraper Global Status -->
+  <div id="scraper-global-status-container" data-initial-data={JSON.stringify(mockGlobalStatus)}></div>
+
+  <!-- Scraper Runs List -->
+  <div
+    id="scraper-runs-list-container"
+    data-initial-runs={JSON.stringify(mockRunsData.runs)}
+    data-initial-page={mockRunsData.page}
+    data-initial-total-pages={mockRunsData.totalPages}
+    data-initial-total-elements={mockRunsData.totalElements}
+    data-rckik-options={JSON.stringify(mockRckikOptions)}
+  ></div>
+
+  <!-- Run Details Modal Container -->
+  <div id="run-details-modal-container"></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- React Components Script -->
+  <script>
+    import React, { useState } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { ToastContainer } from 'react-toastify';
+    import 'react-toastify/dist/ReactToastify.css';
+
+    import { ScraperGlobalStatus } from '@/components/admin/scraper/ScraperGlobalStatus';
+    import { ManualTriggerButton } from '@/components/admin/scraper/ManualTriggerButton';
+    import { ScraperRunsList } from '@/components/admin/scraper/ScraperRunsList';
+    import { RunDetailsModal } from '@/components/admin/scraper/RunDetailsModal';
+
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toast Container
+      const toastContainer = document.getElementById('toast-container');
+      if (toastContainer) {
+        const toastRoot = createRoot(toastContainer);
+        toastRoot.render(
+          React.createElement(ToastContainer, {
+            position: 'top-right',
+            autoClose: 5000,
+            hideProgressBar: false,
+            newestOnTop: true,
+            closeOnClick: true,
+            rtl: false,
+            pauseOnFocusLoss: true,
+            draggable: true,
+            pauseOnHover: true,
+            theme: 'light',
+          })
+        );
+      }
+
+      // Global Status Component
+      const globalStatusContainer = document.getElementById('scraper-global-status-container');
+      if (globalStatusContainer) {
+        const initialData = JSON.parse(globalStatusContainer.dataset.initialData || '{}');
+        const globalStatusRoot = createRoot(globalStatusContainer);
+        globalStatusRoot.render(
+          React.createElement(ScraperGlobalStatus, {
+            initialData,
+            autoRefresh: true,
+            refreshInterval: 30000,
+          })
+        );
+      }
+
+      // Shared state for selected run ID (for modal)
+      let selectedRunId: number | null = null;
+      let runDetailsModalRoot: any = null;
+
+      const openRunDetailsModal = (runId: number) => {
+        selectedRunId = runId;
+        renderRunDetailsModal();
+      };
+
+      const closeRunDetailsModal = () => {
+        selectedRunId = null;
+        renderRunDetailsModal();
+      };
+
+      const renderRunDetailsModal = () => {
+        const modalContainer = document.getElementById('run-details-modal-container');
+        if (modalContainer) {
+          if (!runDetailsModalRoot) {
+            runDetailsModalRoot = createRoot(modalContainer);
+          }
+          runDetailsModalRoot.render(
+            React.createElement(RunDetailsModal, {
+              runId: selectedRunId,
+              isOpen: selectedRunId !== null,
+              onClose: closeRunDetailsModal,
+            })
+          );
+        }
+      };
+
+      // Runs List Component
+      const runsListContainer = document.getElementById('scraper-runs-list-container');
+      if (runsListContainer) {
+        const initialRuns = JSON.parse(runsListContainer.dataset.initialRuns || '[]');
+        const initialPage = parseInt(runsListContainer.dataset.initialPage || '0');
+        const initialTotalPages = parseInt(runsListContainer.dataset.initialTotalPages || '0');
+        const initialTotalElements = parseInt(runsListContainer.dataset.initialTotalElements || '0');
+
+        const runsListRoot = createRoot(runsListContainer);
+        runsListRoot.render(
+          React.createElement(ScraperRunsList, {
+            initialRuns,
+            initialPage,
+            initialTotalPages,
+            initialTotalElements,
+            initialFilters: {},
+            onViewDetails: openRunDetailsModal,
+          })
+        );
+      }
+
+      // Manual Trigger Button
+      const manualTriggerContainer = document.getElementById('manual-trigger-button-container');
+      if (manualTriggerContainer) {
+        const rckikOptions = JSON.parse(
+          document.getElementById('scraper-runs-list-container')?.dataset.rckikOptions || '[]'
+        );
+
+        const manualTriggerRoot = createRoot(manualTriggerContainer);
+        manualTriggerRoot.render(
+          React.createElement(ManualTriggerButton, {
+            rckikOptions,
+            onSuccess: (runId: number) => {
+              console.log('Scraper triggered successfully, run ID:', runId);
+              // Runs list will auto-refresh due to RUNNING status
+            },
+          })
+        );
+      }
+
+      // Initialize modal renderer
+      renderRunDetailsModal();
+    });
+  </script>
+</AdminLayout>

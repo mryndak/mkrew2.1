@@ -1,0 +1,413 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/layout/Navbar.astro';
+import Footer from '../components/layout/Footer.astro';
+
+/**
+ * AdminLayout - Layout dla panelu administracyjnego
+ * Features:
+ * - Sidebar z nawigacją admin
+ * - Auth protection dla roli ADMIN
+ * - Responsive: sidebar drawer na mobile, fixed sidebar na desktop
+ * - Navbar i Footer
+ *
+ * Access Control:
+ * - Wymaga autentykacji (JWT token)
+ * - Wymaga roli ADMIN
+ * - Redirect do /dashboard jeśli brak uprawnień ADMIN
+ */
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Panel Administracyjny | mkrew',
+  description = 'Panel administracyjny platformy mkrew',
+} = Astro.props;
+
+/**
+ * Auth check - sprawdź czy użytkownik jest zalogowany
+ */
+const accessToken = Astro.cookies.get('accessToken')?.value;
+
+if (!accessToken) {
+  const currentPath = Astro.url.pathname;
+  return Astro.redirect(`/login?redirect=${encodeURIComponent(currentPath)}`);
+}
+
+/**
+ * Role check - sprawdź czy użytkownik ma rolę ADMIN
+ * TODO: Dodać weryfikację roli z JWT token po stronie backendu
+ * Na razie zakładamy że jeśli użytkownik jest zalogowany i ma token, ma dostęp
+ * W produkcji backend powinien weryfikować rolę i zwracać 403 jeśli brak uprawnień
+ */
+
+/**
+ * Admin navigation items
+ */
+interface AdminNavItem {
+  label: string;
+  href: string;
+  icon: string; // SVG path data
+  description?: string;
+}
+
+const adminNavItems: AdminNavItem[] = [
+  {
+    label: 'Dashboard',
+    href: '/admin',
+    icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+    description: 'Przegląd',
+  },
+  {
+    label: 'Scraper',
+    href: '/admin/scraper',
+    icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+    description: 'Monitoring scrapingu',
+  },
+  {
+    label: 'Użytkownicy',
+    href: '/admin/users',
+    icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    description: 'Zarządzanie użytkownikami',
+  },
+  {
+    label: 'Centra RCKiK',
+    href: '/admin/rckik',
+    icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+    description: 'Zarządzanie centrami',
+  },
+  {
+    label: 'Raporty',
+    href: '/admin/reports',
+    icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    description: 'Raporty i statystyki',
+  },
+];
+
+// Pobierz aktualną ścieżkę dla active state
+const currentPath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <slot name="head" />
+  </head>
+  <body class="flex flex-col min-h-screen bg-gray-50">
+    <!-- Navbar -->
+    <Navbar />
+
+    <div class="flex-1 flex">
+      <!-- Sidebar - Desktop -->
+      <aside
+        id="admin-sidebar"
+        class="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:pt-16 bg-white border-r border-gray-200"
+      >
+        <div class="flex-1 flex flex-col overflow-y-auto pt-5 pb-4">
+          <!-- Admin Badge -->
+          <div class="px-4 mb-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <div class="flex items-center">
+                <svg
+                  class="h-5 w-5 text-red-600 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+                <span class="text-sm font-medium text-red-900">Panel Admin</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation -->
+          <nav class="flex-1 px-4 space-y-1">
+            {adminNavItems.map((item) => {
+              const isActive =
+                currentPath === item.href ||
+                (item.href !== '/admin' && currentPath.startsWith(item.href));
+
+              return (
+                <a
+                  href={item.href}
+                  class={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-red-50 text-red-700'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <svg
+                    class={`mr-3 flex-shrink-0 h-6 w-6 ${
+                      isActive ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-500'
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d={item.icon}
+                    />
+                  </svg>
+                  <div class="flex-1">
+                    <div>{item.label}</div>
+                    {item.description && (
+                      <div class="text-xs text-gray-500 mt-0.5">
+                        {item.description}
+                      </div>
+                    )}
+                  </div>
+                </a>
+              );
+            })}
+          </nav>
+
+          <!-- Sidebar Footer - Back to Dashboard -->
+          <div class="px-4 pt-4 border-t border-gray-200">
+            <a
+              href="/dashboard"
+              class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <svg
+                class="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 group-hover:text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Powrót do Dashboard
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Mobile Sidebar Overlay -->
+      <div
+        id="admin-mobile-sidebar-overlay"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 lg:hidden hidden"
+        aria-hidden="true"
+      ></div>
+
+      <!-- Mobile Sidebar -->
+      <aside
+        id="admin-mobile-sidebar"
+        class="fixed inset-y-0 left-0 z-50 w-64 bg-white transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden"
+      >
+        <div class="flex flex-col h-full pt-5 pb-4">
+          <!-- Close button -->
+          <div class="flex items-center justify-between px-4 mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Admin Menu</h2>
+            <button
+              id="admin-mobile-sidebar-close"
+              class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label="Zamknij menu"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Admin Badge -->
+          <div class="px-4 mb-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <div class="flex items-center">
+                <svg
+                  class="h-5 w-5 text-red-600 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+                <span class="text-sm font-medium text-red-900">Panel Admin</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation -->
+          <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+            {adminNavItems.map((item) => {
+              const isActive =
+                currentPath === item.href ||
+                (item.href !== '/admin' && currentPath.startsWith(item.href));
+
+              return (
+                <a
+                  href={item.href}
+                  class={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-red-50 text-red-700'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <svg
+                    class={`mr-3 flex-shrink-0 h-6 w-6 ${
+                      isActive ? 'text-red-600' : 'text-gray-400'
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d={item.icon}
+                    />
+                  </svg>
+                  {item.label}
+                </a>
+              );
+            })}
+          </nav>
+
+          <!-- Mobile Sidebar Footer -->
+          <div class="px-4 pt-4 border-t border-gray-200">
+            <a
+              href="/dashboard"
+              class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <svg
+                class="mr-3 flex-shrink-0 h-6 w-6 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Powrót do Dashboard
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Mobile Sidebar Toggle Button (Floating) -->
+      <button
+        id="admin-mobile-sidebar-toggle"
+        class="fixed bottom-6 left-6 z-30 lg:hidden p-3 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-colors"
+        aria-label="Otwórz menu"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+
+      <!-- Main Content -->
+      <main class="flex-1 lg:pl-64">
+        <div class="py-6 px-4 sm:px-6 lg:px-8">
+          <slot />
+        </div>
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <Footer />
+
+    <!-- Mobile Sidebar Toggle Script -->
+    <script>
+      // Mobile sidebar functionality
+      const adminMobileSidebarToggle = document.getElementById('admin-mobile-sidebar-toggle');
+      const adminMobileSidebar = document.getElementById('admin-mobile-sidebar');
+      const adminMobileSidebarClose = document.getElementById('admin-mobile-sidebar-close');
+      const adminMobileSidebarOverlay = document.getElementById('admin-mobile-sidebar-overlay');
+
+      function openAdminMobileSidebar() {
+        if (adminMobileSidebar && adminMobileSidebarOverlay) {
+          adminMobileSidebar.classList.remove('-translate-x-full');
+          adminMobileSidebarOverlay.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        }
+      }
+
+      function closeAdminMobileSidebar() {
+        if (adminMobileSidebar && adminMobileSidebarOverlay) {
+          adminMobileSidebar.classList.add('-translate-x-full');
+          adminMobileSidebarOverlay.classList.add('hidden');
+          document.body.style.overflow = '';
+        }
+      }
+
+      // Toggle button
+      adminMobileSidebarToggle?.addEventListener('click', openAdminMobileSidebar);
+
+      // Close button
+      adminMobileSidebarClose?.addEventListener('click', closeAdminMobileSidebar);
+
+      // Overlay click
+      adminMobileSidebarOverlay?.addEventListener('click', closeAdminMobileSidebar);
+
+      // Close on navigation (click on sidebar links)
+      adminMobileSidebar?.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', closeAdminMobileSidebar);
+      });
+
+      // Close on ESC key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeAdminMobileSidebar();
+        }
+      });
+    </script>
+  </body>
+</html>
