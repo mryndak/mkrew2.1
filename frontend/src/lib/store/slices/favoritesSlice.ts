@@ -5,6 +5,7 @@ import {
   addFavorite as addFavoriteApi,
   removeFavorite as removeFavoriteApi,
   fetchFavorites as fetchFavoritesApi,
+  updateFavoritesOrder as updateFavoritesOrderApi,
 } from '@/lib/api/endpoints/favorites';
 
 /**
@@ -88,6 +89,28 @@ export const removeFavorite = createAsyncThunk(
   }
 );
 
+/**
+ * Aktualizuj kolejność ulubionych
+ * Endpoint: PATCH /api/v1/users/me/favorites
+ * Z optimistic update
+ */
+export const updateFavoritesOrder = createAsyncThunk(
+  'favorites/updateOrder',
+  async (newOrder: FavoriteRckikDto[], { rejectWithValue }) => {
+    try {
+      const payload = newOrder.map((fav, index) => ({
+        id: fav.id,
+        priority: index + 1,
+      }));
+      await updateFavoritesOrderApi(payload);
+      return newOrder;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Nie udało się zaktualizować kolejności';
+      return rejectWithValue(message);
+    }
+  }
+);
+
 // ===== Slice =====
 
 /**
@@ -134,6 +157,22 @@ const favoritesSlice = createSlice({
           state.favoriteIds.push(rckikId);
         }
       }
+    },
+
+    /**
+     * Reorder favorites optimistic
+     * Wywołaj przed API request dla drag-and-drop
+     */
+    reorderFavoritesOptimistic(state, action: PayloadAction<FavoriteRckikDto[]>) {
+      state.favorites = action.payload;
+    },
+
+    /**
+     * Rollback reorder
+     * Wywołaj przy błędzie API request
+     */
+    rollbackReorder(state, action: PayloadAction<FavoriteRckikDto[]>) {
+      state.favorites = action.payload;
     },
 
     /**
@@ -211,6 +250,23 @@ const favoritesSlice = createSlice({
       // removeFavorite - rejected (rollback w komponencie)
       .addCase(removeFavorite.rejected, (state, action) => {
         state.error = action.payload as string;
+      })
+
+      // updateFavoritesOrder - pending
+      .addCase(updateFavoritesOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      // updateFavoritesOrder - fulfilled
+      .addCase(updateFavoritesOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.favorites = action.payload;
+        state.error = null;
+      })
+      // updateFavoritesOrder - rejected (rollback w komponencie)
+      .addCase(updateFavoritesOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });
@@ -220,6 +276,8 @@ export const {
   optimisticAddFavorite,
   optimisticRemoveFavorite,
   rollbackOptimisticUpdate,
+  reorderFavoritesOptimistic,
+  rollbackReorder,
   clearError,
   clearFavorites,
 } = favoritesSlice.actions;

@@ -1,0 +1,51 @@
+---
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { ReduxProvider } from '@/components/common/ReduxProvider';
+import { FavoritesView } from '@/components/dashboard/favorites/FavoritesView';
+
+/**
+ * Favorites Page - Strona z ulubionymi centrami krwiodawstwa
+ * Protected page dla zalogowanych użytkowników
+ *
+ * Features:
+ * - Lista ulubionych centrów RCKiK z aktualnymi poziomami krwi
+ * - Drag-and-drop reordering (zmiana kolejności)
+ * - Usuwanie z ulubionych z potwierdzeniem
+ * - Empty state dla użytkowników bez ulubionych
+ * - Optimistic updates z rollback
+ * - Responsywny mobile-first design
+ * - Accessibility (keyboard navigation)
+ *
+ * Layout:
+ * - Full-width single column layout
+ * - Cards w grid layout na desktop
+ * - Stack na mobile
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
+ * - Redirect do /login jeśli niezalogowany
+ *
+ * Data Flow:
+ * - FavoritesView używa Redux favoritesSlice
+ * - Automatyczne pobieranie listy ulubionych przy mount
+ * - Optimistic updates dla lepszego UX
+ * - Toast notifications dla feedbacku użytkownika
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Ulubione centra | mkrew';
+const pageDescription = 'Zarządzaj swoimi ulubionymi centrami krwiodawstwa i śledź aktualne poziomy krwi';
+---
+
+<DashboardLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Favorites Content with Redux Provider -->
+  <ReduxProvider client:only="react">
+    <FavoritesView client:only="react" />
+  </ReduxProvider>
+</DashboardLayout>
