@@ -1,5 +1,5 @@
 import { apiClient } from '../client';
-import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, VerifyEmailResponse } from '@/types/auth';
+import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, VerifyEmailResponse, PasswordResetResponse } from '@/types/auth';
 
 /**
  * Login user
@@ -92,6 +92,58 @@ export async function resendVerificationEmail(email: string): Promise<{ message:
   const response = await apiClient.post<{ message: string }>(
     '/auth/resend-verification',
     { email }
+  );
+  return response.data;
+}
+
+/**
+ * Request password reset
+ * Endpoint: POST /api/v1/auth/password-reset/request
+ *
+ * @param email - User email address
+ * @returns Promise<PasswordResetResponse> with success message
+ *
+ * @throws AxiosError with status codes:
+ * - 400: Validation error (invalid email format)
+ * - 429: Too many requests (rate limit - 3 requests per email per hour)
+ * - 500: Server error
+ *
+ * @note Security: Always returns success message even if email doesn't exist (prevents email enumeration)
+ */
+export async function requestPasswordReset(email: string): Promise<PasswordResetResponse> {
+  const response = await apiClient.post<PasswordResetResponse>(
+    '/auth/password-reset/request',
+    { email },
+    {
+      timeout: 15000, // 15 seconds timeout
+    }
+  );
+  return response.data;
+}
+
+/**
+ * Confirm password reset with token
+ * Endpoint: POST /api/v1/auth/password-reset/confirm
+ *
+ * @param token - Reset token from email
+ * @param newPassword - New password (must meet security requirements)
+ * @returns Promise<PasswordResetResponse> with success message
+ *
+ * @throws AxiosError with status codes:
+ * - 400: Invalid/expired token or weak password
+ * - 404: Token not found
+ * - 500: Server error
+ */
+export async function confirmPasswordReset(
+  token: string,
+  newPassword: string
+): Promise<PasswordResetResponse> {
+  const response = await apiClient.post<PasswordResetResponse>(
+    '/auth/password-reset/confirm',
+    { token, newPassword },
+    {
+      timeout: 15000, // 15 seconds timeout
+    }
   );
   return response.data;
 }
