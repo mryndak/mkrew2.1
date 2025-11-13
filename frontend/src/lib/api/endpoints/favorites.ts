@@ -47,6 +47,20 @@ export async function fetchFavorites(): Promise<FavoriteRckikDto[]> {
 }
 
 /**
+ * Aktualizacja kolejności ulubionych centrów
+ * Endpoint: PATCH /api/v1/users/me/favorites
+ * Wymaga uwierzytelnienia (JWT token)
+ *
+ * @param favorites - Tablica obiektów z id i priority dla każdego ulubionego
+ * @returns Promise (void przy sukcesie)
+ */
+export async function updateFavoritesOrder(
+  favorites: Array<{ id: number; priority: number }>
+): Promise<void> {
+  await apiClient.patch('/users/me/favorites', { favorites });
+}
+
+/**
  * Sprawdzenie czy centrum jest w ulubionych
  * Helper function - sprawdza lokalnie w liście pobranych ulubionych
  *
