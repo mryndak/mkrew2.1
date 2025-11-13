@@ -112,6 +112,7 @@ export interface RckikCardProps {
 export interface BloodLevelBadgeProps {
   bloodLevel: BloodLevel;
   size?: 'small' | 'medium' | 'large';
+  onClick?: (bloodGroup: string) => void; // opcjonalne - do filtrowania wykresu/tabeli
 }
 
 /**
