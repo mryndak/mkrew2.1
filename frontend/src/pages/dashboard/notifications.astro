@@ -1,0 +1,56 @@
+---
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { ReduxProvider } from '@/components/common/ReduxProvider';
+import { NotificationsView } from '@/components/dashboard/notifications/NotificationsView';
+
+/**
+ * Notifications Page - Strona z powiadomieniami in-app
+ * Protected page dla zalogowanych użytkowników
+ *
+ * Features:
+ * - Lista powiadomień in-app z podziałem na wszystkie/nieprzeczytane
+ * - Grupowanie powiadomień po dniach
+ * - Oznaczanie jako przeczytane (pojedynczo i masowo)
+ * - Paginacja (Load More)
+ * - Badge z licznikiem nieprzeczytanych
+ * - Linkowanie do akcji (np. szczegółów RCKiK)
+ * - Empty state dla pustych list
+ * - Responsywny mobile-first design
+ * - Accessibility (keyboard navigation, ARIA labels)
+ *
+ * Layout:
+ * - Full-width single column layout
+ * - Cards/list items dla powiadomień
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
+ * - Redirect do /login jeśli niezalogowany
+ *
+ * Data Flow:
+ * - NotificationsView używa API endpoints z /api/endpoints/notifications.ts
+ * - Optimistic updates dla oznaczania jako przeczytane
+ * - Toast notifications dla feedbacku użytkownika
+ *
+ * User Stories:
+ * - US-011: Powiadomienie in-app o krytycznym stanie krwi
+ * - US-010: Powiązane z powiadomieniami e-mail
+ * - US-006: Ustawienia powiadomień
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Powiadomienia | mkrew';
+const pageDescription = 'Przeglądaj powiadomienia in-app i alerty o krytycznych stanach krwi w centrach krwiodawstwa';
+---
+
+<DashboardLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Notifications Content with Redux Provider -->
+  <ReduxProvider client:only="react">
+    <NotificationsView client:only="react" />
+  </ReduxProvider>
+</DashboardLayout>
