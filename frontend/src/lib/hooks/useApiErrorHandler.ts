@@ -1,10 +1,16 @@
 import { useEffect, useRef } from 'react';
+import { useDispatch } from 'react-redux';
 import { useToast } from '@/components/ui/Toast';
+import { logout } from '@/lib/store/slices/authSlice';
+import { clearUserData } from '@/lib/store/slices/userSlice';
 
 /**
  * Hook do obsługi błędów API na poziomie aplikacji
  * Nasłuchuje na event 'api-max-retries-reached' z axios interceptora
  * i wyświetla odpowiednie komunikaty toast
+ *
+ * Dodatkowo nasłuchuje na event 'logout-403' który wymusza wylogowanie
+ * użytkownika gdy endpoint /users/me zwróci 403 Forbidden
  *
  * Zapobiega duplikacji komunikatów (pokazuje max 1 komunikat na 5 sekund)
  *
@@ -19,6 +25,7 @@ import { useToast } from '@/components/ui/Toast';
  * ```
  */
 export function useApiErrorHandler() {
+  const dispatch = useDispatch();
   const toast = useToast();
   const lastErrorTimeRef = useRef<number>(0);
   const DEDUPE_WINDOW_MS = 5000; // 5 seconds
@@ -75,12 +82,41 @@ export function useApiErrorHandler() {
       }
     };
 
-    // Add event listener
+    const handleLogout403 = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        error: any;
+        url: string;
+      }>;
+
+      // Log for debugging (development only)
+      if (import.meta.env.DEV) {
+        console.log('403 Forbidden on /users/me - forcing logout', customEvent.detail);
+      }
+
+      // Dispatch logout actions
+      dispatch(logout());
+      dispatch(clearUserData());
+
+      // Show toast notification
+      toast.error(
+        'Twoja sesja wygasła lub dostęp został odwołany. Zaloguj się ponownie.',
+        'Sesja wygasła'
+      );
+
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1000);
+    };
+
+    // Add event listeners
     window.addEventListener('api-max-retries-reached', handleMaxRetriesReached);
+    window.addEventListener('logout-403', handleLogout403);
 
     // Cleanup
     return () => {
       window.removeEventListener('api-max-retries-reached', handleMaxRetriesReached);
+      window.removeEventListener('logout-403', handleLogout403);
     };
-  }, [toast]);
+  }, [toast, dispatch]);
 }

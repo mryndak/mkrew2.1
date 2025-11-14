@@ -129,6 +129,19 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // Check for 403 Forbidden on /users/me endpoint - force logout
+    if (error.response?.status === 403 && config?.url?.includes('/users/me')) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('logout-403', {
+          detail: {
+            error,
+            url: config.url,
+          }
+        }));
+      }
+      return Promise.reject(error);
+    }
+
     // Check if we should retry
     if (!config || !isRetryableError(error)) {
       return Promise.reject(error);
