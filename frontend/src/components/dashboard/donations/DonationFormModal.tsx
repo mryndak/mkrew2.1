@@ -5,9 +5,11 @@ import { z } from 'zod';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { Autocomplete } from '@/components/ui/Autocomplete';
 import { Button } from '@/components/ui/Button';
 import type { DonationResponse } from '@/types/dashboard';
 import type { SelectOption } from '@/components/ui/Select';
+import type { AutocompleteOption } from '@/components/ui/Autocomplete';
 
 /**
  * Zod schema dla formularza donacji
@@ -178,14 +180,12 @@ export function DonationFormModal({
     onClose();
   };
 
-  // RCKiK options
-  const rckikOptions: SelectOption[] = [
-    { value: '', label: 'Wybierz centrum', disabled: true },
-    ...availableRckiks.map((rckik) => ({
-      value: rckik.id.toString(),
-      label: `${rckik.name} - ${rckik.city}`,
-    })),
-  ];
+  // RCKiK options for Autocomplete
+  const rckikAutocompleteOptions: AutocompleteOption[] = availableRckiks.map((rckik) => ({
+    value: rckik.id,
+    label: rckik.name,
+    subtitle: rckik.city,
+  }));
 
   // Donation type options
   const donationTypeOptions: SelectOption[] = [
@@ -255,15 +255,22 @@ export function DonationFormModal({
           </div>
         )}
 
-        {/* RCKiK Select */}
-        <Select
+        {/* RCKiK Autocomplete */}
+        <Autocomplete
           label="Centrum RCKiK *"
-          options={rckikOptions}
+          options={rckikAutocompleteOptions}
+          value={watch('rckikId')}
+          onChange={(value) => {
+            setValue('rckikId', typeof value === 'number' ? value : parseInt(value as string, 10), {
+              shouldValidate: true,
+              shouldDirty: true,
+            });
+          }}
           error={errors.rckikId?.message}
           disabled={mode === 'edit'} // Readonly in edit mode
-          {...register('rckikId', {
-            setValueAs: (v) => (v === '' ? undefined : parseInt(v, 10)),
-          })}
+          placeholder="Szukaj centrum RCKiK..."
+          noResultsText="Nie znaleziono centrum"
+          minSearchLength={2}
         />
 
         {/* Donation Date */}

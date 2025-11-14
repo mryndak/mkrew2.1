@@ -13,6 +13,7 @@ import {
   editDonation,
   removeDonation,
 } from '@/lib/store/slices/donationsSlice';
+import { fetchRckikList } from '@/lib/api/endpoints/rckik';
 import { toast, Toaster } from 'sonner';
 import { DonationsHeader } from './DonationsHeader';
 import { DonationsToolbar, type DonationFilters } from './DonationsToolbar';
@@ -67,6 +68,8 @@ export function DonationsView() {
   });
   const [sortBy, setSortBy] = useState('donationDate');
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+  const [availableRckiks, setAvailableRckiks] = useState<Array<{ id: number; name: string; city: string }>>([]);
+  const [isLoadingRckiks, setIsLoadingRckiks] = useState(false);
 
   // Modal states
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -75,12 +78,42 @@ export function DonationsView() {
   const [selectedDonation, setSelectedDonation] = useState<DonationResponse | null>(null);
 
   /**
+   * Fetch available RCKiK centers
+   */
+  const loadAvailableRckiks = async () => {
+    try {
+      setIsLoadingRckiks(true);
+      const response = await fetchRckikList({
+        page: 0,
+        size: 100,
+        active: true,
+        sortBy: 'name',
+        sortOrder: 'ASC',
+      });
+
+      setAvailableRckiks(
+        response.content.map((rckik) => ({
+          id: rckik.id,
+          name: rckik.name,
+          city: rckik.city,
+        }))
+      );
+    } catch (error) {
+      console.error('Failed to fetch RCKiK list:', error);
+      toast.error('Nie udało się pobrać listy centrów RCKiK');
+    } finally {
+      setIsLoadingRckiks(false);
+    }
+  };
+
+  /**
    * Initial data fetch
    */
   useEffect(() => {
     if (!isInitialized) {
       dispatch(fetchDonations({ page: 0, size: 20, sortOrder: 'DESC' }));
       dispatch(fetchDonationStats());
+      loadAvailableRckiks();
       setIsInitialized(true);
     }
   }, [dispatch, isInitialized]);
@@ -197,7 +230,7 @@ export function DonationsView() {
         onSortChange={handleSortChange}
         onExport={handleExport}
         onAddDonation={handleAddDonation}
-        availableRckiks={[]} // TODO: Fetch from API or Redux
+        availableRckiks={availableRckiks}
       />
 
       {/* Donations Table */}
@@ -220,7 +253,7 @@ export function DonationsView() {
         isOpen={isFormModalOpen}
         mode={formMode}
         donation={selectedDonation}
-        availableRckiks={[]} // TODO: Fetch from API or Redux
+        availableRckiks={availableRckiks}
         lastDonationDate={statistics?.lastDonationDate || null}
         onClose={() => {
           setIsFormModalOpen(false);
