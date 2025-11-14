@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { getCookie, deleteCookie } from '@/lib/utils/cookies';
+import { getRoleFromToken } from '@/lib/auth/jwt';
+import type { UserRole } from '@/types/auth';
 
 /**
  * MobileUserMenu - Client-side authentication menu for mobile
  * Mobile version of UserMenu component
+ * Shows different links based on user role (USER vs ADMIN)
  */
 export function MobileUserMenu() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPath, setCurrentPath] = useState('');
 
@@ -18,7 +22,18 @@ export function MobileUserMenu() {
     const checkAuth = () => {
       const cookieToken = getCookie('accessToken');
       const storageToken = localStorage.getItem('accessToken');
-      setIsAuthenticated(!!(cookieToken || storageToken));
+      const token = cookieToken || storageToken;
+
+      setIsAuthenticated(!!token);
+
+      // Get user role from token
+      if (token) {
+        const role = getRoleFromToken(token);
+        setUserRole(role);
+      } else {
+        setUserRole(null);
+      }
+
       setIsLoading(false);
     };
 
@@ -60,6 +75,31 @@ export function MobileUserMenu() {
 
   // Authenticated user menu
   if (isAuthenticated) {
+    // ADMIN menu - only admin panel and logout
+    if (userRole === 'ADMIN') {
+      const isAdmin = currentPath.startsWith('/admin');
+
+      return (
+        <div className="flex flex-col gap-2">
+          <a
+            href="/admin"
+            className={`px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 ${
+              isAdmin ? 'bg-primary-50 text-primary-600' : ''
+            }`}
+          >
+            Panel administracyjny
+          </a>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 text-left"
+          >
+            Wyloguj
+          </button>
+        </div>
+      );
+    }
+
+    // USER menu - dashboard, notifications, and logout
     const isDashboard = currentPath.startsWith('/dashboard') && !currentPath.startsWith('/dashboard/notifications');
     const isNotifications = currentPath.startsWith('/dashboard/notifications');
 

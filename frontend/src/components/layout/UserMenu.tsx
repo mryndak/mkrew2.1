@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getCookie, deleteCookie } from '@/lib/utils/cookies';
+import { getRoleFromToken } from '@/lib/auth/jwt';
+import type { UserRole } from '@/types/auth';
 
 /**
  * UserMenu - Client-side authentication menu
@@ -8,11 +10,12 @@ import { getCookie, deleteCookie } from '@/lib/utils/cookies';
  * Features:
  * - Checks token in cookies/localStorage client-side
  * - Shows Login/Register for guests
- * - Shows Dashboard/Logout for authenticated users
+ * - Shows Dashboard (USER) or Admin Panel (ADMIN) for authenticated users
  * - Handles logout (clears tokens and redirects)
  */
 export function UserMenu() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -20,7 +23,18 @@ export function UserMenu() {
     const checkAuth = () => {
       const cookieToken = getCookie('accessToken');
       const storageToken = localStorage.getItem('accessToken');
-      setIsAuthenticated(!!(cookieToken || storageToken));
+      const token = cookieToken || storageToken;
+
+      setIsAuthenticated(!!token);
+
+      // Get user role from token
+      if (token) {
+        const role = getRoleFromToken(token);
+        setUserRole(role);
+      } else {
+        setUserRole(null);
+      }
+
       setIsLoading(false);
     };
 
@@ -64,13 +78,17 @@ export function UserMenu() {
 
   // Authenticated user menu
   if (isAuthenticated) {
+    // Determine link and label based on role
+    const dashboardHref = userRole === 'ADMIN' ? '/admin' : '/dashboard';
+    const dashboardLabel = userRole === 'ADMIN' ? 'Panel administracyjny' : 'Dashboard';
+
     return (
       <div className="flex items-center gap-3">
         <a
-          href="/dashboard"
+          href={dashboardHref}
           className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
         >
-          Dashboard
+          {dashboardLabel}
         </a>
         <button
           onClick={handleLogout}

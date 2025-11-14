@@ -11,6 +11,7 @@
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { UserMenu } from '@/components/layout/UserMenu';
 import { MobileUserMenu } from '@/components/layout/MobileUserMenu';
+import { getRoleFromToken } from '@/lib/auth/jwt';
 
 interface NavLink {
   label: string;
@@ -30,9 +31,13 @@ const navLinks: NavLink[] = [
 // Pobierz aktualną ścieżkę dla active state
 const currentPath = Astro.url.pathname;
 
-// Sprawdź czy użytkownik jest zalogowany (dla NotificationBell)
+// Sprawdź czy użytkownik jest zalogowany i jego rolę
 const accessToken = Astro.cookies.get('accessToken')?.value;
 const isAuthenticated = !!accessToken;
+const userRole = accessToken ? getRoleFromToken(accessToken) : null;
+
+// NotificationBell should only be shown for USER role (not for ADMIN)
+const showNotificationBell = isAuthenticated && userRole === 'USER';
 ---
 
 <nav class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
@@ -70,8 +75,8 @@ const isAuthenticated = !!accessToken;
 
       <!-- CTA Buttons (Desktop) -->
       <div class="hidden md:flex items-center gap-3">
-        <!-- Notification Bell (only for authenticated users) -->
-        {isAuthenticated && (
+        <!-- Notification Bell (only for USER role, not for ADMIN) -->
+        {showNotificationBell && (
           <NotificationBell client:idle />
         )}
 
