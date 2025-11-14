@@ -83,8 +83,9 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
-    // Get token from localStorage (or use httpOnly cookies in production)
-    const token = localStorage.getItem('accessToken');
+    // Get token from localStorage (only available in browser)
+    // Check if running in browser context to avoid SSR/SSG errors
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
