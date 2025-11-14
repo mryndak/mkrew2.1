@@ -87,9 +87,9 @@ export function useScraperRuns({
       const data = await scraperApi.getRuns(filters, pagination);
 
       if (isMountedRef.current) {
-        setRuns(data.runs);
-        setTotalPages(data.totalPages);
-        setTotalElements(data.totalElements);
+        setRuns(data.runs || []);
+        setTotalPages(data.totalPages || 0);
+        setTotalElements(data.totalElements || 0);
         setError(null);
       }
     } catch (err) {
