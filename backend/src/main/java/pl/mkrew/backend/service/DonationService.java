@@ -438,7 +438,39 @@ public class DonationService {
     }
 
     /**
-     * Calculate donation statistics for user
+     * Get donation statistics for user
+     * Supports users with no donations (returns zeros and null date)
+     *
+     * @param userId User ID
+     * @return Statistics
+     */
+    @Transactional(readOnly = true)
+    public DonationStatisticsDto getDonationStatistics(Long userId) {
+        log.debug("Getting donation statistics for user ID: {}", userId);
+
+        // Verify user exists and is active
+        if (!userRepository.existsByIdAndDeletedAtIsNull(userId)) {
+            throw new ResourceNotFoundException("User not found with ID: " + userId);
+        }
+
+        long totalDonations = donationRepository.countByUserIdAndDeletedAtIsNull(userId);
+        Long totalQuantity = donationRepository.sumQuantityByUserId(userId);
+        LocalDate lastDonationDate = donationRepository.findLatestDonationDateByUserId(userId);
+
+        DonationStatisticsDto statistics = DonationStatisticsDto.builder()
+                .totalDonations(totalDonations)
+                .totalQuantityMl(totalQuantity != null ? totalQuantity : 0L)
+                .lastDonationDate(lastDonationDate) // Can be null if no donations
+                .build();
+
+        log.info("Retrieved statistics for user ID: {} - {} donations, {} ml total",
+                userId, totalDonations, statistics.getTotalQuantityMl());
+
+        return statistics;
+    }
+
+    /**
+     * Calculate donation statistics for user (internal helper)
      *
      * @param userId User ID
      * @return Statistics

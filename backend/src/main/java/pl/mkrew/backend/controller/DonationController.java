@@ -141,6 +141,54 @@ public class DonationController {
     }
 
     /**
+     * Get donation statistics
+     * GET /api/v1/users/me/donations/statistics
+     *
+     * Returns donation statistics for the authenticated user.
+     * Supports users with no donations (returns zeros and null date).
+     * Authentication required.
+     *
+     * @return Donation statistics
+     */
+    @Operation(
+            summary = "Get donation statistics",
+            description = "Returns donation statistics for authenticated user including total donations count, " +
+                    "total quantity donated in milliliters, and date of last donation. " +
+                    "For users with no donations, returns totalDonations=0, totalQuantityMl=0, lastDonationDate=null. " +
+                    "JWT authentication required.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Statistics retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = DonationStatisticsDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized - JWT token missing or invalid",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    @GetMapping("/statistics")
+    public ResponseEntity<DonationStatisticsDto> getDonationStatistics() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        log.info("GET /api/v1/users/me/donations/statistics - Get statistics for user ID: {}", userId);
+
+        DonationStatisticsDto statistics = donationService.getDonationStatistics(userId);
+
+        log.info("Retrieved statistics for user ID: {} - {} donations, {} ml, last donation: {}",
+                userId, statistics.getTotalDonations(), statistics.getTotalQuantityMl(), statistics.getLastDonationDate());
+
+        return ResponseEntity.ok(statistics);
+    }
+
+    /**
      * US-012: Create new donation entry
      * POST /api/v1/users/me/donations
      *
