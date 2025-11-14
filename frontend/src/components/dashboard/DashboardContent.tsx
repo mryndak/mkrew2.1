@@ -53,8 +53,8 @@ export function DashboardContent() {
     );
   }
 
-  // Error state
-  if (error && !user) {
+  // Error state - show error only during initial load
+  if (error && !user && isLoading) {
     return (
       <div className="bg-white rounded-lg border border-red-200 p-6">
         <div className="flex items-start gap-3">
@@ -91,13 +91,19 @@ export function DashboardContent() {
     );
   }
 
-  // No user (shouldn't happen due to auth middleware)
-  if (!user) {
+  // If user is not loaded yet and still loading, show skeleton
+  // Note: If user is missing after loading completes, AuthGuard should have redirected
+  if (!user && isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
-        <p className="text-gray-600">Trwa ładowanie danych użytkownika...</p>
+      <div className="space-y-6">
+        <LoadingSkeleton />
       </div>
     );
+  }
+
+  // If no user after loading (shouldn't happen due to AuthGuard), show minimal message
+  if (!user) {
+    return null;
   }
 
   return (
