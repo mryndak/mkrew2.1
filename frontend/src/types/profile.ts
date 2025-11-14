@@ -92,11 +92,11 @@ export interface UserProfile {
   bloodGroup: BloodGroup | null;
   emailVerified: boolean;
   consentInfo: {
-    timestamp: Date;
+    timestamp: string; // ISO 8601 string (serializable for Redux)
     version: string;
   };
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string; // ISO 8601 string (serializable for Redux)
+  updatedAt: string; // ISO 8601 string (serializable for Redux)
 }
 
 /**
@@ -113,7 +113,7 @@ export interface NotificationPreferences {
     enabled: boolean;
     frequency: NotificationFrequency;
   };
-  updatedAt: Date;
+  updatedAt: string; // ISO 8601 string (serializable for Redux)
 }
 
 // ===== Enums =====

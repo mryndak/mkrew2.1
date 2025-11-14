@@ -26,11 +26,11 @@ export function mapUserProfileResponseToViewModel(dto: UserProfileResponse): Use
     bloodGroup: dto.bloodGroup as BloodGroup | null,
     emailVerified: dto.emailVerified,
     consentInfo: {
-      timestamp: new Date(dto.consentTimestamp),
+      timestamp: dto.consentTimestamp, // Keep as ISO string for Redux serialization
       version: dto.consentVersion,
     },
-    createdAt: new Date(dto.createdAt),
-    updatedAt: new Date(dto.updatedAt),
+    createdAt: dto.createdAt, // Keep as ISO string for Redux serialization
+    updatedAt: dto.updatedAt, // Keep as ISO string for Redux serialization
   };
 }
 
@@ -54,6 +54,6 @@ export function mapNotificationPreferencesResponseToViewModel(
       enabled: dto.inAppEnabled,
       frequency: dto.inAppFrequency as NotificationFrequency,
     },
-    updatedAt: new Date(dto.updatedAt),
+    updatedAt: dto.updatedAt, // Keep as ISO string for Redux serialization
   };
 }
