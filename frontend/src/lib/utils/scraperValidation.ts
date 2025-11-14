@@ -8,14 +8,12 @@ import { z } from 'zod';
  * Schema dla formularza ręcznego triggerowania scrapera
  */
 export const manualTriggerSchema = z.object({
-  rckikId: z
-    .union([z.number().positive().int(), z.literal(''), z.null()])
-    .optional()
+  rckikIds: z
+    .array(z.number().positive().int())
+    .default([])
     .transform(val => {
-      if (val === '' || val === null || val === undefined) {
-        return null;
-      }
-      return val as number;
+      // Pusta tablica oznacza "wszystkie centra"
+      return val;
     }),
 
   customUrl: z

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useManualTrigger } from '@/lib/hooks/scraper/useManualTrigger';
 import { manualTriggerSchema, type ManualTriggerFormData } from '@/lib/utils/scraperValidation';
+import { RckikMultiSelect } from './RckikMultiSelect';
 import type { RckikBasicDto } from '@/lib/types/scraper';
 
 /**
@@ -35,13 +36,14 @@ export function ManualTriggerModal({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     reset,
     watch,
   } = useForm<ManualTriggerFormData>({
     resolver: zodResolver(manualTriggerSchema),
     defaultValues: {
-      rckikId: null,
+      rckikIds: [],
       customUrl: '',
       confirmed: false,
     },
@@ -51,7 +53,7 @@ export function ManualTriggerModal({
   useEffect(() => {
     if (isOpen) {
       reset({
-        rckikId: null,
+        rckikIds: [],
         customUrl: '',
         confirmed: false,
       });
@@ -62,14 +64,36 @@ export function ManualTriggerModal({
   const confirmed = watch('confirmed');
 
   const onSubmit = async (data: ManualTriggerFormData) => {
-    const result = await triggerScraper({
-      rckikId: data.rckikId || undefined,
-      url: data.customUrl || undefined,
-    });
+    // Jeśli wybrano konkretne centra (rckikIds.length > 0)
+    if (data.rckikIds.length > 0) {
+      // Wysyłamy sekwencyjnie requesty dla każdego wybranego centrum
+      const results = [];
+      for (const rckikId of data.rckikIds) {
+        const result = await triggerScraper({
+          rckikId: rckikId,
+          url: data.customUrl || undefined,
+        });
+        if (result) {
+          results.push(result.scraperId);
+        }
+      }
 
-    if (result) {
-      onSuccess?.(result.scraperId);
-      onClose();
+      if (results.length > 0) {
+        // Zwracamy ID pierwszego uruchomienia
+        onSuccess?.(results[0]);
+        onClose();
+      }
+    } else {
+      // Jeśli rckikIds jest puste, to znaczy "wszystkie centra"
+      const result = await triggerScraper({
+        rckikId: undefined,
+        url: data.customUrl || undefined,
+      });
+
+      if (result) {
+        onSuccess?.(result.scraperId);
+        onClose();
+      }
     }
   };
 
@@ -181,35 +205,27 @@ export function ManualTriggerModal({
 
             {/* Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
-              {/* RCKiK Select */}
+              {/* RCKiK Multi-Select */}
               <div className="mb-4">
                 <label
-                  htmlFor="rckikId"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor="rckikIds"
+                  className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Centrum krwi (opcjonalnie)
+                  Centrum krwi
                 </label>
-                <select
-                  id="rckikId"
-                  {...register('rckikId', {
-                    setValueAs: (v) => (v === '' ? null : parseInt(v)),
-                  })}
-                  disabled={isTriggering}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-                  <option value="">Wszystkie centra (52)</option>
-                  {rckikOptions.map((rckik) => (
-                    <option key={rckik.id} value={rckik.id}>
-                      {rckik.name} - {rckik.city}
-                    </option>
-                  ))}
-                </select>
-                {errors.rckikId && (
-                  <p className="mt-1 text-sm text-red-600">{errors.rckikId.message}</p>
-                )}
-                <p className="mt-1 text-xs text-gray-500">
-                  Pozostaw puste aby uruchomić dla wszystkich centrów
-                </p>
+                <Controller
+                  name="rckikIds"
+                  control={control}
+                  render={({ field }) => (
+                    <RckikMultiSelect
+                      options={rckikOptions}
+                      selectedIds={field.value}
+                      onChange={field.onChange}
+                      disabled={isTriggering}
+                      error={errors.rckikIds?.message}
+                    />
+                  )}
+                />
               </div>
 
               {/* Custom URL Input */}
