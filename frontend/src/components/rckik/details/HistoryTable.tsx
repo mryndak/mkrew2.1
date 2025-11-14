@@ -269,14 +269,9 @@ export function HistoryTable({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Blood Group Filter */}
           <div>
-            <label
-              htmlFor="bloodGroupFilter"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Grupa krwi
-            </label>
             <Select
               id="bloodGroupFilter"
+              label="Grupa krwi"
               value={filters.bloodGroup || ''}
               onChange={(e) =>
                 handleFilterChange(
@@ -284,14 +279,14 @@ export function HistoryTable({
                   e.target.value ? (e.target.value as BloodGroup) : undefined
                 )
               }
-            >
-              <option value="">Wszystkie grupy</option>
-              {ALL_BLOOD_GROUPS.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: '', label: 'Wszystkie grupy' },
+                ...ALL_BLOOD_GROUPS.map((group) => ({
+                  value: group,
+                  label: group,
+                })),
+              ]}
+            />
           </div>
 
           {/* Date From Filter */}
