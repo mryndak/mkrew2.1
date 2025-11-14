@@ -32,21 +32,12 @@ const pageDescription = 'Panel monitorowania systemu web scrapingu - status, log
 
 /**
  * SSR: Pobieranie początkowych danych z API
- * TODO: W produkcji pobierz dane z API przez apiClient na serwerze
- * Na razie używamy mock danych dla development
+ * Dane są pobierane bezpośrednio przez hooki React po załadowaniu komponentu
+ * Initial data ustawione na null, aby wymusić natychmiastowe pobranie z API
  */
 
-// Mock data dla development
-const mockGlobalStatus = {
-  globalStatus: 'OK' as const,
-  lastSuccessfulTimestamp: new Date().toISOString(),
-  consecutiveFailures: 0,
-  totalRecentRuns: 5,
-  successfulRecentRuns: 5,
-  failedRecentRuns: 0,
-  message: 'System scrapingu działa prawidłowo',
-  requiresAdminAlert: false,
-};
+// Puste initial data - komponenty pobiorą dane z API automatycznie
+const mockGlobalStatus = null;
 
 const mockRunsData = {
   runs: [],
