@@ -22,7 +22,12 @@ import {
   selectFavoritesLoading,
   selectFavoritesError,
 } from '@/lib/store/slices/favoritesSlice';
-import { selectUser } from '@/lib/store/slices/authSlice';
+import {
+  fetchUserProfile,
+  selectUserProfile,
+  selectUserLoading,
+  selectUserError,
+} from '@/lib/store/slices/userSlice';
 import {
   calculateNextEligibleDate,
   getDaysRemaining,
@@ -62,7 +67,7 @@ export const useDashboardData = (options?: {
   const dispatch = useAppDispatch();
 
   // Selectors z różnych slice'ów
-  const user = useAppSelector(selectUser);
+  const user = useAppSelector(selectUserProfile);
   const recentDonations = useAppSelector(selectRecentDonations);
   const statistics = useAppSelector(selectDonationStatistics);
   const favorites = useAppSelector(selectFavorites);
@@ -70,11 +75,13 @@ export const useDashboardData = (options?: {
   const unreadCount = useAppSelector(selectUnreadCount);
 
   // Loading states
+  const userLoading = useAppSelector(selectUserLoading);
   const donationsLoading = useAppSelector(selectDonationsLoading);
   const notificationsLoading = useAppSelector(selectNotificationsLoading);
   const favoritesLoading = useAppSelector(selectFavoritesLoading);
 
   // Error states
+  const userError = useAppSelector(selectUserError);
   const donationsError = useAppSelector(selectDonationsError);
   const notificationsError = useAppSelector(selectNotificationsError);
   const favoritesError = useAppSelector(selectFavoritesError);
@@ -83,13 +90,13 @@ export const useDashboardData = (options?: {
    * Aggregate loading state
    * True jeśli którykolwiek z fetch'y jest w toku
    */
-  const isLoading = donationsLoading || notificationsLoading || favoritesLoading;
+  const isLoading = userLoading || donationsLoading || notificationsLoading || favoritesLoading;
 
   /**
    * Aggregate error state
    * Zwraca pierwszy napotkany błąd lub null
    */
-  const error = donationsError || notificationsError || favoritesError || null;
+  const error = userError || donationsError || notificationsError || favoritesError || null;
 
   /**
    * Oblicz nextEligibleDonationDate z lastDonationDate
@@ -119,6 +126,7 @@ export const useDashboardData = (options?: {
    * Prevents infinite retry loops when data fetching fails
    */
   const fetchAttemptedRef = useRef({
+    userProfile: false,
     donationStats: false,
     recentDonations: false,
     favorites: false,
@@ -133,6 +141,12 @@ export const useDashboardData = (options?: {
    */
   useEffect(() => {
     if (!autoFetch) return;
+
+    // Fetch user profile first (CRITICAL - needed for dashboard display)
+    if (!user && !userLoading && !userError && !fetchAttemptedRef.current.userProfile) {
+      fetchAttemptedRef.current.userProfile = true;
+      dispatch(fetchUserProfile());
+    }
 
     // Fetch donations statistics
     // Only fetch if: no data, not loading, no error, and haven't attempted yet
@@ -166,13 +180,16 @@ export const useDashboardData = (options?: {
     }
   }, [
     autoFetch,
+    user,
     statistics,
     recentDonations.length,
     favorites.length,
     notifications.length,
+    userLoading,
     donationsLoading,
     favoritesLoading,
     notificationsLoading,
+    userError,
     donationsError,
     favoritesError,
     notificationsError,
@@ -191,6 +208,7 @@ export const useDashboardData = (options?: {
   const refreshAll = useCallback(async () => {
     // Reset fetch attempted flags
     fetchAttemptedRef.current = {
+      userProfile: false,
       donationStats: false,
       recentDonations: false,
       favorites: false,
@@ -199,6 +217,7 @@ export const useDashboardData = (options?: {
     };
 
     await Promise.all([
+      dispatch(fetchUserProfile()),
       dispatch(fetchDonationStats()),
       dispatch(fetchRecentDonations(recentDonationsLimit)),
       dispatch(fetchFavorites()),
