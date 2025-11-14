@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { SelectHTMLAttributes } from 'react';
 
 export interface SelectOption {
@@ -33,7 +34,8 @@ export function Select({
   disabled = false,
   ...props
 }: SelectProps) {
-  const selectId = id || `select-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const selectId = id || generatedId;
 
   const selectClasses = [
     'w-full px-4 py-2.5 pr-10 rounded-lg border transition-all duration-200',

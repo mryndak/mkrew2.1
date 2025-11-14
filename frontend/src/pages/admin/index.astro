@@ -1,0 +1,312 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+/**
+ * Admin Dashboard - Główna strona panelu administracyjnego
+ * Protected page dla użytkowników z rolą ADMIN
+ *
+ * Features:
+ * - Przegląd statusu systemu
+ * - Szybki dostęp do głównych funkcji administracyjnych
+ * - Statystyki i metryki (opcjonalnie)
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by AdminLayout)
+ * - Wymaga roli ADMIN
+ * - Redirect do /login jeśli brak uwierzytelnienia
+ */
+
+const pageTitle = 'Panel Administracyjny | mkrew';
+const pageDescription = 'Dashboard panelu administracyjnego platformy mkrew - zarządzanie systemem monitorowania poziomów krwi w centrach RCKiK';
+
+/**
+ * Admin quick access cards
+ */
+interface QuickAccessCard {
+  title: string;
+  description: string;
+  href: string;
+  icon: string; // SVG path
+  color: string; // Tailwind color class
+}
+
+const quickAccessCards: QuickAccessCard[] = [
+  {
+    title: 'Scraper',
+    description: 'Monitoruj status scrapingu i zarządzaj harmonogramem pobierania danych',
+    href: '/admin/scraper',
+    icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+    color: 'blue',
+  },
+  {
+    title: 'Użytkownicy',
+    description: 'Zarządzaj użytkownikami, rolami i uprawnieniami w systemie',
+    href: '/admin/users',
+    icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+    color: 'green',
+  },
+  {
+    title: 'Centra RCKiK',
+    description: 'Zarządzaj kanoniczną listą centrów krwiodawstwa i ich metadanymi',
+    href: '/admin/rckik',
+    icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+    color: 'red',
+  },
+  {
+    title: 'Raporty',
+    description: 'Przeglądaj zgłoszenia użytkowników i zarządzaj raportami błędów',
+    href: '/admin/reports',
+    icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    color: 'purple',
+  },
+];
+
+/**
+ * Get color classes based on card color
+ */
+function getColorClasses(color: string) {
+  const colors: Record<string, { bg: string; border: string; icon: string; hover: string }> = {
+    blue: {
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
+      icon: 'text-blue-600',
+      hover: 'hover:bg-blue-100',
+    },
+    green: {
+      bg: 'bg-green-50',
+      border: 'border-green-200',
+      icon: 'text-green-600',
+      hover: 'hover:bg-green-100',
+    },
+    red: {
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+      icon: 'text-red-600',
+      hover: 'hover:bg-red-100',
+    },
+    purple: {
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      icon: 'text-purple-600',
+      hover: 'hover:bg-purple-100',
+    },
+  };
+  return colors[color] || colors.blue;
+}
+---
+
+<AdminLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Admin Dashboard Container -->
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        Panel Administracyjny
+      </h1>
+      <p class="text-gray-600">
+        Witaj w panelu administracyjnym platformy mkrew. Wybierz sekcję, którą chcesz zarządzać.
+      </p>
+    </div>
+
+    <!-- Quick Access Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+      {quickAccessCards.map((card) => {
+        const colors = getColorClasses(card.color);
+        return (
+          <a
+            href={card.href}
+            class={`block p-6 rounded-lg border-2 ${colors.bg} ${colors.border} ${colors.hover} transition-all duration-200 hover:shadow-md group`}
+          >
+            <div class="flex items-start gap-4">
+              {/* Icon */}
+              <div class={`flex-shrink-0 p-3 rounded-lg bg-white ${colors.icon}`}>
+                <svg
+                  class="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d={card.icon}
+                  />
+                </svg>
+              </div>
+
+              {/* Content */}
+              <div class="flex-1 min-w-0">
+                <h2 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+                  {card.title}
+                </h2>
+                <p class="text-sm text-gray-600">
+                  {card.description}
+                </p>
+              </div>
+
+              {/* Arrow */}
+              <div class="flex-shrink-0 text-gray-400 group-hover:text-primary-600 transition-colors">
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+
+    <!-- Info Section -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 text-blue-600">
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">
+            Informacje o panelu administracyjnym
+          </h3>
+          <div class="text-sm text-gray-700 space-y-2">
+            <p>
+              <strong>Scraper:</strong> Zarządzaj automatycznym pobieraniem danych o poziomach krwi z centralnych stron RCKiK. Monitoruj status, harmonogram i logi scrapingu.
+            </p>
+            <p>
+              <strong>Użytkownicy:</strong> Przeglądaj listę użytkowników systemu, zarządzaj rolami i uprawnieniami, oraz moderuj konta użytkowników.
+            </p>
+            <p>
+              <strong>Centra RCKiK:</strong> Zarządzaj kanoniczną listą Regionalnych Centrów Krwiodawstwa i Krwiolecznictwa. Dodawaj nowe centra, edytuj metadane, kontroluj aliasy i lokalizacje.
+            </p>
+            <p>
+              <strong>Raporty:</strong> Przeglądaj zgłoszenia użytkowników o błędach w danych, nieprawidłowościach scrapingu i innych problemach. Zarządzaj statusem zgłoszeń.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Status (Optional - can be expanded in the future) -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Stats card placeholder - to be implemented with real data -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2 bg-green-100 rounded-lg">
+            <svg
+              class="w-5 h-5 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900">Status systemu</h3>
+        </div>
+        <p class="text-2xl font-bold text-green-600 mb-1">Operacyjny</p>
+        <p class="text-sm text-gray-600">Wszystkie usługi działają prawidłowo</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2 bg-blue-100 rounded-lg">
+            <svg
+              class="w-5 h-5 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900">Centra RCKiK</h3>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 mb-1">-</p>
+        <p class="text-sm text-gray-600">Aktywnych centrów w systemie</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2 bg-purple-100 rounded-lg">
+            <svg
+              class="w-5 h-5 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900">Użytkownicy</h3>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 mb-1">-</p>
+        <p class="text-sm text-gray-600">Zarejestrowanych użytkowników</p>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  /* Smooth transitions for cards */
+  a {
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Focus visible dla keyboard navigation */
+  a:focus-visible {
+    outline: 2px solid theme('colors.blue.500');
+    outline-offset: 2px;
+  }
+</style>

@@ -2,19 +2,21 @@
 import '../styles/global.css';
 import Navbar from '../components/layout/Navbar.astro';
 import Footer from '../components/layout/Footer.astro';
+import UnauthorizedAccess from '../components/admin/UnauthorizedAccess.astro';
+import { isAuthenticated, isAdmin, getEmailFromToken } from '@/lib/auth/jwt';
 
 /**
  * AdminLayout - Layout dla panelu administracyjnego
  * Features:
  * - Sidebar z nawigacją admin
- * - Auth protection dla roli ADMIN
+ * - Auth protection dla roli ADMIN (fallback - główna weryfikacja w middleware)
  * - Responsive: sidebar drawer na mobile, fixed sidebar na desktop
  * - Navbar i Footer
  *
  * Access Control:
- * - Wymaga autentykacji (JWT token)
- * - Wymaga roli ADMIN
- * - Redirect do /dashboard jeśli brak uprawnień ADMIN
+ * - Middleware wykonuje główną weryfikację i przekierowania
+ * - AdminLayout sprawdza jako fallback i wyświetla komunikat błędu jeśli potrzebne
+ * - Defense in Depth: dwie warstwy weryfikacji
  */
 
 interface Props {
@@ -29,20 +31,21 @@ const {
 
 /**
  * Auth check - sprawdź czy użytkownik jest zalogowany
+ * NOTE: To jest fallback - middleware powinien już to obsłużyć
  */
 const accessToken = Astro.cookies.get('accessToken')?.value;
 
-if (!accessToken) {
-  const currentPath = Astro.url.pathname;
-  return Astro.redirect(`/login?redirect=${encodeURIComponent(currentPath)}`);
-}
+// Check authorization (fallback - middleware should catch this first)
+const isUserAuthenticated = accessToken ? isAuthenticated(accessToken) : false;
+const isUserAdmin = accessToken ? isAdmin(accessToken) : false;
 
-/**
- * Role check - sprawdź czy użytkownik ma rolę ADMIN
- * TODO: Dodać weryfikację roli z JWT token po stronie backendu
- * Na razie zakładamy że jeśli użytkownik jest zalogowany i ma token, ma dostęp
- * W produkcji backend powinien weryfikować rolę i zwracać 403 jeśli brak uprawnień
- */
+// Get user email for logging (if available)
+const userEmail = accessToken ? getEmailFromToken(accessToken) : null;
+
+// Log unauthorized attempts (should not happen if middleware works correctly)
+if (!isUserAuthenticated || !isUserAdmin) {
+  console.warn(`AdminLayout fallback triggered - unauthorized access by user: ${userEmail || 'anonymous'}`);
+}
 
 /**
  * Admin navigation items
@@ -102,8 +105,16 @@ const currentPath = Astro.url.pathname;
     <slot name="head" />
   </head>
   <body class="flex flex-col min-h-screen bg-gray-50">
-    <!-- Navbar -->
-    <Navbar />
+    {/* Fallback: Show unauthorized if middleware didn't catch it */}
+    {!isUserAuthenticated || !isUserAdmin ? (
+      <UnauthorizedAccess
+        message="Nie masz uprawnień do dostępu do panelu administracyjnego. Panel dostępny tylko dla użytkowników z rolą ADMIN."
+        returnUrl="/"
+      />
+    ) : (
+      <>
+        <!-- Navbar -->
+        <Navbar />
 
     <div class="flex-1 flex">
       <!-- Sidebar - Desktop -->
@@ -409,5 +420,7 @@ const currentPath = Astro.url.pathname;
         }
       });
     </script>
+      </>
+    )}
   </body>
 </html>

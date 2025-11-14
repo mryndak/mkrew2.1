@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type ReactNode } from 'react';
+import { useState, useRef, useEffect, useId, type ReactNode } from 'react';
 
 export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -30,7 +30,7 @@ export function Tooltip({
   className = '',
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [tooltipId] = useState(() => `tooltip-${Math.random().toString(36).substr(2, 9)}`);
+  const tooltipId = useId();
   const timeoutRef = useRef<number>();
 
   const handleMouseEnter = () => {

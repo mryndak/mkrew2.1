@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { InputHTMLAttributes, ReactNode } from 'react';
 
 export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
@@ -40,7 +41,8 @@ export function Radio({
   disabled = false,
   ...props
 }: RadioProps) {
-  const radioId = id || `radio-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const radioId = id || generatedId;
 
   const radioClasses = [
     'h-4 w-4 border-gray-300 transition-colors',

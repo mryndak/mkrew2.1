@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import UnauthorizedAccess from '../components/admin/UnauthorizedAccess.astro';
+
+/**
+ * Unauthorized Page - 403 Forbidden
+ * Wyświetlana gdy użytkownik próbuje dostać się do chronionego zasobu bez uprawnień
+ */
+
+const message = Astro.url.searchParams.get('message') || undefined;
+const returnUrl = Astro.url.searchParams.get('returnUrl') || '/';
+
+const pageTitle = 'Brak dostępu | mkrew';
+const pageDescription = 'Nie masz uprawnień do dostępu do tej strony.';
+---
+
+<Layout title={pageTitle} description={pageDescription} includeNavbar={false} includeFooter={false}>
+  <UnauthorizedAccess message={message} returnUrl={returnUrl} />
+</Layout>

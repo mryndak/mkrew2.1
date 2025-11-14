@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { TextareaHTMLAttributes } from 'react';
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -37,7 +38,8 @@ export function Textarea({
   rows = 4,
   ...props
 }: TextareaProps) {
-  const textareaId = id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+  const generatedId = useId();
+  const textareaId = id || generatedId;
 
   const textareaClasses = [
     'w-full px-4 py-2.5 rounded-lg border transition-all duration-200',

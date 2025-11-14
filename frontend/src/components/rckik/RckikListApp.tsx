@@ -126,7 +126,7 @@ export default function RckikListApp({
         )}
 
         {/* Main content */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0" suppressHydrationWarning>
           {/* Search */}
           <div className="mb-6">
             <SearchBar
