@@ -171,20 +171,12 @@ const mockRckikOptions = [
         const initialTotalElements = parseInt(reportsViewContainer.dataset.initialTotalElements || '0');
         const rckikOptions = JSON.parse(reportsViewContainer.dataset.rckikOptions || '[]');
 
-        const initialData = {
-          reports: initialReports,
-          page: initialPage,
-          size: 20,
-          totalElements: initialTotalElements,
-          totalPages: initialTotalPages,
-          first: initialPage === 0,
-          last: initialPage === initialTotalPages - 1,
-        };
-
+        // Nie przekazuj initialData - pozwól aby hook sam załadował dane z API
+        // To zapewni że dane będą świeże i aktualne zamiast pustych mock danych
         reportsViewRoot = createRoot(reportsViewContainer);
         reportsViewRoot.render(
           React.createElement(ReportsView, {
-            initialData: initialData.reports.length > 0 ? initialData : undefined,
+            initialData: undefined,
             rckikOptions,
             onOpenModal: openReportDetailsModal,
           })
