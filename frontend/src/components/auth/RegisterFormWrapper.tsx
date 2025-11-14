@@ -1,16 +1,16 @@
 import React from 'react';
-import { Provider } from 'react-redux';
-import { store } from '@/lib/store';
+import { AppProvider } from '@/components/common/AppProvider';
 import { RegisterForm } from './RegisterForm';
 
 /**
- * RegisterFormWrapper - wraps RegisterForm with Redux Provider
+ * RegisterFormWrapper - wraps RegisterForm with AppProvider
  * This is necessary because Astro islands need Provider and component in same island
+ * AppProvider includes Redux Provider, Toast notifications, and API error handling
  */
 export function RegisterFormWrapper() {
   return (
-    <Provider store={store}>
+    <AppProvider>
       <RegisterForm />
-    </Provider>
+    </AppProvider>
   );
 }

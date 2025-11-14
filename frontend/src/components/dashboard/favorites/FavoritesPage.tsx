@@ -1,17 +1,16 @@
-import { Provider } from 'react-redux';
-import { store } from '@/lib/store';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { AppProvider } from '@/components/common/AppProvider';
 import { FavoritesView } from './FavoritesView';
 
 /**
- * FavoritesPage - Wrapper combining AuthGuard, Redux Provider, and FavoritesView
+ * FavoritesPage - Wrapper combining AuthGuard, AppProvider, and FavoritesView
  */
 export function FavoritesPage() {
   return (
     <AuthGuard redirectUrl="/dashboard/favorites">
-      <Provider store={store}>
+      <AppProvider>
         <FavoritesView />
-      </Provider>
+      </AppProvider>
     </AuthGuard>
   );
 }

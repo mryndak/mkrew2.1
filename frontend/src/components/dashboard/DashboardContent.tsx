@@ -41,6 +41,7 @@ export function DashboardContent() {
     nextDonationInfo,
     isLoading,
     error,
+    refreshAll,
   } = useDashboardData();
 
   // Loading state
@@ -73,14 +74,16 @@ export function DashboardContent() {
           </svg>
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              Błąd ładowania danych
+              Nie można pobrać danych
             </h3>
-            <p className="text-sm text-gray-600 mb-3">{error}</p>
+            <p className="text-sm text-gray-600 mb-3">
+              Wystąpił problem podczas łączenia z serwerem. Sprawdź połączenie internetowe i spróbuj ponownie.
+            </p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={refreshAll}
               className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
             >
-              Odśwież stronę
+              Spróbuj ponownie
             </button>
           </div>
         </div>

@@ -8,13 +8,16 @@ import type {
 import { DEFAULT_RCKIK_SEARCH_PARAMS } from '../../types/rckik';
 
 // Throttling configuration
+// Note: This throttling prevents excessive API calls from rapid user interactions
+// (e.g., clicking filters quickly). It's different from retry logic in axios interceptor.
 const THROTTLE_DELAY_MS = 1000; // 1 second
-const MAX_ATTEMPTS = 5;
 
 /**
  * Hook do zarządzania listą RCKiK
  * Synchronizuje parametry z URL i wykonuje API calls
- * Includes throttling (1 request per second, max 5 attempts)
+ * Includes throttling (1 request per second) to prevent excessive API calls from rapid user interactions
+ *
+ * Note: Error handling and retry logic is handled by axios interceptor (see client.ts)
  *
  * @param initialData - Opcjonalne początkowe dane (z SSR)
  * @returns Stan listy RCKiK wraz z funkcjami do zarządzania
@@ -25,7 +28,6 @@ const MAX_ATTEMPTS = 5;
 export function useRckikList(initialData?: RckikListApiResponse | null) {
   // Throttling refs
   const lastFetchTimeRef = useRef<number>(0);
-  const fetchAttemptCountRef = useRef<number>(0);
   const throttleTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Parse params z URL
   const getParamsFromUrl = useCallback((): RckikSearchParams => {
@@ -64,17 +66,6 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
    * Fetch data z API with throttling
    */
   const fetchData = useCallback(async (params: RckikSearchParams, skipThrottle = false) => {
-    // Check max attempts
-    if (fetchAttemptCountRef.current >= MAX_ATTEMPTS) {
-      console.warn(`Przekroczono limit ${MAX_ATTEMPTS} prób pobierania danych. Pomiń kolejne zapytania.`);
-      setState(prev => ({
-        ...prev,
-        error: new Error(`Przekroczono limit ${MAX_ATTEMPTS} prób. Odśwież stronę, aby spróbować ponownie.`),
-        loading: false
-      }));
-      return;
-    }
-
     const now = Date.now();
     const timeSinceLastFetch = now - lastFetchTimeRef.current;
 
@@ -98,7 +89,6 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
 
     // Update throttle tracking
     lastFetchTimeRef.current = now;
-    fetchAttemptCountRef.current += 1;
 
     setState(prev => ({ ...prev, loading: true, error: null }));
 
@@ -166,9 +156,6 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
       const newUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
       window.history.pushState({}, '', newUrl);
 
-      // Reset licznika prób przy nowym wyszukiwaniu
-      fetchAttemptCountRef.current = 0;
-
       // Fetch nowe dane
       fetchData(updated);
 
@@ -184,8 +171,6 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
    * Refetch z obecnymi parametrami (force refresh)
    */
   const refetch = useCallback(() => {
-    // Reset licznika prób przy manualnym refresh
-    fetchAttemptCountRef.current = 0;
     fetchData(state.params, true); // Skip throttle on manual refresh
   }, [fetchData, state.params]);
 
@@ -206,9 +191,6 @@ export function useRckikList(initialData?: RckikListApiResponse | null) {
         }
 
         console.log('Parametry zmieniły się (popstate) - wykonuję fetch');
-
-        // Reset licznika prób przy nawigacji
-        fetchAttemptCountRef.current = 0;
 
         fetchData(params);
 

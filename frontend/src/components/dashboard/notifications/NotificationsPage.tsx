@@ -1,17 +1,16 @@
-import { Provider } from 'react-redux';
-import { store } from '@/lib/store';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { AppProvider } from '@/components/common/AppProvider';
 import { NotificationsView } from './NotificationsView';
 
 /**
- * NotificationsPage - Wrapper combining AuthGuard, Redux Provider, and NotificationsView
+ * NotificationsPage - Wrapper combining AuthGuard, AppProvider, and NotificationsView
  */
 export function NotificationsPage() {
   return (
     <AuthGuard redirectUrl="/dashboard/notifications">
-      <Provider store={store}>
+      <AppProvider>
         <NotificationsView />
-      </Provider>
+      </AppProvider>
     </AuthGuard>
   );
 }

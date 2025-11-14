@@ -1,17 +1,16 @@
-import { Provider } from 'react-redux';
-import { store } from '@/lib/store';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { AppProvider } from '@/components/common/AppProvider';
 import { ProfileView } from './ProfileView';
 
 /**
- * ProfilePage - Wrapper combining AuthGuard, Redux Provider, and ProfileView
+ * ProfilePage - Wrapper combining AuthGuard, AppProvider, and ProfileView
  */
 export function ProfilePage() {
   return (
     <AuthGuard redirectUrl="/dashboard/profile">
-      <Provider store={store}>
+      <AppProvider>
         <ProfileView />
-      </Provider>
+      </AppProvider>
     </AuthGuard>
   );
 }

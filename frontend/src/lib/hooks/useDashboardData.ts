@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/store';
 import {
   fetchRecentDonations,
@@ -115,28 +115,53 @@ export const useDashboardData = (options?: {
   }, [statistics?.lastDonationDate]);
 
   /**
+   * Track whether we've already attempted to fetch data
+   * Prevents infinite retry loops when data fetching fails
+   */
+  const fetchAttemptedRef = useRef({
+    donationStats: false,
+    recentDonations: false,
+    favorites: false,
+    notifications: false,
+    unreadCount: false,
+  });
+
+  /**
    * Auto-fetch wszystkich danych przy montowaniu
-   * Fetchuje tylko jeśli dane nie istnieją
+   * Fetchuje tylko jeśli dane nie istnieją i nie ma błędu
+   * Zapobiega ponownemu fetchowaniu po niepowodzeniu (infinite loop)
    */
   useEffect(() => {
     if (!autoFetch) return;
 
-    // Fetch donations i statistics
-    if (!statistics && !donationsLoading) {
+    // Fetch donations statistics
+    // Only fetch if: no data, not loading, no error, and haven't attempted yet
+    if (!statistics && !donationsLoading && !donationsError && !fetchAttemptedRef.current.donationStats) {
+      fetchAttemptedRef.current.donationStats = true;
       dispatch(fetchDonationStats());
     }
-    if (recentDonations.length === 0 && !donationsLoading) {
+
+    // Fetch recent donations
+    if (recentDonations.length === 0 && !donationsLoading && !donationsError && !fetchAttemptedRef.current.recentDonations) {
+      fetchAttemptedRef.current.recentDonations = true;
       dispatch(fetchRecentDonations(recentDonationsLimit));
     }
 
     // Fetch favorites
-    if (favorites.length === 0 && !favoritesLoading) {
+    if (favorites.length === 0 && !favoritesLoading && !favoritesError && !fetchAttemptedRef.current.favorites) {
+      fetchAttemptedRef.current.favorites = true;
       dispatch(fetchFavorites());
     }
 
     // Fetch notifications
-    if (notifications.length === 0 && !notificationsLoading) {
+    if (notifications.length === 0 && !notificationsLoading && !notificationsError && !fetchAttemptedRef.current.notifications) {
+      fetchAttemptedRef.current.notifications = true;
       dispatch(fetchRecentNotifications(recentNotificationsLimit));
+    }
+
+    // Fetch unread count
+    if (!notificationsLoading && !notificationsError && !fetchAttemptedRef.current.unreadCount) {
+      fetchAttemptedRef.current.unreadCount = true;
       dispatch(fetchUnreadCount());
     }
   }, [
@@ -148,6 +173,9 @@ export const useDashboardData = (options?: {
     donationsLoading,
     favoritesLoading,
     notificationsLoading,
+    donationsError,
+    favoritesError,
+    notificationsError,
     recentDonationsLimit,
     recentNotificationsLimit,
     dispatch,
@@ -156,10 +184,20 @@ export const useDashboardData = (options?: {
   /**
    * Refresh wszystkich danych Dashboard
    * Force fetch bez względu na cache
+   * Resetuje flagi fetchAttempted aby umożliwić ponowne próby
    *
    * @returns Promise<void>
    */
   const refreshAll = useCallback(async () => {
+    // Reset fetch attempted flags
+    fetchAttemptedRef.current = {
+      donationStats: false,
+      recentDonations: false,
+      favorites: false,
+      notifications: false,
+      unreadCount: false,
+    };
+
     await Promise.all([
       dispatch(fetchDonationStats()),
       dispatch(fetchRecentDonations(recentDonationsLimit)),
@@ -171,10 +209,15 @@ export const useDashboardData = (options?: {
 
   /**
    * Refresh tylko statystyk donacji
+   * Resetuje flagi fetchAttempted dla donacji
    *
    * @returns Promise<void>
    */
   const refreshDonations = useCallback(async () => {
+    // Reset donation fetch flags
+    fetchAttemptedRef.current.donationStats = false;
+    fetchAttemptedRef.current.recentDonations = false;
+
     await Promise.all([
       dispatch(fetchDonationStats()),
       dispatch(fetchRecentDonations(recentDonationsLimit)),
@@ -183,10 +226,15 @@ export const useDashboardData = (options?: {
 
   /**
    * Refresh tylko powiadomień
+   * Resetuje flagi fetchAttempted dla powiadomień
    *
    * @returns Promise<void>
    */
   const refreshNotifications = useCallback(async () => {
+    // Reset notification fetch flags
+    fetchAttemptedRef.current.notifications = false;
+    fetchAttemptedRef.current.unreadCount = false;
+
     await Promise.all([
       dispatch(fetchRecentNotifications(recentNotificationsLimit)),
       dispatch(fetchUnreadCount()),
@@ -195,10 +243,14 @@ export const useDashboardData = (options?: {
 
   /**
    * Refresh tylko ulubionych
+   * Resetuje flagę fetchAttempted dla ulubionych
    *
    * @returns Promise<void>
    */
   const refreshFavorites = useCallback(async () => {
+    // Reset favorites fetch flag
+    fetchAttemptedRef.current.favorites = false;
+
     await dispatch(fetchFavorites());
   }, [dispatch]);
 
