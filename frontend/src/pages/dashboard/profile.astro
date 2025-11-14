@@ -1,7 +1,6 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-import { ProfileView } from '@/components/profile/ProfileView';
-import { ReduxProvider } from '@/components/common/ReduxProvider';
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { ProfilePage } from '@/components/profile/ProfilePage';
 
 /**
  * Profile Page - User Profile Management
@@ -10,29 +9,18 @@ import { ReduxProvider } from '@/components/common/ReduxProvider';
  * Features:
  * - SSR z React islands dla interaktywności
  * - Redux Provider dla state management
- * - Auth middleware (wymaga JWT token)
+ * - Auth guard (wymaga JWT token)
  * - User Stories: US-005 (Edycja profilu), US-006 (Ustawienia powiadomień), US-016 (GDPR)
  *
  * Layout:
- * - Desktop: max-w-4xl centered
- * - Mobile: responsive stack
+ * - Uses DashboardLayout with sidebar navigation
+ * - Responsive mobile-first design
  *
  * Security:
- * - Wymaga uwierzytelnienia JWT
+ * - Wymaga uwierzytelnienia JWT (handled by AuthGuard client-side)
  * - Redirect do /login jeśli niezalogowany
  * - CSRF protection przez API
  */
-
-/**
- * Client-side auth check (basic - server middleware would be better)
- * Note: W produkcji powinno być middleware po stronie serwera
- */
-const accessToken = Astro.cookies.get('accessToken')?.value;
-
-// Jeśli brak tokenu, redirect do login z return URL
-if (!accessToken) {
-  return Astro.redirect(`/login?redirect=/dashboard/profile`);
-}
 
 /**
  * Page title i meta
@@ -41,49 +29,12 @@ const pageTitle = 'Mój profil | mkrew';
 const pageDescription = 'Zarządzaj swoimi danymi osobowymi, preferencjami powiadomień i ustawieniami konta w platformie mkrew.';
 ---
 
-<Layout
-  title={pageTitle}
-  description={pageDescription}
-  includeNavbar={true}
-  includeFooter={true}
->
+<DashboardLayout title={pageTitle} description={pageDescription}>
   <!-- Meta tags -->
   <Fragment slot="head">
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </Fragment>
 
-  <!-- Main Content -->
-  <main class="min-h-screen">
-    {/* ProfileView - React island z Redux */}
-    <ReduxProvider client:only="react">
-      <ProfileView client:load />
-    </ReduxProvider>
-  </main>
-</Layout>
-
-<style>
-  /**
-   * Custom styles dla profile page
-   * Większość stylów w Tailwind, ale dodatkowe CSS jeśli potrzebne
-   */
-  main {
-    background-color: #f9fafb; /* gray-50 */
-  }
-</style>
-
-<script>
-  /**
-   * Client-side auth check (runs in browser)
-   * Sprawdza token w localStorage i redirectuje jeśli brak
-   * Note: To jest dodatkowa warstwa - główna auth powinna być po stronie serwera
-   */
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('accessToken');
-
-    if (!token) {
-      // Redirect do login z return URL
-      window.location.href = '/login?redirect=/dashboard/profile';
-    }
-  }
-</script>
+  <!-- Profile Content with Auth Guard and Redux Provider wrapped in single component -->
+  <ProfilePage client:only="react" />
+</DashboardLayout>

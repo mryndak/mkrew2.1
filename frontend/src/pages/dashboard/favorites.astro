@@ -1,7 +1,6 @@
 ---
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
-import { ReduxProvider } from '@/components/common/ReduxProvider';
-import { FavoritesView } from '@/components/dashboard/favorites/FavoritesView';
+import { FavoritesPage } from '@/components/dashboard/favorites/FavoritesPage';
 
 /**
  * Favorites Page - Strona z ulubionymi centrami krwiodawstwa
@@ -22,7 +21,7 @@ import { FavoritesView } from '@/components/dashboard/favorites/FavoritesView';
  * - Stack na mobile
  *
  * Security:
- * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
+ * - Wymaga uwierzytelnienia JWT (handled by AuthGuard client-side)
  * - Redirect do /login jeśli niezalogowany
  *
  * Data Flow:
@@ -44,8 +43,6 @@ const pageDescription = 'Zarządzaj swoimi ulubionymi centrami krwiodawstwa i ś
     <meta name="robots" content="noindex, nofollow" />
   </Fragment>
 
-  <!-- Favorites Content with Redux Provider -->
-  <ReduxProvider client:only="react">
-    <FavoritesView client:only="react" />
-  </ReduxProvider>
+  <!-- Favorites Content with Auth Guard and Redux Provider wrapped in single component -->
+  <FavoritesPage client:only="react" />
 </DashboardLayout>

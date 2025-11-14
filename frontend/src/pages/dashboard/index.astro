@@ -1,7 +1,6 @@
 ---
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
-import { ReduxProvider } from '@/components/common/ReduxProvider';
-import { DashboardContent } from '@/components/dashboard/DashboardContent';
+import { DashboardPage } from '@/components/dashboard/DashboardPage';
 
 /**
  * Dashboard Page - Główna strona panelu użytkownika
@@ -18,8 +17,8 @@ import { DashboardContent } from '@/components/dashboard/DashboardContent';
  * - Mobile: 1-kolumnowy layout (stack)
  *
  * Security:
- * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
- * - Redirect do /login jeśli niezalogowany
+ * - Wymaga uwierzytelnienia JWT (handled by AuthGuard client-side)
+ * - Redirect do /login jeśli niezalogowany (client-side guard)
  *
  * Data Flow:
  * - DashboardContent używa useDashboardData hook
@@ -39,8 +38,6 @@ const pageDescription = 'Panel użytkownika platformy mkrew - przegląd donacji,
     <meta name="robots" content="noindex, nofollow" />
   </Fragment>
 
-  <!-- Dashboard Content with Redux Provider -->
-  <ReduxProvider client:only="react">
-    <DashboardContent client:only="react" />
-  </ReduxProvider>
+  <!-- Dashboard Content with Auth Guard and Redux Provider wrapped in single component -->
+  <DashboardPage client:only="react" redirectUrl="/dashboard" />
 </DashboardLayout>

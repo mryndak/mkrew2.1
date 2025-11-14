@@ -1,7 +1,6 @@
 ---
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
-import { ReduxProvider } from '@/components/common/ReduxProvider';
-import { DonationsView } from '@/components/dashboard/donations/DonationsView';
+import { DonationsPage } from '@/components/dashboard/donations/DonationsPage';
 
 /**
  * Donations Page - Strona zarządzania donacjami krwi
@@ -26,7 +25,7 @@ import { DonationsView } from '@/components/dashboard/donations/DonationsView';
  * - Modalne formularze (dodawanie/edycja, potwierdzenie usunięcia)
  *
  * Security:
- * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
+ * - Wymaga uwierzytelnienia JWT (handled by AuthGuard client-side)
  * - Redirect do /login jeśli niezalogowany
  * - Dostęp tylko do własnych donacji (weryfikacja po stronie API)
  *
@@ -53,8 +52,6 @@ const pageDescription = 'Zarządzaj historią donacji krwi, śledź statystyki i
     <meta name="robots" content="noindex, nofollow" />
   </Fragment>
 
-  <!-- Donations Content with Redux Provider -->
-  <ReduxProvider client:only="react">
-    <DonationsView client:only="react" />
-  </ReduxProvider>
+  <!-- Donations Content with Auth Guard and Redux Provider wrapped in single component -->
+  <DonationsPage client:only="react" />
 </DashboardLayout>

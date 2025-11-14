@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { AuthState, LoginResponse, User } from '@/types/auth';
+import { setCookie, deleteCookie } from '@/lib/utils/cookies';
 
 /**
  * Initial state for auth slice
@@ -36,14 +37,21 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.isLoading = false;
 
-      // Store tokens in localStorage (or use httpOnly cookies in production)
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
+      // Store tokens in both localStorage and cookies
+      // localStorage for API requests, cookies for SSR auth check
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+
+        // Set cookies for middleware auth check (7 days expiration)
+        setCookie('accessToken', accessToken, 7);
+        setCookie('refreshToken', refreshToken, 7);
+      }
     },
 
     /**
      * Logout action - clear all auth state
-     * Removes tokens from localStorage
+     * Removes tokens from localStorage and cookies
      */
     logout(state) {
       state.user = null;
@@ -53,10 +61,16 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.isLoading = false;
 
-      // Clear localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('rememberMe');
+      // Clear localStorage and cookies
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('rememberMe');
+
+        // Delete cookies
+        deleteCookie('accessToken');
+        deleteCookie('refreshToken');
+      }
     },
 
     /**

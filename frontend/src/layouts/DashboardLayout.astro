@@ -9,7 +9,7 @@ import Footer from '../components/layout/Footer.astro';
  * - Sidebar z nawigacją do sekcji dashboard
  * - Responsive: sidebar drawer na mobile, fixed sidebar na desktop
  * - Navbar i Footer
- * - Auth protection (sprawdzanie tokenu)
+ * - Auth protection handled by AuthGuard component (client-side)
  */
 
 interface Props {
@@ -23,15 +23,9 @@ const {
 } = Astro.props;
 
 /**
- * Auth check - sprawdź czy użytkownik jest zalogowany
- * Jeśli nie, redirect do /login
+ * Auth check is handled by AuthGuard component (client-side)
+ * Each dashboard page wraps its content with <AuthGuard>
  */
-const accessToken = Astro.cookies.get('accessToken')?.value;
-
-if (!accessToken) {
-  const currentPath = Astro.url.pathname;
-  return Astro.redirect(`/login?redirect=${encodeURIComponent(currentPath)}`);
-}
 
 /**
  * Dashboard navigation items

@@ -1,7 +1,6 @@
 ---
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
-import { ReduxProvider } from '@/components/common/ReduxProvider';
-import { NotificationsView } from '@/components/dashboard/notifications/NotificationsView';
+import { NotificationsPage } from '@/components/dashboard/notifications/NotificationsPage';
 
 /**
  * Notifications Page - Strona z powiadomieniami in-app
@@ -23,7 +22,7 @@ import { NotificationsView } from '@/components/dashboard/notifications/Notifica
  * - Cards/list items dla powiadomień
  *
  * Security:
- * - Wymaga uwierzytelnienia JWT (handled by DashboardLayout)
+ * - Wymaga uwierzytelnienia JWT (handled by AuthGuard client-side)
  * - Redirect do /login jeśli niezalogowany
  *
  * Data Flow:
@@ -49,8 +48,6 @@ const pageDescription = 'Przeglądaj powiadomienia in-app i alerty o krytycznych
     <meta name="robots" content="noindex, nofollow" />
   </Fragment>
 
-  <!-- Notifications Content with Redux Provider -->
-  <ReduxProvider client:only="react">
-    <NotificationsView client:only="react" />
-  </ReduxProvider>
+  <!-- Notifications Content with Auth Guard and Redux Provider wrapped in single component -->
+  <NotificationsPage client:only="react" />
 </DashboardLayout>
