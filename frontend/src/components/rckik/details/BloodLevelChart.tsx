@@ -34,14 +34,12 @@ import type { BloodLevelChartProps, ChartDataPoint, BloodGroup } from '@/types/r
  * <BloodLevelChart
  *   rckikId={1}
  *   initialBloodGroup="A+"
- *   historyData={historyData}
  * />
  * ```
  */
 export function BloodLevelChart({
   rckikId,
   initialBloodGroup = '0+',
-  historyData,
   onBloodGroupChange,
 }: BloodLevelChartProps) {
   const [selectedBloodGroup, setSelectedBloodGroup] =
@@ -143,23 +141,17 @@ export function BloodLevelChart({
     onBloodGroupChange?.(bloodGroup);
   };
 
-  // Get all available blood groups z historyData
+  // Get all available blood groups (wszystkie 8 grup)
   const availableGroups = useMemo(() => {
-    if (!historyData || historyData.length === 0) {
-      return ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] as BloodGroup[];
-    }
-    const uniqueGroups = Array.from(
-      new Set(historyData.map((item) => item.bloodGroup))
-    );
-    return uniqueGroups as BloodGroup[];
-  }, [historyData]);
+    return ['0+', '0-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] as BloodGroup[];
+  }, []);
 
-  // Get current levels for tooltips w selektorze
+  // Get current levels for tooltips w selektorze (z fetchowanych snapshotów)
   const currentLevels = useMemo(() => {
-    if (!historyData || historyData.length === 0) return undefined;
+    if (!snapshots || snapshots.length === 0) return undefined;
 
     // Get latest snapshot dla każdej grupy
-    const latestByGroup = historyData.reduce((acc, item) => {
+    const latestByGroup = snapshots.reduce((acc, item) => {
       if (
         !acc[item.bloodGroup] ||
         new Date(item.snapshotDate) > new Date(acc[item.bloodGroup].snapshotDate)
@@ -167,7 +159,7 @@ export function BloodLevelChart({
         acc[item.bloodGroup] = item;
       }
       return acc;
-    }, {} as Record<string, typeof historyData[0]>);
+    }, {} as Record<string, typeof snapshots[0]>);
 
     return Object.values(latestByGroup).map((item) => ({
       bloodGroup: item.bloodGroup,
@@ -175,7 +167,7 @@ export function BloodLevelChart({
       levelStatus: item.levelStatus,
       lastUpdate: item.scrapedAt,
     }));
-  }, [historyData]);
+  }, [snapshots]);
 
   // Loading state
   if (loading) {
