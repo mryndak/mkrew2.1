@@ -96,6 +96,16 @@ export function isAdmin(token: string): boolean {
 }
 
 /**
+ * Check if user has USER role (not ADMIN)
+ * @param token - JWT token string
+ * @returns true if user is USER, false otherwise
+ */
+export function isUser(token: string): boolean {
+  const role = getRoleFromToken(token);
+  return role === 'USER';
+}
+
+/**
  * Check if user is authenticated (has valid, non-expired token)
  * @param token - JWT token string or null
  * @returns true if authenticated, false otherwise
