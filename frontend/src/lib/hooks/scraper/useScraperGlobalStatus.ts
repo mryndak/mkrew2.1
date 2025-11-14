@@ -52,14 +52,16 @@ export function useScraperGlobalStatus(
   // Refs dla cleanup
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const isFetchingRef = useRef(false);
 
   /**
    * Fetch status from API
    */
   const fetchStatus = useCallback(async () => {
     // Prevent multiple concurrent fetches
-    if (isRefreshing) return;
+    if (isFetchingRef.current) return;
 
+    isFetchingRef.current = true;
     setIsRefreshing(true);
     setError(null);
 
@@ -79,11 +81,12 @@ export function useScraperGlobalStatus(
         console.error('Error fetching scraper global status:', error);
       }
     } finally {
+      isFetchingRef.current = false;
       if (isMountedRef.current) {
         setIsRefreshing(false);
       }
     }
-  }, [isRefreshing]);
+  }, []);
 
   /**
    * Manual refetch (exposed to component)
