@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.mkrew.backend.dto.ErrorResponse;
 import pl.mkrew.backend.dto.NotificationPreferencesResponse;
@@ -23,6 +24,7 @@ import pl.mkrew.backend.service.NotificationPreferenceService;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Notification Preferences", description = "User notification preferences management endpoints")
+@PreAuthorize("hasRole('USER')")
 public class NotificationPreferenceController {
 
     private final NotificationPreferenceService notificationPreferenceService;

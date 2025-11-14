@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.mkrew.backend.dto.*;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +32,7 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Donation Diary", description = "User donation diary management endpoints")
+@PreAuthorize("hasRole('USER')")
 public class DonationController {
 
     private final DonationService donationService;

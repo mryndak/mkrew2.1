@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.mkrew.backend.dto.DeleteAccountResponse;
 import pl.mkrew.backend.dto.ErrorResponse;
@@ -157,6 +158,7 @@ public class UserController {
             )
     })
     @DeleteMapping("/me")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<DeleteAccountResponse> deleteCurrentUserAccount() {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("DELETE /api/v1/users/me - Delete account request for user ID: {}", userId);
