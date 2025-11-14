@@ -37,10 +37,11 @@ export function ReportsView({
    */
   const statistics: ReportStatistics = useMemo(() => {
     const total = state.pagination.totalElements;
-    const newCount = state.reports.filter((r) => r.status === 'NEW').length;
-    const inReviewCount = state.reports.filter((r) => r.status === 'IN_REVIEW').length;
-    const resolvedCount = state.reports.filter((r) => r.status === 'RESOLVED').length;
-    const rejectedCount = state.reports.filter((r) => r.status === 'REJECTED').length;
+    const reports = state.reports || [];
+    const newCount = reports.filter((r) => r.status === 'NEW').length;
+    const inReviewCount = reports.filter((r) => r.status === 'IN_REVIEW').length;
+    const resolvedCount = reports.filter((r) => r.status === 'RESOLVED').length;
+    const rejectedCount = reports.filter((r) => r.status === 'REJECTED').length;
 
     return {
       total,

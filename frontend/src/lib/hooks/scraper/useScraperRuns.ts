@@ -57,19 +57,20 @@ export function useScraperRuns({
   initialFilters,
 }: UseScraperRunsOptions): UseScraperRunsReturn {
   // State
-  const [runs, setRuns] = useState<ScraperRunDto[]>(initialData.runs);
+  const [runs, setRuns] = useState<ScraperRunDto[]>(initialData?.runs || []);
   const [filters, setFilters] = useState<RunsFilters>(initialFilters);
   const [pagination, setPagination] = useState<PaginationParams>({
-    page: initialData.page,
+    page: initialData?.page || 0,
     size: 20,
   });
-  const [totalPages, setTotalPages] = useState(initialData.totalPages);
-  const [totalElements, setTotalElements] = useState(initialData.totalElements);
-  const [isLoading, setIsLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(initialData?.totalPages || 0);
+  const [totalElements, setTotalElements] = useState(initialData?.totalElements || 0);
+  // Set loading to true if initial data is empty (will fetch from API)
+  const [isLoading, setIsLoading] = useState(!initialData?.runs || initialData.runs.length === 0);
   const [error, setError] = useState<Error | null>(null);
 
   // Check if any run is RUNNING
-  const hasRunningRun = runs.some(run => run.status === 'RUNNING');
+  const hasRunningRun = runs?.some(run => run.status === 'RUNNING') || false;
 
   // Refs
   const intervalRef = useRef<NodeJS.Timeout | null>(null);

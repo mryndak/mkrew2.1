@@ -45,9 +45,9 @@ export function useScraperGlobalStatus(
 
   // State
   const [status, setStatus] = useState<ScraperGlobalStatusDto | null>(initialData);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(!initialData);
   const [error, setError] = useState<Error | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(initialData ? new Date() : null);
 
   // Refs dla cleanup
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -91,6 +91,16 @@ export function useScraperGlobalStatus(
   const refetch = useCallback(async () => {
     await fetchStatus();
   }, [fetchStatus]);
+
+  /**
+   * Fetch immediately on mount if no initial data
+   */
+  useEffect(() => {
+    if (!initialData) {
+      fetchStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   /**
    * Setup auto-refresh interval

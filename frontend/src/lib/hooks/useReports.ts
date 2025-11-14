@@ -80,12 +80,12 @@ export function useReports(props?: UseReportsProps) {
     if (props?.initialData) {
       return {
         ...initialState,
-        reports: props.initialData.reports,
+        reports: props.initialData.reports || [],
         pagination: {
-          page: props.initialData.page,
-          size: props.initialData.size,
-          totalElements: props.initialData.totalElements,
-          totalPages: props.initialData.totalPages,
+          page: props.initialData.page ?? 0,
+          size: props.initialData.size ?? 20,
+          totalElements: props.initialData.totalElements ?? 0,
+          totalPages: props.initialData.totalPages ?? 0,
         },
         loading: false,
       };
