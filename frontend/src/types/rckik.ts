@@ -408,7 +408,7 @@ export interface BloodGroupSelectorProps {
 export interface BloodLevelChartProps {
   rckikId: number;
   initialBloodGroup?: BloodGroup;
-  historyData: BloodLevelHistoryDto[];
+  historyData?: BloodLevelHistoryDto[]; // Optional - komponent używa useBloodLevelHistory hook
   onBloodGroupChange?: (bloodGroup: BloodGroup) => void;
 }
 

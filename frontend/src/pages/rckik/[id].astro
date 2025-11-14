@@ -24,23 +24,35 @@ import { HistoryTable } from '../../components/rckik/details/HistoryTable';
 import { ScraperStatus } from '../../components/rckik/details/ScraperStatus';
 import { ErrorState } from '../../components/common/ErrorState';
 
-// Import API funkcji (będzie potrzebne po skonfigurowaniu backendu)
-// import { fetchRckikDetails } from '../../lib/api/endpoints/rckik';
+// Import API funkcji
+import { fetchRckikDetails, fetchRckikList } from '../../lib/api/endpoints/rckik';
 
 // ===== Static Site Generation =====
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // TODO: W production, fetch lista wszystkich RCKiK z API
-  // const rckikList = await fetch('http://localhost:8080/api/v1/rckik?size=100').then(r => r.json());
-  // return rckikList.content.map((rckik: any) => ({
-  //   params: { id: String(rckik.id) },
-  // }));
+  try {
+    // Fetch lista wszystkich RCKiK z API
+    const rckikList = await fetchRckikList({
+      page: 0,
+      size: 100,
+      search: '',
+      city: null,
+      active: true,
+      sortBy: 'name',
+      sortOrder: 'ASC'
+    });
 
-  // Dla development - przykładowe IDs (zaktualizuj gdy backend będzie gotowy)
-  const exampleIds = [1, 2, 3, 4, 5, 15];
-  return exampleIds.map(id => ({
-    params: { id: String(id) },
-  }));
+    return rckikList.content.map((rckik) => ({
+      params: { id: String(rckik.id) },
+    }));
+  } catch (error) {
+    // Fallback dla development - jeśli backend nie jest dostępny
+    console.warn('Backend API not available, using fallback IDs:', error);
+    const fallbackIds = [1, 2, 3, 4, 5, 15];
+    return fallbackIds.map(id => ({
+      params: { id: String(id) },
+    }));
+  }
 };
 
 // ===== Page Component =====
@@ -59,151 +71,146 @@ if (isNaN(rckikId) || rckikId <= 0 || !Number.isInteger(parseFloat(id as string)
   return Astro.redirect('/404');
 }
 
-// TODO: Fetch RCKiK details from API
-// W production, tutaj powinno być:
-// try {
-//   const rckik = await fetchRckikDetails(rckikId);
-// } catch (error) {
-//   if (error.response?.status === 404) {
-//     return Astro.redirect('/404');
-//   }
-//   throw error;
-// }
+// Fetch RCKiK details from API
+let rckik;
+let rckikNotFound = false;
 
-// Mock data dla development (usuń po podłączeniu backendu)
-// W production, jeśli fetchRckikDetails zwróci 404, pokaż RckikNotFound
-const mockRckikExists = [1, 2, 3, 4, 5, 15].includes(rckikId);
+try {
+  rckik = await fetchRckikDetails(rckikId);
+} catch (error: any) {
+  // Handle 404 - RCKiK nie istnieje
+  if (error.response?.status === 404) {
+    rckikNotFound = true;
+  } else {
+    // Other errors - log and show error state
+    console.error('Error fetching RCKiK details:', error);
 
-// Jeśli RCKiK nie istnieje, wyświetl 404 component
-if (!mockRckikExists) {
-  // W production to będzie:
-  // if (error.response?.status === 404) { ... }
+    // For development - use mock data if backend not available
+    if (import.meta.env.DEV) {
+      console.warn('Using mock data for development');
+      rckik = {
+        id: rckikId,
+        name: `Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Warszawie`,
+        code: `RCKIK-WAW-${rckikId}`,
+        city: 'Warszawa',
+        address: 'ul. Kasprzaka 17, 01-211 Warszawa',
+        latitude: 52.2319,
+        longitude: 20.9728,
+        aliases: ['RCKiK Warszawa', 'RCKIK WAW'],
+        active: true,
+        createdAt: '2024-01-01T00:00:00',
+        updatedAt: new Date().toISOString(),
+        currentBloodLevels: [
+          {
+            bloodGroup: 'A+',
+            levelPercentage: 45.5,
+            levelStatus: 'IMPORTANT',
+            lastUpdate: new Date().toISOString(),
+          },
+          {
+            bloodGroup: '0-',
+            levelPercentage: 15.0,
+            levelStatus: 'CRITICAL',
+            lastUpdate: new Date().toISOString(),
+          },
+          {
+            bloodGroup: 'B+',
+            levelPercentage: 65.0,
+            levelStatus: 'OK',
+            lastUpdate: new Date().toISOString(),
+          },
+          {
+            bloodGroup: 'AB+',
+            levelPercentage: 30.0,
+            levelStatus: 'IMPORTANT',
+            lastUpdate: new Date().toISOString(),
+          },
+          {
+            bloodGroup: 'A-',
+            levelPercentage: 55.0,
+            levelStatus: 'OK',
+            lastUpdate: new Date().toISOString(),
+          },
+          {
+            bloodGroup: '0+',
+            levelPercentage: 12.0,
+            levelStatus: 'CRITICAL',
+            lastUpdate: new Date().toISOString(),
+          },
+          {
+            bloodGroup: 'B-',
+            levelPercentage: 48.0,
+            levelStatus: 'IMPORTANT',
+            lastUpdate: new Date().toISOString(),
+          },
+          {
+            bloodGroup: 'AB-',
+            levelPercentage: 70.0,
+            levelStatus: 'OK',
+            lastUpdate: new Date().toISOString(),
+          },
+        ],
+        lastSuccessfulScrape: new Date(Date.now() - 3600000).toISOString(),
+        scrapingStatus: 'OK',
+      };
+    } else {
+      // In production, rethrow the error
+      throw error;
+    }
+  }
 }
 
-const mockRckik = {
-  id: rckikId,
-  name: `Regionalne Centrum Krwiodawstwa i Krwiolecznictwa w Warszawie`,
-  code: `RCKIK-WAW-${rckikId}`,
-  city: 'Warszawa',
-  address: 'ul. Kasprzaka 17, 01-211 Warszawa',
-  latitude: 52.2319,
-  longitude: 20.9728,
-  aliases: ['RCKiK Warszawa', 'RCKIK WAW'],
-  active: true,
-  createdAt: '2024-01-01T00:00:00',
-  updatedAt: new Date().toISOString(),
-  currentBloodLevels: [
-    {
-      bloodGroup: 'A+',
-      levelPercentage: 45.5,
-      levelStatus: 'IMPORTANT',
-      lastUpdate: new Date().toISOString(),
-    },
-    {
-      bloodGroup: '0-',
-      levelPercentage: 15.0,
-      levelStatus: 'CRITICAL',
-      lastUpdate: new Date().toISOString(),
-    },
-    {
-      bloodGroup: 'B+',
-      levelPercentage: 65.0,
-      levelStatus: 'OK',
-      lastUpdate: new Date().toISOString(),
-    },
-    {
-      bloodGroup: 'AB+',
-      levelPercentage: 30.0,
-      levelStatus: 'IMPORTANT',
-      lastUpdate: new Date().toISOString(),
-    },
-    {
-      bloodGroup: 'A-',
-      levelPercentage: 55.0,
-      levelStatus: 'OK',
-      lastUpdate: new Date().toISOString(),
-    },
-    {
-      bloodGroup: '0+',
-      levelPercentage: 12.0,
-      levelStatus: 'CRITICAL',
-      lastUpdate: new Date().toISOString(),
-    },
-    {
-      bloodGroup: 'B-',
-      levelPercentage: 48.0,
-      levelStatus: 'IMPORTANT',
-      lastUpdate: new Date().toISOString(),
-    },
-    {
-      bloodGroup: 'AB-',
-      levelPercentage: 70.0,
-      levelStatus: 'OK',
-      lastUpdate: new Date().toISOString(),
-    },
-  ],
-  lastSuccessfulScrape: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-  scrapingStatus: 'OK',
-};
+// Check if user is authenticated
+const accessToken = Astro.cookies.get('accessToken')?.value;
+const isAuthenticated = !!accessToken;
 
-const rckik = mockRckik;
-
-// TODO: Check if user is authenticated
-// const isAuthenticated = !!Astro.cookies.get('accessToken')?.value;
-const isAuthenticated = false; // Mock dla development
-
-// TODO: Check if RCKiK is in user's favorites
-// Dla zalogowanych użytkowników, sprawdź w Redux store lub API
-const isFavorite = false; // Mock dla development
-
-// Mock history data (w production z API)
-const mockHistoryData = Array.from({ length: 50 }, (_, i) => {
-  const date = new Date();
-  date.setDate(date.getDate() - i);
-  const bloodGroups = ['A+', '0-', 'B+', 'AB+', 'A-', '0+', 'B-', 'AB-'];
-  const bloodGroup = bloodGroups[i % bloodGroups.length];
-  const percentage = 20 + Math.random() * 60;
-
-  return {
-    id: i + 1,
-    snapshotDate: date.toISOString().split('T')[0],
-    bloodGroup,
-    levelPercentage: percentage,
-    levelStatus: percentage < 20 ? 'CRITICAL' : percentage < 50 ? 'IMPORTANT' : 'OK',
-    scrapedAt: date.toISOString(),
-    isManual: Math.random() > 0.9,
-  };
-});
+// Check if RCKiK is in user's favorites
+let isFavorite = false;
+if (isAuthenticated && rckik) {
+  try {
+    const { fetchFavorites } = await import('../../lib/api/endpoints/favorites');
+    const favorites = await fetchFavorites();
+    isFavorite = favorites.some(fav => fav.rckikId === rckikId);
+  } catch (error) {
+    // If fetching favorites fails, assume not favorite
+    console.error('Error fetching favorites:', error);
+    isFavorite = false;
+  }
+}
 
 // SEO
-const title = `${rckik.name} - Szczegóły centrum | mkrew`;
-const description = `Szczegółowe informacje o ${rckik.name}: aktualne stany krwi, historia snapshotów i trend dla wszystkich grup krwi. ${rckik.address}.`;
+const title = rckikNotFound
+  ? `RCKiK nie znaleziono | mkrew`
+  : `${rckik!.name} - Szczegóły centrum | mkrew`;
+const description = rckikNotFound
+  ? `Centrum RCKiK o ID ${rckikId} nie zostało znalezione.`
+  : `Szczegółowe informacje o ${rckik!.name}: aktualne stany krwi, historia snapshotów i trend dla wszystkich grup krwi. ${rckik!.address}.`;
 
 // Breadcrumbs
-const breadcrumbItems = [
+const breadcrumbItems = !rckikNotFound && rckik ? [
   { label: 'Strona główna', href: '/' },
   { label: 'Lista RCKiK', href: '/rckik' },
   { label: rckik.name },
-];
+] : [];
 ---
 
 <Layout
-  title={mockRckikExists ? title : `RCKiK nie znaleziono | mkrew`}
-  description={mockRckikExists ? description : `Centrum RCKiK o ID ${rckikId} nie zostało znalezione.`}
+  title={title}
+  description={description}
   includeNavbar={true}
   includeFooter={true}
 >
   <Fragment slot="head">
     <SEO
-      title={mockRckikExists ? title : `RCKiK nie znaleziono | mkrew`}
-      description={mockRckikExists ? description : `Centrum RCKiK o ID ${rckikId} nie zostało znalezione.`}
+      title={title}
+      description={description}
     />
   </Fragment>
 
   <main class="container mx-auto px-4 py-8">
     <div class="max-w-7xl mx-auto">
 
-      {!mockRckikExists ? (
+      {rckikNotFound ? (
         <RckikNotFound rckikId={rckikId} />
       ) : (
         <>
@@ -264,7 +271,6 @@ const breadcrumbItems = [
         <BloodLevelChart
           rckikId={rckikId}
           initialBloodGroup="0+"
-          historyData={mockHistoryData}
           client:visible
         />
       </section>
