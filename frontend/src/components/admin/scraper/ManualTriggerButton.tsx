@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
 import { ManualTriggerModal } from './ManualTriggerModal';
-import type { RckikBasicDto } from '@/lib/types/scraper';
 
 /**
  * ManualTriggerButton - Przycisk do ręcznego uruchamiania scrapera
  *
  * Features:
- * - Otwiera ManualTriggerModal
+ * - Otwiera ManualTriggerModal (pobiera RCKiK z API)
  * - Callback po sukcesie
  * - Disabled state (opcjonalny)
  */
 
 interface ManualTriggerButtonProps {
-  rckikOptions?: RckikBasicDto[];
   onSuccess?: (runId: number) => void;
   disabled?: boolean;
   className?: string;
 }
 
 export function ManualTriggerButton({
-  rckikOptions = [],
   onSuccess,
   disabled = false,
   className = '',
@@ -67,7 +64,6 @@ export function ManualTriggerButton({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleSuccess}
-        rckikOptions={rckikOptions}
       />
     </>
   );

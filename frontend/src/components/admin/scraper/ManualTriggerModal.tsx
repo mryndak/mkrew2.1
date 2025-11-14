@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useManualTrigger } from '@/lib/hooks/scraper/useManualTrigger';
+import { useRckikOptions } from '@/lib/hooks/scraper/useRckikOptions';
 import { manualTriggerSchema, type ManualTriggerFormData } from '@/lib/utils/scraperValidation';
 import { RckikMultiSelect } from './RckikMultiSelect';
 import type { RckikBasicDto } from '@/lib/types/scraper';
@@ -10,7 +11,8 @@ import type { RckikBasicDto } from '@/lib/types/scraper';
  * ManualTriggerModal - Modal z formularzem do ręcznego uruchamiania scrapera
  *
  * Features:
- * - Select dla wyboru centrum (opcjonalny)
+ * - Pobieranie wszystkich aktywnych RCKiK z API
+ * - Multi-select z wyszukiwaniem dla wyboru centrów
  * - Input dla custom URL (opcjonalny)
  * - Checkbox potwierdzenia
  * - Walidacja z Zod
@@ -22,16 +24,15 @@ interface ManualTriggerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: (runId: number) => void;
-  rckikOptions?: RckikBasicDto[];
 }
 
 export function ManualTriggerModal({
   isOpen,
   onClose,
   onSuccess,
-  rckikOptions = [],
 }: ManualTriggerModalProps) {
   const { triggerScraper, isTriggering } = useManualTrigger();
+  const { rckikOptions, isLoading: isLoadingOptions, error: optionsError } = useRckikOptions();
 
   const {
     register,
@@ -205,6 +206,33 @@ export function ManualTriggerModal({
 
             {/* Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
+              {/* RCKiK Options Error */}
+              {optionsError && (
+                <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-center">
+                    <svg
+                      className="h-5 w-5 text-red-400 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div>
+                      <p className="text-sm text-red-800 font-medium">
+                        Nie udało się pobrać listy centrów krwi
+                      </p>
+                      <p className="text-xs text-red-700 mt-1">{optionsError.message}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* RCKiK Multi-Select */}
               <div className="mb-4">
                 <label
@@ -213,19 +241,46 @@ export function ManualTriggerModal({
                 >
                   Centrum krwi
                 </label>
-                <Controller
-                  name="rckikIds"
-                  control={control}
-                  render={({ field }) => (
-                    <RckikMultiSelect
-                      options={rckikOptions}
-                      selectedIds={field.value}
-                      onChange={field.onChange}
-                      disabled={isTriggering}
-                      error={errors.rckikIds?.message}
-                    />
-                  )}
-                />
+                {isLoadingOptions ? (
+                  <div className="border border-gray-300 rounded-md p-4 bg-gray-50">
+                    <div className="flex items-center justify-center">
+                      <svg
+                        className="animate-spin h-5 w-5 text-primary-600 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span className="text-sm text-gray-600">Ładowanie listy centrów...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <Controller
+                    name="rckikIds"
+                    control={control}
+                    render={({ field }) => (
+                      <RckikMultiSelect
+                        options={rckikOptions}
+                        selectedIds={field.value}
+                        onChange={field.onChange}
+                        disabled={isTriggering || optionsError !== null}
+                        error={errors.rckikIds?.message}
+                      />
+                    )}
+                  />
+                )}
               </div>
 
               {/* Custom URL Input */}
