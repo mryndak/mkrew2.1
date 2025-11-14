@@ -7,8 +7,19 @@
  * Formatuje timestamp na relative time ("5 minut temu", "2 godziny temu")
  */
 export function formatRelativeTime(timestamp: string): string {
-  const now = new Date();
+  // Sprawdź czy timestamp jest poprawny
+  if (!timestamp || timestamp.trim() === '') {
+    return 'Brak';
+  }
+
   const date = new Date(timestamp);
+
+  // Sprawdź czy data jest niepoprawna lub przed rokiem 2000 (Unix epoch, brak danych)
+  if (isNaN(date.getTime()) || date.getTime() < 946684800000) {
+    return 'Brak';
+  }
+
+  const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffSec = Math.floor(diffMs / 1000);
   const diffMin = Math.floor(diffSec / 60);
@@ -32,7 +43,18 @@ export function formatRelativeTime(timestamp: string): string {
  * Formatuje timestamp na absolute date ("8 stycznia 2025, 14:30")
  */
 export function formatAbsoluteDate(timestamp: string): string {
+  // Sprawdź czy timestamp jest poprawny
+  if (!timestamp || timestamp.trim() === '') {
+    return 'Brak';
+  }
+
   const date = new Date(timestamp);
+
+  // Sprawdź czy data jest niepoprawna lub przed rokiem 2000 (Unix epoch, brak danych)
+  if (isNaN(date.getTime()) || date.getTime() < 946684800000) {
+    return 'Brak';
+  }
+
   return date.toLocaleString('pl-PL', {
     year: 'numeric',
     month: 'long',
@@ -46,7 +68,18 @@ export function formatAbsoluteDate(timestamp: string): string {
  * Formatuje timestamp na krótką datę ("08.01.2025 14:30")
  */
 export function formatShortDate(timestamp: string): string {
+  // Sprawdź czy timestamp jest poprawny
+  if (!timestamp || timestamp.trim() === '') {
+    return 'Brak';
+  }
+
   const date = new Date(timestamp);
+
+  // Sprawdź czy data jest niepoprawna lub przed rokiem 2000 (Unix epoch, brak danych)
+  if (isNaN(date.getTime()) || date.getTime() < 946684800000) {
+    return 'Brak';
+  }
+
   return date.toLocaleString('pl-PL', {
     year: 'numeric',
     month: '2-digit',
