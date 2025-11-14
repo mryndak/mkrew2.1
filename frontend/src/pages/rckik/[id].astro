@@ -7,12 +7,11 @@
  * historię snapshotów i trend."
  *
  * Strategia renderowania:
- * - SSG (Static Site Generation) - strony generowane podczas build time
- * - ISR (Incremental Static Regeneration) - rewalidacja co 5 minut
+ * - SSR (Server-Side Rendering) - strony renderowane on-demand
+ * - Pozwala na dynamiczne ładowanie szczegółów RCKiK bez konieczności rebuildowania
  * - Publiczny dostęp (bez wymaganej autoryzacji)
  */
 
-import type { GetStaticPaths } from 'astro';
 import Layout from '../../layouts/Layout.astro';
 import SEO from '../../components/SEO.astro';
 import Breadcrumbs from '../../components/common/Breadcrumbs.astro';
@@ -25,45 +24,16 @@ import { ScraperStatus } from '../../components/rckik/details/ScraperStatus';
 import { ErrorState } from '../../components/common/ErrorState';
 
 // Import API funkcji
-import { fetchRckikDetails, fetchRckikList } from '../../lib/api/endpoints/rckik';
+import { fetchRckikDetails } from '../../lib/api/endpoints/rckik';
 
-// ===== Static Site Generation with ISR =====
+// ===== Server-Side Rendering Configuration =====
 
 /**
- * ISR (Incremental Static Regeneration) Configuration
- * Rewalidacja co 5 minut (300 sekund)
- *
- * UWAGA: ISR wymaga adaptera (np. @astrojs/node, @astrojs/vercel)
- * W trybie static (bez adaptera), strony są generowane tylko podczas build time.
- * Dla pełnego ISR, skonfiguruj adapter w astro.config.mjs
+ * SSR (Server-Side Rendering) Configuration
+ * Strony są renderowane on-demand dla każdego żądania
+ * Pozwala na wyświetlanie szczegółów dowolnego RCKiK bez konieczności rebuildowania
  */
-export const prerender = true;
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  try {
-    // Fetch lista wszystkich RCKiK z API
-    const rckikList = await fetchRckikList({
-      page: 0,
-      size: 100,
-      search: '',
-      city: null,
-      active: true,
-      sortBy: 'name',
-      sortOrder: 'ASC'
-    });
-
-    return rckikList.content.map((rckik) => ({
-      params: { id: String(rckik.id) },
-    }));
-  } catch (error) {
-    // Fallback dla development - jeśli backend nie jest dostępny
-    console.warn('Backend API not available, using fallback IDs:', error);
-    const fallbackIds = [1, 2, 3, 4, 5, 15];
-    return fallbackIds.map(id => ({
-      params: { id: String(id) },
-    }));
-  }
-};
+export const prerender = false;
 
 // ===== Page Component =====
 
