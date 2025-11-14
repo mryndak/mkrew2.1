@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 021-add-role-to-users
+      author: mkrew-team
+      comment: Add role column to users table for RBAC (Role-Based Access Control)
+      changes:
+        # Add role column
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: role
+                  type: VARCHAR(20)
+                  defaultValue: 'USER'
+                  constraints:
+                    nullable: false
+
+        # Add check constraint for valid roles
+        - sql:
+            sql: ALTER TABLE users ADD CONSTRAINT chk_users_role CHECK (role IN ('USER', 'ADMIN'));
+
+        # Create index on role for faster queries
+        - createIndex:
+            indexName: idx_users_role
+            tableName: users
+            columns:
+              - column:
+                  name: role
+
+        # Update existing users to have USER role (defensive, DEFAULT should handle this)
+        - sql:
+            sql: UPDATE users SET role = 'USER' WHERE role IS NULL;
+
+      rollback:
+        - dropIndex:
+            indexName: idx_users_role
+            tableName: users
+        - sql:
+            sql: ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_users_role;
+        - dropColumn:
+            tableName: users
+            columnName: role

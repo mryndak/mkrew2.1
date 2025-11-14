@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.mkrew.backend.dto.*;
 import pl.mkrew.backend.security.SecurityUtils;
@@ -23,12 +24,15 @@ import pl.mkrew.backend.service.RckikService;
 /**
  * Admin controller for RCKiK management
  * US-019: Zarządzanie kanoniczną listą RCKiK
+ *
+ * SECURITY: Requires ADMIN role for all endpoints
  */
 @RestController
 @RequestMapping("/api/v1/admin/rckik")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Admin - RCKiK", description = "Admin endpoints for RCKiK center management")
+@PreAuthorize("hasRole('ADMIN')") // Require ADMIN role for all methods in this controller
 public class AdminRckikController {
 
     private final RckikService rckikService;

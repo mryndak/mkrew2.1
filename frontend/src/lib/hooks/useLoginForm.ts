@@ -16,6 +16,9 @@ import { loginSchema, mapApiErrorToLoginError } from '@/types/auth';
  * Obsługuje walidację, rate limiting, submit do API, i Redux integration
  *
  * @param redirectUrl - URL do przekierowania po pomyślnym logowaniu (default: /dashboard)
+ *                      NOTE: If redirectUrl is /dashboard (default), users will be redirected based on role:
+ *                      - ADMIN users → /admin
+ *                      - USER → /dashboard
  * @param onSuccess - Callback wywoływany po pomyślnym logowaniu (opcjonalny)
  * @returns Form handlers, state, errors
  *
@@ -126,9 +129,23 @@ export function useLoginForm(
         onSuccess();
       }
 
-      // Redirect
+      // Redirect based on user role
       if (typeof window !== 'undefined') {
-        window.location.href = redirectUrl;
+        // Determine redirect URL based on user role
+        let finalRedirectUrl = redirectUrl;
+
+        // If no custom redirect was provided (default is /dashboard)
+        // Redirect ADMIN users to /admin, USER to /dashboard
+        if (redirectUrl === '/dashboard') {
+          if (response.user.role === 'ADMIN') {
+            finalRedirectUrl = '/admin';
+          } else {
+            finalRedirectUrl = '/dashboard';
+          }
+        }
+        // If custom redirect was provided, respect it (unless it's /login)
+
+        window.location.href = finalRedirectUrl;
       }
     } catch (error) {
       // Map error to LoginError

@@ -38,6 +38,10 @@ public class User {
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private UserRole role = UserRole.USER;
+
     @Column(name = "consent_timestamp")
     private LocalDateTime consentTimestamp;
 

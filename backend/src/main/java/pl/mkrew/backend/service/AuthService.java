@@ -249,7 +249,7 @@ public class AuthService {
                 .lastName(user.getLastName())
                 .bloodGroup(user.getBloodGroup())
                 .emailVerified(user.getEmailVerified())
-                .role("USER") // Default role for MVP
+                .role(user.getRole().name()) // Use actual user role (USER or ADMIN)
                 .build();
 
         // 8. Return login response

@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 022-seed-admin-user
+      author: mkrew-team
+      comment: Create initial ADMIN user for system administration
+      changes:
+        # Insert admin user
+        # Password: Admin123! (BCrypt hash with strength 12)
+        # IMPORTANT: Change password immediately after first login!
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: 'admin@mkrew.pl'
+              - column:
+                  name: password_hash
+                  # BCrypt hash for "Admin123!" with cost factor 12
+                  # Generated using: BCryptPasswordEncoder(12).encode("Admin123!")
+                  value: '$2a$12$N3uB8Mm3qhzXatZHARRQEu.6I2PpgtK8TXrlC0KJRhgENrcejDtIO'
+              - column:
+                  name: first_name
+                  value: 'System'
+              - column:
+                  name: last_name
+                  value: 'Administrator'
+              - column:
+                  name: blood_group
+                  value: null
+              - column:
+                  name: email_verified
+                  valueBoolean: true
+              - column:
+                  name: role
+                  value: 'ADMIN'
+              - column:
+                  name: consent_timestamp
+                  valueComputed: 'CURRENT_TIMESTAMP'
+              - column:
+                  name: consent_version
+                  value: '1.0'
+              - column:
+                  name: created_at
+                  valueComputed: 'CURRENT_TIMESTAMP'
+              - column:
+                  name: updated_at
+                  valueComputed: 'CURRENT_TIMESTAMP'
+
+      rollback:
+        - delete:
+            tableName: users
+            where: email = 'admin@mkrew.pl'
+
+      # Run only once - skip if admin user already exists
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM users WHERE email = 'admin@mkrew.pl'

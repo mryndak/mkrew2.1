@@ -44,7 +44,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(String.valueOf(user.getId()))
                 .claim("email", user.getEmail())
-                .claim("role", "USER") // Default role for now
+                .claim("role", user.getRole().name()) // Use actual user role (USER or ADMIN)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -100,6 +100,22 @@ public class JwtTokenProvider {
                 .getPayload();
 
         return claims.get("email", String.class);
+    }
+
+    /**
+     * Extracts role from JWT token
+     *
+     * @param token JWT token
+     * @return User role as String ("USER" or "ADMIN")
+     */
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.get("role", String.class);
     }
 
     /**

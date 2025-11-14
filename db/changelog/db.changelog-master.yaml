@@ -59,3 +59,9 @@ databaseChangeLog:
   - include:
       file: changesets/020-create-consent-records-table.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changesets/021-add-role-to-users.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: changesets/022-seed-admin-user.yaml
+      relativeToChangelogFile: true

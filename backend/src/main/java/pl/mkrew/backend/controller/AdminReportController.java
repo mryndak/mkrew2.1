@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import pl.mkrew.backend.dto.ErrorResponse;
 import pl.mkrew.backend.dto.UpdateUserReportRequest;
@@ -25,12 +26,15 @@ import pl.mkrew.backend.service.UserReportService;
 /**
  * Admin controller for user report management
  * US-021: Zarządzanie zgłoszeniami problemów z danymi
+ *
+ * SECURITY: Requires ADMIN role for all endpoints
  */
 @RestController
 @RequestMapping("/api/v1/admin/reports")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Admin - Reports", description = "Admin endpoints for user report management")
+@PreAuthorize("hasRole('ADMIN')") // Require ADMIN role for all methods in this controller
 public class AdminReportController {
 
     private final UserReportService userReportService;

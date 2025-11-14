@@ -37,20 +37,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
                 Long userId = jwtTokenProvider.getUserIdFromToken(jwt);
                 String email = jwtTokenProvider.getEmailFromToken(jwt);
+                String role = jwtTokenProvider.getRoleFromToken(jwt);
 
-                // Create authentication token
-                // Using email as principal, userId can be retrieved from principal if needed
+                // Create authentication token with actual user role
+                // Spring Security requires roles to have "ROLE_" prefix
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 userId,  // Principal is userId
                                 null,    // No credentials needed (already authenticated via JWT)
-                                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                                List.of(new SimpleGrantedAuthority("ROLE_" + role)) // ROLE_USER or ROLE_ADMIN
                         );
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("Set authentication for user ID: {} (email: {})", userId, email);
+                log.debug("Set authentication for user ID: {} (email: {}, role: {})", userId, email, role);
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);
