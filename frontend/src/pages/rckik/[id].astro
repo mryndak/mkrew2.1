@@ -27,7 +27,17 @@ import { ErrorState } from '../../components/common/ErrorState';
 // Import API funkcji
 import { fetchRckikDetails, fetchRckikList } from '../../lib/api/endpoints/rckik';
 
-// ===== Static Site Generation =====
+// ===== Static Site Generation with ISR =====
+
+/**
+ * ISR (Incremental Static Regeneration) Configuration
+ * Rewalidacja co 5 minut (300 sekund)
+ *
+ * UWAGA: ISR wymaga adaptera (np. @astrojs/node, @astrojs/vercel)
+ * W trybie static (bez adaptera), strony są generowane tylko podczas build time.
+ * Dla pełnego ISR, skonfiguruj adapter w astro.config.mjs
+ */
+export const prerender = true;
 
 export const getStaticPaths: GetStaticPaths = async () => {
   try {
