@@ -2,10 +2,10 @@ import axios, { type AxiosError } from 'axios';
 
 /**
  * Axios client dla komunikacji z backend API
- * Bazowy URL pobierany z zmiennej środowiskowej lub domyślny '/api/v1'
+ * Bazowy URL pobierany z zmiennej środowiskowej PUBLIC_API_BASE_URL
  */
 export const apiClient = axios.create({
-  baseURL: import.meta.env.PUBLIC_API_URL || '/api/v1',
+  baseURL: import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

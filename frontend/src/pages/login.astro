@@ -9,7 +9,7 @@ import { VerificationSuccessMessage } from '@/components/auth/VerificationSucces
  *
  * Features:
  * - Static generation for fast loading
- * - React island dla LoginForm (client:load)
+ * - React island dla LoginForm (client:only - fixes hydration issues with browser extensions)
  * - Redux Provider dla zarządzania stanem
  * - Query params: verified (boolean), redirect (string)
  * - Sanityzacja redirect URL (prevent open redirect)
@@ -63,7 +63,7 @@ const safeRedirectUrl = sanitizeRedirectUrl(redirectParam);
 
       {/* Success message - email verification */}
       {verified && (
-        <VerificationSuccessMessage client:load />
+        <VerificationSuccessMessage client:only="react" />
       )}
 
       {/* Login form card */}
@@ -80,7 +80,7 @@ const safeRedirectUrl = sanitizeRedirectUrl(redirectParam);
 
         {/* Login Form - React island with Redux */}
         <LoginFormWrapper
-          client:load
+          client:only="react"
           redirectUrl={safeRedirectUrl}
         />
 

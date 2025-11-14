@@ -6,6 +6,7 @@ import { RememberMeCheckbox } from '@/components/forms/RememberMeCheckbox';
 import { SubmitButton } from '@/components/forms/SubmitButton';
 import { ErrorMessage } from '@/components/forms/ErrorMessage';
 import { RateLimitNotice } from './RateLimitNotice';
+import { ReCaptchaInput } from '@/components/forms/ReCaptchaInput';
 import type { LoginFormProps } from '@/types/auth';
 
 /**
@@ -16,7 +17,7 @@ import type { LoginFormProps } from '@/types/auth';
  * Features:
  * - Email + password validation (Zod schema)
  * - Rate limiting (5 attempts → 5 min lockout)
- * - CAPTCHA after 3 failed attempts (TODO)
+ * - CAPTCHA after 3 failed attempts (Google reCAPTCHA v2)
  * - Redux integration (saves auth state)
  * - Error handling (API errors, network errors)
  * - Redirect after successful login
@@ -77,16 +78,13 @@ export function LoginForm({ redirectUrl, onSuccess }: LoginFormProps) {
         disabled={isSubmitting || isLocked}
       />
 
-      {/* CAPTCHA (TODO - pokazywany po 3 nieudanych próbach) */}
+      {/* CAPTCHA (pokazywany po 3 nieudanych próbach) */}
       {showCaptcha && (
-        <div className="p-4 bg-gray-50 border border-gray-300 rounded-lg">
-          <p className="text-sm text-gray-600 mb-2">
-            CAPTCHA będzie tutaj (TODO: integracja z Google reCAPTCHA)
-          </p>
-          <div className="h-20 bg-gray-200 rounded flex items-center justify-center text-gray-500">
-            reCAPTCHA widget
-          </div>
-        </div>
+        <ReCaptchaInput
+          onChange={(token) => setValue('captchaToken', token)}
+          error={errors.captchaToken?.message}
+          disabled={isSubmitting || isLocked}
+        />
       )}
 
       {/* Submit button */}
