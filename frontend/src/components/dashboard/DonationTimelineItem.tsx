@@ -92,6 +92,7 @@ export function DonationTimelineItem({
           ? `Donacja ${formatDate(donationDate)}, ${quantityMl} ml w ${rckik.name}. Kliknij aby zobaczyć szczegóły.`
           : undefined
       }
+      data-test-id={`donation-timeline-item-${id}`}
     >
       {/* Timeline dot */}
       <div className="relative flex flex-col items-center flex-shrink-0">
@@ -153,7 +154,7 @@ export function DonationTimelineItem({
 
         {/* Confirmation status */}
         {confirmed ? (
-          <div className="flex items-center gap-1.5 text-xs text-green-700">
+          <div className="flex items-center gap-1.5 text-xs text-green-700" data-test-id={`donation-timeline-confirmed-${id}`}>
             <svg
               className="w-4 h-4"
               fill="none"
