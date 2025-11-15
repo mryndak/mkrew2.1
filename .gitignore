@@ -65,3 +65,18 @@ application-local.properties
 *.jks
 credentials.json
 secrets.yml
+
+# Test results and coverage
+test-results/
+playwright-report/
+coverage/
+*.lcov
+frontend/coverage/
+backend/.jacoco/
+*.exec
+screenshots/
+test-results.json
+
+# Playwright
+playwright/.cache/
+.auth/
