@@ -35,7 +35,7 @@ Build Docker Images
     ↓
 Push to Artifact Registry
     ↓
-Deploy to GKE
+Deploy to GKE Autopilot (pay-per-pod)
     ↓
 ┌─────────────────────────────────┐
 │    Cloud Load Balancer          │
@@ -87,13 +87,14 @@ Frontend   Backend ──> Cloud SQL Proxy ──> Cloud SQL
 
 ```yaml
 GCP_PROJECT_ID: "mkrew-project"
-GCP_REGION: "europe-central2"
+GCP_REGION: "europe-central2"  # Used for Autopilot cluster location
 GCP_WORKLOAD_IDENTITY_PROVIDER: "projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/github"
 GCP_SERVICE_ACCOUNT: "github-actions@mkrew-project.iam.gserviceaccount.com"
 GKE_CLUSTER: "mkrew-cluster"
-GKE_ZONE: "europe-central2-a"
 ARTIFACT_REGISTRY: "mkrew"
 ```
+
+**Note:** GKE Autopilot uses regional clusters, no `GKE_ZONE` needed.
 
 ## 📝 Next Steps
 
@@ -127,23 +128,29 @@ curl https://api.mkrew.pl/actuator/health
 kubectl describe managedcertificate mkrew-cert
 ```
 
-## 💰 Estimated Costs (Development)
+## 💰 Estimated Costs (Development - GKE Autopilot)
 
 | Service | Monthly Cost (PLN) |
 |---------|-------------------|
-| GKE (1x e2-standard-2) | ~150 PLN |
+| **GKE Autopilot** (0.4 vCPU, 0.69 GB) | **~60 PLN** |
 | Cloud SQL (db-f1-micro) | ~60 PLN |
 | Load Balancer | ~75 PLN |
 | Artifact Registry | ~5 PLN |
-| Logging & Monitoring | ~20 PLN |
-| **Total** | **~310 PLN/month** |
+| Logging & Monitoring | ~10 PLN |
+| **Total** | **~210 PLN/month** |
+
+**💡 Autopilot Savings:**
+- Standard GKE (e2-standard-2): ~310 PLN/month
+- **Autopilot**: ~210 PLN/month
+- **You save: ~100 PLN/month (32%)** 🎉
 
 ### Cost Optimization
-- ✅ Używa 1 repliki dla minimalnego ruchu
-- Użyj Preemptible VMs (-60% cost) - może obniżyć do ~150 PLN/month
-- Skonfiguruj autoscaling do 0 w nocy (opcjonalne)
-- Użyj GKE Autopilot (pay per pod) - może być tańsze dla bardzo małego ruchu
-- Skonfiguruj log retention (7 days)
+- ✅ **GKE Autopilot enabled** - pay only for running pods
+- ✅ Single replica for minimal traffic
+- Reduce resource requests (currently conservative)
+- Configure log retention to 7 days (~5 PLN savings)
+- For dev: disable Load Balancer, use NodePort (~75 PLN savings)
+- **Potential minimal cost: ~100-130 PLN/month**
 
 ## 🔄 CI/CD Pipeline
 

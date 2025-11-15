@@ -19,7 +19,6 @@ env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: ${{ secrets.GCP_REGION }}
   GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
-  GKE_ZONE: ${{ secrets.GKE_ZONE }}
   ARTIFACT_REGISTRY: ${{ secrets.ARTIFACT_REGISTRY }}
 
 jobs:
@@ -127,7 +126,7 @@ jobs:
       - name: Get GKE credentials
         run: |
           gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
-            --zone=${{ env.GKE_ZONE }} \
+            --region=${{ env.GCP_REGION }} \
             --project=${{ env.GCP_PROJECT_ID }}
 
       - name: Update deployment images

@@ -54,25 +54,31 @@ gcloud artifacts repositories create mkrew \
   --description="Docker repository for mkrew"
 ```
 
-### 4. GKE Cluster (10 min)
+### 4. GKE Autopilot Cluster (5 min)
 
 ```bash
-gcloud container clusters create $CLUSTER_NAME \
-  --zone=$ZONE \
-  --num-nodes=1 \
-  --machine-type=e2-standard-2 \
-  --enable-autoscaling \
-  --min-nodes=1 \
-  --max-nodes=4 \
-  --enable-autorepair \
-  --enable-autoupgrade \
-  --workload-pool=$PROJECT_ID.svc.id.goog \
-  --disk-size=20GB \
-  --disk-type=pd-standard
+# Create Autopilot cluster (fully managed, pay-per-pod)
+gcloud container clusters create-auto $CLUSTER_NAME \
+  --region=$REGION \
+  --project=$PROJECT_ID
 
-# Get credentials
-gcloud container clusters get-credentials $CLUSTER_NAME --zone=$ZONE
+# Get credentials (note: region, not zone)
+gcloud container clusters get-credentials $CLUSTER_NAME --region=$REGION
 ```
+
+**Why Autopilot?**
+- ✅ Pay only for running pods (~60% cheaper)
+- ✅ No node management needed
+- ✅ Auto-scaling and auto-repair built-in
+- ✅ Ideal for dev environments with low traffic
+- ✅ Google manages infrastructure
+
+**Autopilot Limitations:**
+- ⚠️ No SSH to nodes (managed by Google)
+- ⚠️ Some workload types not supported (DaemonSets, HostPath)
+- ⚠️ Slightly slower pod startup (~10-30s)
+
+For your use case (dev, low traffic, cost-sensitive) → Perfect fit!
 
 ### 5. Cloud SQL (8 min)
 
@@ -192,9 +198,10 @@ GCP_REGION = "europe-central2"
 GCP_WORKLOAD_IDENTITY_PROVIDER = "projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/github"
 GCP_SERVICE_ACCOUNT = "github-actions@mkrew-project.iam.gserviceaccount.com"
 GKE_CLUSTER = "mkrew-cluster"
-GKE_ZONE = "europe-central2-a"
 ARTIFACT_REGISTRY = "mkrew"
 ```
+
+**Note:** No `GKE_ZONE` needed for Autopilot - it uses regional clusters (`GCP_REGION`).
 
 ### 10. Deploy Kubernetes Resources (10 min)
 
@@ -333,8 +340,8 @@ kubectl rollout undo deployment/mkrew-backend --to-revision=2
 ## Cleanup (Development)
 
 ```bash
-# Delete GKE cluster
-gcloud container clusters delete $CLUSTER_NAME --zone=$ZONE --quiet
+# Delete GKE Autopilot cluster
+gcloud container clusters delete $CLUSTER_NAME --region=$REGION --quiet
 
 # Delete Cloud SQL
 gcloud sql instances delete $DB_INSTANCE --quiet

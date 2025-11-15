@@ -44,11 +44,12 @@
 ### 2.1 Wymagane Usługi
 
 #### Compute & Orchestration
-- **GKE Cluster**: Standard cluster z autoscalingiem
-  - Node pool: e2-standard-2 (2 vCPU, 8GB RAM)
-  - Min nodes: 1, Max nodes: 4
-  - Auto-upgrade: enabled
-  - Auto-repair: enabled
+- **GKE Autopilot**: Fully managed Kubernetes (pay-per-pod)
+  - No node management required
+  - Auto-scaling and auto-repair built-in
+  - Automatic resource optimization
+  - Regional deployment (high availability)
+  - Google manages infrastructure
 
 #### Database
 - **Cloud SQL for PostgreSQL**:
@@ -386,23 +387,50 @@ kubectl rollout undo deployment/mkrew-backend --to-revision=2
 
 ## 8. Koszty
 
-### 8.1 Oszacowanie Miesięcznych Kosztów (Development)
+### 8.1 Oszacowanie Miesięcznych Kosztów (Development - GKE Autopilot)
 
-- **GKE Cluster**: ~$37/miesiąc (1x e2-standard-2)
+**Pod Resources (based on requests):**
+- Backend: 0.25 vCPU, 0.5 GB RAM
+- Frontend: 0.1 vCPU, 0.125 GB RAM
+- Cloud SQL Proxy: 0.05 vCPU, 0.064 GB RAM
+- **Total**: 0.4 vCPU, 0.689 GB RAM
+
+**GKE Autopilot Pricing (europe-central2):**
+- vCPU: 0.4 × $0.042/hour × 730h = ~$12/miesiąc
+- Memory: 0.69 GB × $0.0046/hour × 730h = ~$2/miesiąc
+- **GKE Autopilot Total**: ~$14-16/miesiąc
+
+**Infrastructure Costs:**
+- **GKE Autopilot**: ~$15/miesiąc
 - **Cloud SQL**: ~$15/miesiąc (db-f1-micro)
 - **Load Balancer**: ~$18/miesiąc
-- **Artifact Registry**: ~$0.10/GB/miesiąc
-- **Cloud Logging**: ~$0.50/GB
+- **Artifact Registry**: ~$0.10/GB/miesiąc (~$1)
+- **Cloud Logging**: ~$0.50/GB (~$2)
 - **Cloud Monitoring**: Darmowe do 150MB/miesiąc
 
-**Łączne koszty (dev)**: ~$75-85/miesiąc (~300-350 PLN/miesiąc)
+**Łączne koszty (dev)**: ~$50-55/miesiąc (~200-220 PLN/miesiąc)
+
+**Savings vs Standard GKE:**
+- Standard GKE (1x e2-standard-2): ~$75-85/month
+- Autopilot: ~$50-55/month
+- **Oszczędność: ~$25-30/month (30-40%)**
 
 ### 8.2 Optymalizacja Kosztów
 
-- Użyj Preemptible VMs dla non-prod environments
-- Skonfiguruj autoscaling dla zmniejszenia kosztów w nocy
-- Użyj GKE Autopilot dla automatycznego zarządzania zasobami
-- Skonfiguruj retention policies dla logów (7-30 dni)
+- ✅ **GKE Autopilot już wdrożony** - płacisz tylko za rzeczywiste użycie podów
+- Zmniejsz resource requests w podach (obecnie konserwatywne)
+- Skonfiguruj HorizontalPodAutoscaler do 0 replik w nocy (optional)
+- Zmniejsz Cloud SQL tier lub użyj shared-core instance (db-f1-micro → db-g1-small)
+- Skonfiguruj retention policies dla logów (7 dni zamiast 30)
+- Wyłącz Load Balancer i użyj NodePort dla dev (oszczędność ~$18/month)
+
+**Potencjalne dalsze oszczędności:**
+- Bez Load Balancer (dev only): ~$18/month
+- Krótsze log retention: ~$1-2/month
+- Optymalizacja resource requests: ~$5-8/month
+- **Total savings potential**: ~$24-28/month
+
+**Minimalny możliwy koszt (dev):** ~$25-30/month (~100-120 PLN)
 
 ## 9. Security Best Practices
 
