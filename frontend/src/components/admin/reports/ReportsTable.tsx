@@ -137,7 +137,7 @@ export function ReportsTable({
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       {/* Header z liczbą wyników */}
-      {!loading && reports.length > 0 && (
+      {!loading && reports && reports.length > 0 && (
         <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium text-gray-900">
@@ -181,7 +181,7 @@ export function ReportsTable({
                   <ReportsTableRowSkeleton key={index} />
                 ))}
               </>
-            ) : reports.length > 0 ? (
+            ) : reports && reports.length > 0 ? (
               // Data rows
               reports.map((report) => (
                 <ReportsTableRow key={report.id} report={report} onClick={onRowClick} />
@@ -191,7 +191,7 @@ export function ReportsTable({
         </table>
 
         {/* Empty State - gdy brak danych i nie loading */}
-        {!loading && reports.length === 0 && (
+        {!loading && (!reports || reports.length === 0) && (
           <EmptyState
             hasActiveFilters={hasActiveFilters}
             onClearFilters={() => {
@@ -203,7 +203,7 @@ export function ReportsTable({
       </div>
 
       {/* Pagination - tylko gdy są dane */}
-      {!loading && reports.length > 0 && (
+      {!loading && reports && reports.length > 0 && (
         <Pagination
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
