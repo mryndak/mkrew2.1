@@ -40,6 +40,7 @@ export function BloodGroupSelect({ value, onChange, error }: BloodGroupSelectPro
       </label>
       <select
         id="bloodGroup"
+        data-test-id="register-blood-group-select"
         value={value || ''}
         onChange={handleChange}
         aria-invalid={!!error}
@@ -59,7 +60,7 @@ export function BloodGroupSelect({ value, onChange, error }: BloodGroupSelectPro
           </option>
         ))}
       </select>
-      {error && <FieldError message={error} />}
+      {error && <FieldError message={error} data-test-id="register-blood-group-error" />}
       <p className="mt-1 text-xs text-gray-500">
         Podanie grupy krwi pomoże nam lepiej dopasować powiadomienia o niskich stanach
       </p>

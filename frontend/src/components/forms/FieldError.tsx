@@ -2,6 +2,7 @@ import React from 'react';
 
 export interface FieldErrorProps {
   message?: string;
+  'data-test-id'?: string;
 }
 
 /**
@@ -10,16 +11,18 @@ export interface FieldErrorProps {
  * Używa role="alert" dla accessibility
  *
  * @param message - Komunikat błędu do wyświetlenia
+ * @param data-test-id - ID testowe dla automatycznych testów
  *
  * @example
- * <FieldError message="Email jest wymagany" />
+ * <FieldError message="Email jest wymagany" data-test-id="email-error" />
  */
-export function FieldError({ message }: FieldErrorProps) {
+export function FieldError({ message, 'data-test-id': dataTestId }: FieldErrorProps) {
   if (!message) return null;
 
   return (
     <p
       role="alert"
+      data-test-id={dataTestId}
       className="mt-1 text-sm text-red-600 flex items-center gap-1"
     >
       <svg

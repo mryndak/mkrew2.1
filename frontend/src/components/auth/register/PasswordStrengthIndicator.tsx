@@ -45,7 +45,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
   const config = strengthConfig[strength];
 
   return (
-    <div className="mt-2">
+    <div className="mt-2" data-test-id="password-strength-indicator">
       {/* Label */}
       <div className="flex justify-between items-center mb-1">
         <span className="text-xs font-medium text-gray-600">
@@ -55,7 +55,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
           strength === 'weak' ? 'text-red-600' :
           strength === 'medium' ? 'text-yellow-600' :
           'text-green-600'
-        }`}>
+        }`} data-test-id="password-strength-label">
           {config.label}
         </span>
       </div>
@@ -64,6 +64,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
         <div
           className={`h-full ${config.color} ${config.width} transition-all duration-300 ease-in-out`}
+          data-test-id="password-strength-bar"
           role="progressbar"
           aria-valuenow={strength === 'weak' ? 33 : strength === 'medium' ? 66 : 100}
           aria-valuemin={0}

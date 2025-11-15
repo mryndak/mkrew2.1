@@ -38,7 +38,7 @@ export function Step1Form({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" data-test-id="register-step1-header">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Utwórz konto
         </h2>
@@ -58,6 +58,7 @@ export function Step1Form({
         <input
           type="email"
           id="email"
+          data-test-id="register-email-input"
           value={formData.email}
           onChange={(e) => onChange('email', e.target.value)}
           autoComplete="email"
@@ -71,7 +72,7 @@ export function Step1Form({
           `}
           placeholder="twoj@email.com"
         />
-        {errors.email && <FieldError message={errors.email} />}
+        {errors.email && <FieldError message={errors.email} data-test-id="register-email-error" />}
         <EmailUniquenessIndicator status={emailCheckStatus} email={formData.email} />
       </div>
 
@@ -87,6 +88,7 @@ export function Step1Form({
           <input
             type={showPassword ? 'text' : 'password'}
             id="password"
+            data-test-id="register-password-input"
             value={formData.password}
             onChange={(e) => onChange('password', e.target.value)}
             autoComplete="new-password"
@@ -102,6 +104,7 @@ export function Step1Form({
           />
           <button
             type="button"
+            data-test-id="register-password-toggle"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
             aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
@@ -118,7 +121,7 @@ export function Step1Form({
             )}
           </button>
         </div>
-        {errors.password && <FieldError message={errors.password} />}
+        {errors.password && <FieldError message={errors.password} data-test-id="register-password-error" />}
         <PasswordStrengthIndicator password={formData.password} />
         <PasswordRequirementsChecklist password={formData.password} />
       </div>
@@ -135,6 +138,7 @@ export function Step1Form({
           <input
             type={showConfirmPassword ? 'text' : 'password'}
             id="confirmPassword"
+            data-test-id="register-confirm-password-input"
             value={formData.confirmPassword}
             onChange={(e) => onChange('confirmPassword', e.target.value)}
             autoComplete="new-password"
@@ -150,6 +154,7 @@ export function Step1Form({
           />
           <button
             type="button"
+            data-test-id="register-confirm-password-toggle"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
             aria-label={showConfirmPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
@@ -166,7 +171,7 @@ export function Step1Form({
             )}
           </button>
         </div>
-        {errors.confirmPassword && <FieldError message={errors.confirmPassword} />}
+        {errors.confirmPassword && <FieldError message={errors.confirmPassword} data-test-id="register-confirm-password-error" />}
       </div>
 
       {/* Consent checkboxes */}
@@ -176,6 +181,7 @@ export function Step1Form({
           <input
             type="checkbox"
             id="consentAccepted"
+            data-test-id="register-consent-checkbox"
             checked={formData.consentAccepted}
             onChange={(e) => onChange('consentAccepted', e.target.checked)}
             aria-invalid={!!errors.consentAccepted}
@@ -209,7 +215,7 @@ export function Step1Form({
           </label>
         </div>
         {errors.consentAccepted && (
-          <FieldError message={errors.consentAccepted} />
+          <FieldError message={errors.consentAccepted} data-test-id="register-consent-error" />
         )}
 
         {/* Marketing consent (optional) */}
@@ -217,6 +223,7 @@ export function Step1Form({
           <input
             type="checkbox"
             id="marketingConsent"
+            data-test-id="register-marketing-checkbox"
             checked={formData.marketingConsent}
             onChange={(e) => onChange('marketingConsent', e.target.checked)}
             className="h-4 w-4 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
@@ -230,6 +237,7 @@ export function Step1Form({
       {/* Next button */}
       <button
         type="button"
+        data-test-id="register-step1-next-button"
         onClick={onNext}
         className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium
           hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2

@@ -33,7 +33,7 @@ export function PasswordRequirementsChecklist({ password }: PasswordRequirements
   ];
 
   return (
-    <div className="mt-3">
+    <div className="mt-3" data-test-id="password-requirements-checklist">
       <p className="text-xs font-medium text-gray-600 mb-2">
         Wymagania dla hasła:
       </p>
@@ -41,6 +41,7 @@ export function PasswordRequirementsChecklist({ password }: PasswordRequirements
         {requirementsList.map((req) => (
           <li
             key={req.key}
+            data-test-id={`password-requirement-${req.key}`}
             className="flex items-center text-xs"
           >
             {/* Ikona checkmark lub X */}

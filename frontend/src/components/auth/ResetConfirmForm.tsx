@@ -130,6 +130,7 @@ export function ResetConfirmForm({ className = '' }: ResetConfirmFormProps) {
         <div
           role="alert"
           aria-live="polite"
+          data-test-id="reset-confirm-success-message"
           className="bg-green-50 border border-green-200 rounded-lg p-6"
         >
           <div className="flex items-start gap-3">
@@ -176,10 +177,10 @@ export function ResetConfirmForm({ className = '' }: ResetConfirmFormProps) {
 
   // Form state
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className={`space-y-4 ${className}`}>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className={`space-y-4 ${className}`} data-test-id="reset-confirm-form">
       {/* Global error message */}
       {error && (
-        <div>
+        <div data-test-id="reset-confirm-error">
           <ErrorMessage message={error} type="error" />
           {showRequestNewLink && (
             <div className="mt-3 text-center">
@@ -207,6 +208,7 @@ export function ResetConfirmForm({ className = '' }: ResetConfirmFormProps) {
             {...register('newPassword')}
             type={showPassword ? 'text' : 'password'}
             id="newPassword"
+            data-test-id="reset-confirm-new-password-input"
             autoComplete="new-password"
             disabled={isSubmitting}
             aria-invalid={!!errors.newPassword}
@@ -223,6 +225,7 @@ export function ResetConfirmForm({ className = '' }: ResetConfirmFormProps) {
           {/* Toggle visibility button */}
           <button
             type="button"
+            data-test-id="reset-confirm-new-password-toggle"
             onClick={() => setShowPassword(!showPassword)}
             disabled={isSubmitting}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 disabled:opacity-50"
@@ -266,6 +269,7 @@ export function ResetConfirmForm({ className = '' }: ResetConfirmFormProps) {
             {...register('confirmPassword')}
             type={showConfirmPassword ? 'text' : 'password'}
             id="confirmPassword"
+            data-test-id="reset-confirm-confirm-password-input"
             autoComplete="new-password"
             disabled={isSubmitting}
             aria-invalid={!!errors.confirmPassword}
@@ -282,6 +286,7 @@ export function ResetConfirmForm({ className = '' }: ResetConfirmFormProps) {
           {/* Toggle visibility button */}
           <button
             type="button"
+            data-test-id="reset-confirm-confirm-password-toggle"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             disabled={isSubmitting}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 disabled:opacity-50"
@@ -315,6 +320,7 @@ export function ResetConfirmForm({ className = '' }: ResetConfirmFormProps) {
       {/* Submit button */}
       <button
         type="submit"
+        data-test-id="reset-confirm-submit-button"
         disabled={isSubmitting || !token}
         className={`
           w-full flex justify-center items-center gap-2 py-3 px-4

@@ -105,7 +105,7 @@ export function Step3Form({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" data-test-id="register-step3-header">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Ulubione centra
         </h2>
@@ -125,6 +125,7 @@ export function Step3Form({
         <input
           type="text"
           id="search"
+          data-test-id="register-rckik-search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Wpisz nazwę lub miasto..."
@@ -206,6 +207,7 @@ export function Step3Form({
         {/* Submit button */}
         <button
           type="button"
+          data-test-id="register-step3-submit-button"
           onClick={onSubmit}
           disabled={isSubmitting || loading}
           className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium
@@ -246,6 +248,7 @@ export function Step3Form({
         <div className="flex gap-3">
           <button
             type="button"
+            data-test-id="register-step3-previous-button"
             onClick={onPrevious}
             disabled={isSubmitting}
             className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium
@@ -258,6 +261,7 @@ export function Step3Form({
 
           <button
             type="button"
+            data-test-id="register-step3-skip-button"
             onClick={onSkip}
             disabled={isSubmitting || loading}
             className="flex-1 bg-white text-gray-700 py-3 px-4 rounded-lg font-medium border border-gray-300

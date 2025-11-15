@@ -42,56 +42,70 @@ export function LoginForm({ redirectUrl, onSuccess }: LoginFormProps) {
   } = useLoginForm(redirectUrl, onSuccess);
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4" data-test-id="login-form">
       {/* Global error message (API errors) */}
       {globalError && (
-        <ErrorMessage message={globalError.message} type="error" />
+        <div data-test-id="login-error-message">
+          <ErrorMessage message={globalError.message} type="error" />
+        </div>
       )}
 
       {/* Rate limit notice (lockout) */}
       {isLocked && lockedUntil && (
-        <RateLimitNotice
-          lockedUntil={lockedUntil}
-          onUnlock={() => {
-            // Auto-unlock handled by useRateLimit hook
-          }}
-        />
+        <div data-test-id="login-rate-limit-notice">
+          <RateLimitNotice
+            lockedUntil={lockedUntil}
+            onUnlock={() => {
+              // Auto-unlock handled by useRateLimit hook
+            }}
+          />
+        </div>
       )}
 
       {/* Email field */}
-      <EmailInput
-        {...register('email')}
-        error={errors.email?.message}
-        disabled={isSubmitting || isLocked}
-      />
+      <div data-test-id="login-email-input">
+        <EmailInput
+          {...register('email')}
+          error={errors.email?.message}
+          disabled={isSubmitting || isLocked}
+        />
+      </div>
 
       {/* Password field */}
-      <PasswordInput
-        {...register('password')}
-        error={errors.password?.message}
-        disabled={isSubmitting || isLocked}
-      />
+      <div data-test-id="login-password-input">
+        <PasswordInput
+          {...register('password')}
+          error={errors.password?.message}
+          disabled={isSubmitting || isLocked}
+        />
+      </div>
 
       {/* Remember me checkbox */}
-      <RememberMeCheckbox
-        {...register('rememberMe')}
-        disabled={isSubmitting || isLocked}
-      />
+      <div data-test-id="login-remember-me-checkbox">
+        <RememberMeCheckbox
+          {...register('rememberMe')}
+          disabled={isSubmitting || isLocked}
+        />
+      </div>
 
       {/* CAPTCHA (pokazywany po 3 nieudanych próbach) */}
       {showCaptcha && (
-        <ReCaptchaInput
-          onChange={(token) => setValue('captchaToken', token)}
-          error={errors.captchaToken?.message}
-          disabled={isSubmitting || isLocked}
-        />
+        <div data-test-id="login-captcha-input">
+          <ReCaptchaInput
+            onChange={(token) => setValue('captchaToken', token)}
+            error={errors.captchaToken?.message}
+            disabled={isSubmitting || isLocked}
+          />
+        </div>
       )}
 
       {/* Submit button */}
-      <SubmitButton
-        loading={isSubmitting}
-        disabled={isSubmitting || isLocked}
-      />
+      <div data-test-id="login-submit-button">
+        <SubmitButton
+          loading={isSubmitting}
+          disabled={isSubmitting || isLocked}
+        />
+      </div>
     </form>
   );
 }
