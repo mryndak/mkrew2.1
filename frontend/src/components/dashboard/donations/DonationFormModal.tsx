@@ -212,7 +212,7 @@ export function DonationFormModal({
       size="medium"
       footer={
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting} data-testid="donation-form-cancel">
             Anuluj
           </Button>
           <Button
@@ -220,6 +220,7 @@ export function DonationFormModal({
             onClick={handleSubmit(handleFormSubmit)}
             loading={isSubmitting}
             disabled={isSubmitting}
+            data-testid="donation-form-submit"
           >
             {mode === 'create' ? 'Dodaj' : 'Zaktualizuj'}
           </Button>
@@ -271,6 +272,7 @@ export function DonationFormModal({
           placeholder="Szukaj centrum RCKiK..."
           noResultsText="Nie znaleziono centrum"
           minSearchLength={2}
+          data-testid="donation-form-rckik"
         />
 
         {/* Donation Date */}
@@ -281,6 +283,7 @@ export function DonationFormModal({
           min={minDate}
           max={today}
           disabled={mode === 'edit'} // Readonly in edit mode
+          data-testid="donation-form-date"
           {...register('donationDate')}
         />
 
@@ -293,6 +296,7 @@ export function DonationFormModal({
           min={50}
           max={1000}
           step={50}
+          data-testid="donation-form-quantity"
           {...register('quantityMl', {
             setValueAs: (v) => (v === '' ? undefined : parseInt(v, 10)),
           })}
@@ -303,6 +307,7 @@ export function DonationFormModal({
           label="Typ donacji *"
           options={donationTypeOptions}
           error={errors.donationType?.message}
+          data-testid="donation-form-type"
           {...register('donationType')}
         />
 
@@ -321,6 +326,7 @@ export function DonationFormModal({
                 : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
             }`}
             placeholder="Dodatkowe informacje o donacji..."
+            data-testid="donation-form-notes"
             {...register('notes')}
           />
           <div className="mt-1.5 flex justify-between">

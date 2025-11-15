@@ -282,7 +282,7 @@ export function DonationTable({
               const typeBadge = getDonationTypeBadge(donation.donationType);
 
               return (
-                <tr key={donation.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={donation.id} className="hover:bg-gray-50 transition-colors" data-testid={`donation-row-${donation.id}`}>
                   {/* Data */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(donation.donationDate)}
@@ -337,6 +337,7 @@ export function DonationTable({
                         size="small"
                         onClick={() => onEdit(donation.id)}
                         className="text-primary-600 hover:text-primary-700"
+                        data-testid={`edit-donation-${donation.id}`}
                       >
                         Edytuj
                       </Button>
@@ -345,6 +346,7 @@ export function DonationTable({
                         size="small"
                         onClick={() => onDelete(donation.id)}
                         className="text-red-600 hover:text-red-700"
+                        data-testid={`delete-donation-${donation.id}`}
                       >
                         Usuń
                       </Button>
@@ -377,6 +379,7 @@ export function DonationTable({
                 size="small"
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 0}
+                data-testid="pagination-previous"
               >
                 Poprzednia
               </Button>
@@ -409,6 +412,7 @@ export function DonationTable({
                 size="small"
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages - 1}
+                data-testid="pagination-next"
               >
                 Następna
               </Button>

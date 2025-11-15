@@ -170,6 +170,7 @@ export function DonationsToolbar({
           variant="primary"
           onClick={onAddDonation}
           className="w-full sm:w-auto"
+          data-testid="add-donation-button"
         >
           <svg
             className="w-5 h-5 mr-2"
@@ -196,6 +197,7 @@ export function DonationsToolbar({
             onChange={(e) => handleSortChange(e.target.value)}
             className="text-sm"
             wrapperClassName="flex-1 sm:w-48"
+            data-testid="sort-select"
           />
 
           {/* Export dropdown */}
@@ -204,6 +206,7 @@ export function DonationsToolbar({
               variant="outline"
               onClick={() => setShowExportMenu(!showExportMenu)}
               className="whitespace-nowrap"
+              data-testid="export-button"
             >
               <svg
                 className="w-5 h-5 mr-2"
@@ -223,13 +226,14 @@ export function DonationsToolbar({
 
             {/* Export menu */}
             {showExportMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10" data-testid="export-menu">
                 <button
                   onClick={() => {
                     onExport('csv');
                     setShowExportMenu(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  data-testid="export-csv-button"
                 >
                   Eksportuj do CSV
                 </button>
@@ -239,6 +243,7 @@ export function DonationsToolbar({
                     setShowExportMenu(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  data-testid="export-json-button"
                 >
                   Eksportuj do JSON
                 </button>
@@ -258,6 +263,7 @@ export function DonationsToolbar({
           onChange={(e) => handleDateChange('fromDate', e.target.value)}
           max={today}
           className="text-sm"
+          data-testid="filter-date-from"
         />
 
         {/* Date to */}
@@ -268,6 +274,7 @@ export function DonationsToolbar({
           onChange={(e) => handleDateChange('toDate', e.target.value)}
           max={today}
           className="text-sm"
+          data-testid="filter-date-to"
         />
 
         {/* Donation type */}
@@ -277,6 +284,7 @@ export function DonationsToolbar({
           value={filters.donationType || ''}
           onChange={(e) => handleDonationTypeChange(e.target.value)}
           className="text-sm"
+          data-testid="filter-donation-type"
         />
 
         {/* RCKiK center */}
@@ -286,6 +294,7 @@ export function DonationsToolbar({
           value={filters.rckikId?.toString() || ''}
           onChange={(e) => handleRckikChange(e.target.value)}
           className="text-sm"
+          data-testid="filter-rckik"
         />
       </div>
 
@@ -295,6 +304,7 @@ export function DonationsToolbar({
           <button
             onClick={handleClearFilters}
             className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
+            data-testid="clear-filters-button"
           >
             Wyczyść filtry
           </button>
