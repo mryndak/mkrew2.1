@@ -20,13 +20,17 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: REGION-docker.pkg.dev/PROJECT_ID/mkrew/frontend:latest
+        image: europe-central2-docker.pkg.dev/mkrew-478317/mkrew/frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4321
           name: http
           protocol: TCP
         env:
+        - name: HOST
+          value: "0.0.0.0"
+        - name: PORT
+          value: "4321"
         - name: PUBLIC_ENV
           valueFrom:
             configMapKeyRef:

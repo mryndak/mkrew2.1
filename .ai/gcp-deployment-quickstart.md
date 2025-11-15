@@ -209,7 +209,7 @@ ARTIFACT_REGISTRY = "mkrew"
 
 ```bash
 # Update manifest placeholders
-cd .ai/k8s
+cd k8s
 
 # Backend deployment
 sed -i "s/PROJECT_ID/$PROJECT_ID/g" backend-deployment.yml

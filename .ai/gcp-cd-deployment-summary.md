@@ -7,7 +7,7 @@
 - ✅ `frontend/.dockerignore` - Wykluczenia dla Docker build
 - ✅ `backend/Dockerfile` - Multi-stage build dla Spring Boot (istniejący)
 
-### Kubernetes Manifests (`.ai/k8s/`)
+### Kubernetes Manifests (`k8s/`)
 - ✅ `configmap.yml` - Konfiguracja non-sensitive
 - ✅ `secrets.yml.template` - Template dla sekretów
 - ✅ `backend-deployment.yml` - Deployment backendu + Cloud SQL Proxy
@@ -180,7 +180,7 @@ kubectl describe managedcertificate mkrew-cert
 | `gcp-cd-deployment-plan.md` | Pełna dokumentacja (12 sekcji) |
 | `gcp-deployment-quickstart.md` | Szybki start (90 min) |
 | `gcp-cd-deployment-summary.md` | To podsumowanie |
-| `.ai/k8s/*` | Kubernetes manifests |
+| `k8s/*` | Kubernetes manifests |
 | `.github/workflows/cd-gcp.yml` | CI/CD workflow |
 
 ## 🛠️ Useful Commands

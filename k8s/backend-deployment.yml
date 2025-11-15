@@ -21,7 +21,7 @@ spec:
       serviceAccountName: mkrew-backend-sa
       containers:
       - name: backend
-        image: REGION-docker.pkg.dev/PROJECT_ID/mkrew/backend:latest
+        image: europe-central2-docker.pkg.dev/mkrew-478317/mkrew/backend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

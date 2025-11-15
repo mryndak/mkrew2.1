@@ -125,7 +125,7 @@ mkrew dostarcza:
 
 ```
 mkrew2.1/
-├── .ai/                          # Dokumentacja kontekstowa i plany
+├── .ai/                          # Dokumentacja kontekstowa i plany (tylko dla AI)
 │   ├── prd.md                    # Product Requirements Document
 │   ├── tech-stack.md             # Stack technologiczny
 │   ├── api-plan.md               # Plan API
@@ -133,7 +133,16 @@ mkrew2.1/
 │   ├── ui-plan.md                # Plan UI/UX
 │   ├── test-plan.md              # Plan testów
 │   ├── gcp-deployment-quickstart.md
-│   └── k8s/                      # Konfiguracje Kubernetes
+│   └── gcp-cd-deployment-plan.md # Plan deployment na GCP
+│
+├── k8s/                          # Kubernetes manifests
+│   ├── backend-deployment.yml    # Backend deployment + Cloud SQL Proxy
+│   ├── backend-service.yml       # Backend service
+│   ├── frontend-deployment.yml   # Frontend deployment
+│   ├── frontend-service.yml      # Frontend service
+│   ├── configmap.yml             # Non-sensitive config
+│   ├── secrets.yml.template      # Secrets template
+│   └── ingress.yml               # Ingress + SSL certificates
 │
 ├── backend/                      # Spring Boot application
 │   ├── src/

@@ -126,7 +126,7 @@ ARTIFACT_REGISTRY: "mkrew"
 
 ### 4.1 Manifesty
 
-Pliki konfiguracyjne znajdują się w `.ai/k8s/`:
+Pliki konfiguracyjne znajdują się w `k8s/`:
 
 - **configmap.yml**: Zmienne środowiskowe (non-sensitive)
 - **secrets.yml.template**: Template dla sekretów (sensitive)
@@ -327,7 +327,7 @@ kubectl annotate serviceaccount mkrew-backend-sa \
 export CLOUD_SQL_CONNECTION=$(gcloud sql instances describe mkrew-db --format='value(connectionName)')
 
 # Create ConfigMap
-kubectl apply -f .ai/k8s/configmap.yml
+kubectl apply -f k8s/configmap.yml
 
 # Create Secrets (use Secret Manager in production)
 kubectl create secret generic mkrew-secrets \
@@ -342,24 +342,24 @@ kubectl create secret generic mkrew-secrets \
   --from-literal=CLOUD_SQL_CONNECTION_NAME=$CLOUD_SQL_CONNECTION
 
 # Update image paths in deployments
-sed -i "s/PROJECT_ID/$PROJECT_ID/g" .ai/k8s/backend-deployment.yml
-sed -i "s/REGION/$REGION/g" .ai/k8s/backend-deployment.yml
-sed -i "s/PROJECT_ID/$PROJECT_ID/g" .ai/k8s/frontend-deployment.yml
-sed -i "s/REGION/$REGION/g" .ai/k8s/frontend-deployment.yml
+sed -i "s/PROJECT_ID/$PROJECT_ID/g" k8s/backend-deployment.yml
+sed -i "s/REGION/$REGION/g" k8s/backend-deployment.yml
+sed -i "s/PROJECT_ID/$PROJECT_ID/g" k8s/frontend-deployment.yml
+sed -i "s/REGION/$REGION/g" k8s/frontend-deployment.yml
 
 # Deploy backend
-kubectl apply -f .ai/k8s/backend-deployment.yml
-kubectl apply -f .ai/k8s/backend-service.yml
+kubectl apply -f k8s/backend-deployment.yml
+kubectl apply -f k8s/backend-service.yml
 
 # Deploy frontend
-kubectl apply -f .ai/k8s/frontend-deployment.yml
-kubectl apply -f .ai/k8s/frontend-service.yml
+kubectl apply -f k8s/frontend-deployment.yml
+kubectl apply -f k8s/frontend-service.yml
 
 # Reserve static IP
 gcloud compute addresses create mkrew-ip --global
 
 # Deploy Ingress
-kubectl apply -f .ai/k8s/ingress.yml
+kubectl apply -f k8s/ingress.yml
 ```
 
 ### 5.2 Continuous Deployment (Automated)

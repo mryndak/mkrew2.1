@@ -607,8 +607,8 @@ docker push gcr.io/PROJECT_ID/mkrew-frontend:latest
 
 3. Deploy to GKE:
 ```bash
-kubectl apply -f .ai/k8s/frontend-deployment.yml
-kubectl apply -f .ai/k8s/frontend-service.yml
+kubectl apply -f k8s/frontend-deployment.yml
+kubectl apply -f k8s/frontend-service.yml
 ```
 
 ### Environment Variables (Production)
