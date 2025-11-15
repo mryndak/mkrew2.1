@@ -83,9 +83,10 @@ For your use case (dev, low traffic, cost-sensitive) → Perfect fit!
 ### 5. Cloud SQL (8 min)
 
 ```bash
-# Create instance
+# Create instance (ENTERPRISE edition dla shared-core tier)
 gcloud sql instances create $DB_INSTANCE \
-  --database-version=POSTGRES_15 \
+  --database-version=POSTGRES_16 \
+  --edition=ENTERPRISE \
   --tier=db-f1-micro \
   --region=$REGION \
   --backup \
@@ -152,12 +153,13 @@ gcloud iam workload-identity-pools create github \
   --location=global \
   --display-name="GitHub Actions Pool"
 
-# Create Provider
+# Create Provider (restricted to mryndak/mkrew2.1 repository)
 gcloud iam workload-identity-pools providers create-oidc github \
   --location=global \
   --workload-identity-pool=github \
   --display-name="GitHub Provider" \
   --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository=='mryndak/mkrew2.1'" \
   --issuer-uri="https://token.actions.githubusercontent.com"
 
 # Bind Service Account to GitHub Repo (replace with your repo)

@@ -80,7 +80,7 @@ Frontend   Backend ──> Cloud SQL Proxy ──> Cloud SQL
 |-----------|-------------|---------|-----------|
 | Frontend | Astro + Node 20 | 1 | 128Mi-256Mi / 100m-200m CPU |
 | Backend | Spring Boot + Java 21 | 1 | 512Mi-1Gi / 250m-500m CPU |
-| Database | Cloud SQL PostgreSQL 15 | 1 (managed) | db-f1-micro (dev) |
+| Database | Cloud SQL PostgreSQL 16 | 1 (managed) | db-f1-micro (dev) |
 | Proxy | Cloud SQL Proxy | 1 (sidecar) | 64Mi-128Mi / 50m-100m CPU |
 
 ## 🔧 GitHub Secrets (Wymagane)

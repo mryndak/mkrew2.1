@@ -116,9 +116,9 @@ GCP_REGION: "europe-central2"
 GCP_WORKLOAD_IDENTITY_PROVIDER: "projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/github"
 GCP_SERVICE_ACCOUNT: "github-actions@mkrew-project.iam.gserviceaccount.com"
 
-# GKE Configuration
+# GKE Configuration (Autopilot uses regional deployment)
 GKE_CLUSTER: "mkrew-cluster"
-GKE_ZONE: "europe-central2-a"
+GKE_REGION: "europe-central2"
 ARTIFACT_REGISTRY: "mkrew"
 ```
 
@@ -164,7 +164,7 @@ containers:
 ```bash
 export PROJECT_ID="mkrew-project"
 export REGION="europe-central2"
-export ZONE="europe-central2-a"
+# Uwaga: ZONE nie jest potrzebne dla GKE Autopilot (używa regional deployment)
 
 gcloud projects create $PROJECT_ID
 gcloud config set project $PROJECT_ID
@@ -190,31 +190,59 @@ gcloud artifacts repositories create mkrew \
   --description="Docker repository for mkrew application"
 ```
 
-#### Krok 4: Utworzenie GKE Cluster
+#### Krok 4: Utworzenie GKE Autopilot Cluster
 ```bash
-gcloud container clusters create mkrew-cluster \
-  --zone=$ZONE \
-  --num-nodes=2 \
-  --machine-type=e2-standard-2 \
-  --enable-autoscaling \
-  --min-nodes=2 \
-  --max-nodes=6 \
-  --enable-autorepair \
-  --enable-autoupgrade \
-  --workload-pool=$PROJECT_ID.svc.id.goog
+# GKE Autopilot - fully managed, pay-per-pod
+# Workload Identity jest włączone domyślnie w Autopilot
+gcloud container clusters create-auto mkrew-cluster \
+  --region=$REGION
+```
+
+**Uwagi dotyczące GKE Autopilot:**
+- Autopilot automatycznie zarządza węzłami (brak parametrów --num-nodes, --machine-type)
+- Wymaga regional deployment (--region zamiast --zone)
+- **Workload Identity jest włączone domyślnie** (nie potrzeba --workload-pool)
+- Skaluje bazując na resource requests w podach
+- Auto-repair i auto-upgrade są wbudowane
+- Płacisz tylko za rzeczywiste użycie zasobów przez pody
+
+**Weryfikacja Workload Identity:**
+```bash
+# Po utworzeniu klastra sprawdź, czy Workload Identity jest włączone
+gcloud container clusters describe mkrew-cluster \
+  --region=$REGION \
+  --format="value(workloadIdentityConfig.workloadPool)"
+# Powinno zwrócić: mkrew-project.svc.id.goog
 ```
 
 #### Krok 5: Utworzenie Cloud SQL Instance
 ```bash
+# PostgreSQL 16 z automatycznymi backupami i point-in-time recovery
+# Edycja ENTERPRISE pozwala na użycie tanich tierów shared-core (db-f1-micro)
 gcloud sql instances create mkrew-db \
-  --database-version=POSTGRES_15 \
+  --database-version=POSTGRES_16 \
+  --edition=ENTERPRISE \
   --tier=db-f1-micro \
   --region=$REGION \
   --backup \
   --backup-start-time=02:00 \
-  --enable-bin-log \
   --maintenance-window-day=SUN \
   --maintenance-window-hour=03
+```
+
+**Uwagi:**
+- **Edycja ENTERPRISE** (zamiast ENTERPRISE_PLUS) pozwala na użycie shared-core instances
+- `db-f1-micro`: 0.6 GB RAM, shared CPU - najtańsza opcja dla development (~$7-9/miesiąc)
+- PostgreSQL używa Write-Ahead Logging (WAL) - włączone automatycznie
+- WAL umożliwia automatyczne backupy i point-in-time recovery
+
+**Alternatywne tiery dla produkcji:**
+```bash
+# Opcja 2: Custom machine (więcej RAM, dedykowany CPU)
+--edition=ENTERPRISE --tier=db-custom-1-3840  # 1 vCPU, 3.75GB RAM (~$35/miesiąc)
+
+# Opcja 3: Enterprise Plus z performance-optimized tier
+--edition=ENTERPRISE_PLUS --tier=db-perf-optimized-N-2  # High performance (~$150+/miesiąc)
 ```
 
 #### Krok 6: Utworzenie Database
@@ -251,11 +279,13 @@ gcloud iam workload-identity-pools create github \
   --display-name="GitHub Actions Pool"
 
 # Create Workload Identity Provider
+# Ograniczamy dostęp tylko do repozytorium mryndak/mkrew2.1
 gcloud iam workload-identity-pools providers create-oidc github \
   --location=global \
   --workload-identity-pool=github \
   --display-name="GitHub Provider" \
   --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+  --attribute-condition="assertion.repository=='mryndak/mkrew2.1'" \
   --issuer-uri="https://token.actions.githubusercontent.com"
 
 # Allow GitHub to authenticate as service account
@@ -267,8 +297,8 @@ gcloud iam service-accounts add-iam-policy-binding \
 
 #### Krok 9: Kubernetes Service Account Setup
 ```bash
-# Get GKE credentials
-gcloud container clusters get-credentials mkrew-cluster --zone=$ZONE
+# Get GKE credentials (Autopilot uses regional deployment)
+gcloud container clusters get-credentials mkrew-cluster --region=$REGION
 
 # Create Kubernetes service account
 kubectl create serviceaccount mkrew-backend-sa --namespace=default
@@ -402,25 +432,25 @@ kubectl rollout undo deployment/mkrew-backend --to-revision=2
 
 **Infrastructure Costs:**
 - **GKE Autopilot**: ~$15/miesiąc
-- **Cloud SQL**: ~$15/miesiąc (db-f1-micro)
+- **Cloud SQL**: ~$7-9/miesiąc (db-f1-micro, ENTERPRISE edition)
 - **Load Balancer**: ~$18/miesiąc
 - **Artifact Registry**: ~$0.10/GB/miesiąc (~$1)
 - **Cloud Logging**: ~$0.50/GB (~$2)
 - **Cloud Monitoring**: Darmowe do 150MB/miesiąc
 
-**Łączne koszty (dev)**: ~$50-55/miesiąc (~200-220 PLN/miesiąc)
+**Łączne koszty (dev)**: ~$43-48/miesiąc (~170-190 PLN/miesiąc)
 
 **Savings vs Standard GKE:**
 - Standard GKE (1x e2-standard-2): ~$75-85/month
-- Autopilot: ~$50-55/month
-- **Oszczędność: ~$25-30/month (30-40%)**
+- Autopilot + ENTERPRISE Cloud SQL: ~$43-48/month
+- **Oszczędność: ~$30-40/month (40-50%)**
 
 ### 8.2 Optymalizacja Kosztów
 
 - ✅ **GKE Autopilot już wdrożony** - płacisz tylko za rzeczywiste użycie podów
+- ✅ **Cloud SQL ENTERPRISE edition** - używamy najtańszego tier (db-f1-micro)
 - Zmniejsz resource requests w podach (obecnie konserwatywne)
 - Skonfiguruj HorizontalPodAutoscaler do 0 replik w nocy (optional)
-- Zmniejsz Cloud SQL tier lub użyj shared-core instance (db-f1-micro → db-g1-small)
 - Skonfiguruj retention policies dla logów (7 dni zamiast 30)
 - Wyłącz Load Balancer i użyj NodePort dla dev (oszczędność ~$18/month)
 
@@ -430,7 +460,11 @@ kubectl rollout undo deployment/mkrew-backend --to-revision=2
 - Optymalizacja resource requests: ~$5-8/month
 - **Total savings potential**: ~$24-28/month
 
-**Minimalny możliwy koszt (dev):** ~$25-30/month (~100-120 PLN)
+**Minimalny możliwy koszt (dev):** ~$20-25/month (~80-100 PLN)
+- GKE Autopilot z optymalnymi resource requests: ~$10-12/month
+- Cloud SQL db-f1-micro: ~$7-9/month
+- Cloud Logging/Monitoring: ~$1-2/month
+- Artifact Registry: ~$1/month
 
 ## 9. Security Best Practices
 

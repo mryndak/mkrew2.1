@@ -286,7 +286,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
     steps:
       - Checkout code
       - Setup Java 17
@@ -576,7 +576,7 @@ public class DonationTestFactory {
 @Testcontainers
 class DonationServiceTest {
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @BeforeEach
     void setUp() {
