@@ -337,6 +337,12 @@ export function calculateNextEligibleDate(
   if (!lastDonationDate) return null;
 
   const lastDate = new Date(lastDonationDate);
+
+  // Check if date is valid
+  if (isNaN(lastDate.getTime())) {
+    return null;
+  }
+
   const nextDate = new Date(lastDate);
   nextDate.setDate(nextDate.getDate() + DAYS_BETWEEN_DONATIONS);
 

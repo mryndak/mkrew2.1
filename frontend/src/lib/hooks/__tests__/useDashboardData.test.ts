@@ -15,6 +15,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import React from 'react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useDashboardData } from '../useDashboardData';
@@ -158,9 +159,8 @@ function createTestStore(initialState = {}) {
 
 // Wrapper component with Redux Provider
 function createWrapper(store: ReturnType<typeof createTestStore>) {
-  return ({ children }: { children: React.ReactNode }) => (
-    <Provider store={store}>{children}</Provider>
-  );
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(Provider, { store }, children);
 }
 
 describe('useDashboardData', () => {

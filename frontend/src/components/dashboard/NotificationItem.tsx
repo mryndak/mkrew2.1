@@ -160,6 +160,7 @@ function NotificationItemComponent({ notification, onRead }: NotificationItemPro
 
   return (
     <div
+      data-testid="notification-item"
       className={itemClasses}
       onClick={isClickable ? handleClick : undefined}
       onKeyDown={isClickable ? handleKeyDown : undefined}
