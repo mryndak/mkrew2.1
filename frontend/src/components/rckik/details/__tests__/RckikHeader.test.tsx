@@ -270,8 +270,11 @@ describe('RckikHeader', () => {
         />
       );
 
-      // Tab to favorite button
-      await user.tab();
+      // Get the favorite button directly
+      const favoriteButton = screen.getByRole('button', { name: /dodaj do ulubionych/i });
+
+      // Focus the button
+      favoriteButton.focus();
 
       // Press Enter
       await user.keyboard('{Enter}');

@@ -15,10 +15,12 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import React from 'react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useDashboardData } from '../useDashboardData';
 import authReducer from '@/lib/store/slices/authSlice';
+import userReducer from '@/lib/store/slices/userSlice';
 import donationsReducer from '@/lib/store/slices/donationsSlice';
 import favoritesReducer from '@/lib/store/slices/favoritesSlice';
 import notificationsReducer from '@/lib/store/slices/notificationsSlice';
@@ -39,36 +41,40 @@ const mockUser = {
   lastName: 'Kowalski',
   bloodGroup: 'A+',
   emailVerified: true,
+  consentVersion: '',
+  consentTimestamp: '',
+  createdAt: '',
+  updatedAt: '',
 };
 
 const mockStatistics = {
   totalDonations: 5,
   totalQuantityMl: 2250,
-  lastDonationDate: '2024-12-01',
+  lastDonationDate: '2025-11-01', // Recent date - 14 days ago from 2025-11-15
 };
 
 const mockDonations = [
   {
     id: 1,
     rckik: { id: 1, name: 'RCKiK Warszawa', code: 'WAW', city: 'Warszawa' },
-    donationDate: '2024-12-01',
+    donationDate: '2025-11-01', // Recent donation - 14 days ago
     quantityMl: 450,
     donationType: 'FULL_BLOOD' as const,
     notes: null,
     confirmed: true,
-    createdAt: '2024-12-01T10:00:00Z',
-    updatedAt: '2024-12-01T10:00:00Z',
+    createdAt: '2025-11-01T10:00:00Z',
+    updatedAt: '2025-11-01T10:00:00Z',
   },
   {
     id: 2,
     rckik: { id: 1, name: 'RCKiK Warszawa', code: 'WAW', city: 'Warszawa' },
-    donationDate: '2024-10-15',
+    donationDate: '2025-09-15',
     quantityMl: 450,
     donationType: 'FULL_BLOOD' as const,
     notes: null,
     confirmed: true,
-    createdAt: '2024-10-15T10:00:00Z',
-    updatedAt: '2024-10-15T10:00:00Z',
+    createdAt: '2025-09-15T10:00:00Z',
+    updatedAt: '2025-09-15T10:00:00Z',
   },
 ];
 
@@ -115,6 +121,7 @@ function createTestStore(initialState = {}) {
   return configureStore({
     reducer: {
       auth: authReducer,
+      user: userReducer,
       donations: donationsReducer,
       favorites: favoritesReducer,
       notifications: notificationsReducer,
@@ -122,10 +129,18 @@ function createTestStore(initialState = {}) {
     preloadedState: {
       auth: {
         user: mockUser,
+        accessToken: 'test-token',
+        refreshToken: 'test-refresh-token',
+        expiresAt: Date.now() + 3600000,
         isAuthenticated: true,
-        token: 'test-token',
-        loading: false,
+        isLoading: false,
+      },
+      user: {
+        profile: mockUser,
+        notificationPreferences: null,
+        isLoading: false,
         error: null,
+        lastFetch: Date.now(),
       },
       donations: {
         donations: mockDonations,
@@ -137,7 +152,8 @@ function createTestStore(initialState = {}) {
         lastFetched: Date.now(),
       },
       favorites: {
-        items: mockFavorites,
+        favorites: mockFavorites,
+        favoriteIds: mockFavorites.map(f => f.rckikId),
         loading: false,
         error: null,
         lastFetched: Date.now(),
@@ -158,9 +174,8 @@ function createTestStore(initialState = {}) {
 
 // Wrapper component with Redux Provider
 function createWrapper(store: ReturnType<typeof createTestStore>) {
-  return ({ children }: { children: React.ReactNode }) => (
-    <Provider store={store}>{children}</Provider>
-  );
+  return ({ children }: { children: React.ReactNode }) =>
+    React.createElement(Provider, { store }, children);
 }
 
 describe('useDashboardData', () => {
@@ -194,7 +209,7 @@ describe('useDashboardData', () => {
       });
 
       expect(result.current.nextDonationInfo).toBeDefined();
-      expect(result.current.nextDonationInfo.date).toBe('2025-01-26'); // 2024-12-01 + 56 days
+      expect(result.current.nextDonationInfo.date).toBe('2025-12-27'); // 2025-11-01 + 56 days
       expect(result.current.nextDonationInfo.daysRemaining).toBeGreaterThan(0);
       expect(result.current.nextDonationInfo.isEligible).toBe(false);
     });
@@ -257,7 +272,8 @@ describe('useDashboardData', () => {
           lastFetched: null,
         },
         favorites: {
-          items: [],
+          favorites: [],
+          favoriteIds: [],
           loading: false,
           error: null,
           lastFetched: null,
@@ -275,7 +291,7 @@ describe('useDashboardData', () => {
 
       vi.spyOn(donationsApi, 'getDonationStatistics').mockResolvedValue(mockStatistics);
       vi.spyOn(donationsApi, 'getRecentDonations').mockResolvedValue(mockDonations);
-      vi.spyOn(favoritesApi, 'getFavorites').mockResolvedValue({ favorites: mockFavorites });
+      vi.spyOn(favoritesApi, 'fetchFavorites').mockResolvedValue(mockFavorites);
       vi.spyOn(notificationsApi, 'getRecentNotifications').mockResolvedValue(mockNotifications);
       vi.spyOn(notificationsApi, 'getUnreadNotificationsCount').mockResolvedValue({
         unreadCount: 1,
@@ -421,7 +437,8 @@ describe('useDashboardData', () => {
       const store = createTestStore({
         favorites: {
           ...createTestStore().getState().favorites,
-          items: manyFavorites,
+          favorites: manyFavorites,
+          favoriteIds: manyFavorites.map(f => f.rckikId),
         },
       });
 
@@ -461,10 +478,18 @@ describe('useDashboardData', () => {
       const store = createTestStore({
         auth: {
           user: null,
+          accessToken: null,
+          refreshToken: null,
+          expiresAt: null,
           isAuthenticated: false,
-          token: null,
-          loading: false,
+          isLoading: false,
+        },
+        user: {
+          profile: null,
+          notificationPreferences: null,
+          isLoading: false,
           error: null,
+          lastFetch: null,
         },
       });
 
@@ -484,7 +509,8 @@ describe('useDashboardData', () => {
         },
         favorites: {
           ...createTestStore().getState().favorites,
-          items: [],
+          favorites: [],
+          favoriteIds: [],
         },
         notifications: {
           ...createTestStore().getState().notifications,
@@ -531,17 +557,25 @@ describe('useDashboardData', () => {
       expect(result.current.dashboardData?.favorites).toEqual(mockFavorites.slice(0, 3));
       expect(result.current.dashboardData?.notifications).toEqual(mockNotifications.slice(0, 5));
       expect(result.current.dashboardData?.unreadNotificationsCount).toBe(1);
-      expect(result.current.dashboardData?.nextEligibleDonationDate).toBe('2025-01-26');
+      expect(result.current.dashboardData?.nextEligibleDonationDate).toBe('2025-12-27');
     });
 
     it('should return null dashboardData when user is null', () => {
       const store = createTestStore({
         auth: {
           user: null,
+          accessToken: null,
+          refreshToken: null,
+          expiresAt: null,
           isAuthenticated: false,
-          token: null,
-          loading: false,
+          isLoading: false,
+        },
+        user: {
+          profile: null,
+          notificationPreferences: null,
+          isLoading: false,
           error: null,
+          lastFetch: null,
         },
       });
 

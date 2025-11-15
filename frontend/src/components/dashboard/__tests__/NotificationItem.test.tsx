@@ -322,9 +322,10 @@ describe('NotificationItem', () => {
     it('should have aria-label without click instruction when not clickable', () => {
       render(<NotificationItem notification={mockNotificationWithoutLink} onRead={onReadMock} />);
 
-      const notificationDiv = screen.getByText('Krytyczny poziom krwi A+').closest('div');
-      const ariaLabel = notificationDiv?.getAttribute('aria-label');
+      const notificationDiv = screen.getByTestId('notification-item');
+      const ariaLabel = notificationDiv.getAttribute('aria-label');
 
+      expect(ariaLabel).toBeTruthy();
       expect(ariaLabel).not.toContain('Kliknij');
     });
 

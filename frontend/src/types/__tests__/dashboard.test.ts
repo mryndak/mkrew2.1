@@ -251,9 +251,8 @@ describe('Dashboard Utility Functions', () => {
       const invalidDate = 'not-a-date';
       const result = calculateNextEligibleDate(invalidDate);
 
-      // Expect either null or 'Invalid Date' string
-      // Actual behavior depends on implementation
-      expect(result).toBeTruthy(); // Will be a string but might be 'NaN-NaN-NaN'
+      // Should return null for invalid dates
+      expect(result).toBeNull();
     });
 
     it('should handle very old dates', () => {

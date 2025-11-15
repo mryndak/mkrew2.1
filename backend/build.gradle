@@ -58,10 +58,65 @@ dependencies {
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
+
+    // REST Assured for API testing
+    testImplementation 'io.rest-assured:rest-assured:5.4.0'
+    testImplementation 'io.rest-assured:json-path:5.4.0'
+    testImplementation 'io.rest-assured:xml-path:5.4.0'
+
+    // AssertJ for fluent assertions
+    testImplementation 'org.assertj:assertj-core:3.25.3'
+
+    // WireMock for mocking HTTP services
+    testImplementation 'org.wiremock:wiremock-standalone:3.3.1'
+
+    // ArchUnit for architecture testing
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.2.1'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+
+    // JaCoCo code coverage
+    finalizedBy jacocoTestReport
+}
+
+// JaCoCo configuration
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                '**/config/**',
+                '**/entity/**',
+                '**/dto/**',
+                '**/*Application.class'
+            ])
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80
+            }
+        }
+    }
 }

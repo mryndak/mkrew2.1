@@ -19,16 +19,16 @@ export const manualTriggerSchema = z.object({
   customUrl: z
     .string()
     .optional()
+    .transform(val => (val && val.trim() !== '' ? val.trim() : undefined))
     .refine(
       val => {
-        if (!val || val.trim() === '') return true;
+        if (!val) return true;
         return /^https?:\/\/.+/.test(val);
       },
       {
         message: 'URL musi zaczynać się od http:// lub https://',
       }
-    )
-    .transform(val => (val && val.trim() !== '' ? val.trim() : undefined)),
+    ),
 
   confirmed: z
     .boolean()
