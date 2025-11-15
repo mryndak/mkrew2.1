@@ -81,6 +81,7 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
       href="/dashboard/notifications"
       className="relative p-2 text-gray-600 hover:text-red-600 transition-colors rounded-lg hover:bg-gray-100"
       aria-label={`Powiadomienia${unreadCount > 0 ? ` - ${unreadCount} nieprzeczytanych` : ''}`}
+      data-test-id="notification-bell-link"
     >
       {/* Bell icon */}
       <svg
@@ -89,6 +90,7 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
         stroke="currentColor"
         viewBox="0 0 24 24"
         aria-hidden="true"
+        data-test-id="notification-bell-icon"
       >
         <path
           strokeLinecap="round"
@@ -111,6 +113,7 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
             ${!isLoading && 'animate-pulse'}
           `}
           aria-label={`${unreadCount} nieprzeczytanych powiadomień`}
+          data-test-id="notification-bell-badge"
         >
           {unreadCount > 99 ? '99+' : unreadCount}
         </span>
@@ -118,7 +121,10 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
 
       {/* Loading indicator (subtle) */}
       {isLoading && unreadCount === 0 && (
-        <span className="absolute -top-1 -right-1 w-2 h-2 bg-gray-400 rounded-full animate-pulse" />
+        <span
+          className="absolute -top-1 -right-1 w-2 h-2 bg-gray-400 rounded-full animate-pulse"
+          data-test-id="notification-bell-loading"
+        />
       )}
     </a>
   );

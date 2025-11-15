@@ -95,7 +95,7 @@ export const NotificationPreferencesForm: React.FC<NotificationPreferencesFormPr
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6" data-test-id="notification-preferences-container">
       {/* Card header */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Preferencje powiadomień</h2>
@@ -105,7 +105,7 @@ export const NotificationPreferencesForm: React.FC<NotificationPreferencesFormPr
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" data-test-id="notification-preferences-form">
         {/* Email Notifications Section */}
         <div className="space-y-4">
           <h3 className="text-base font-medium text-gray-900">Powiadomienia e-mail</h3>
@@ -117,6 +117,7 @@ export const NotificationPreferencesForm: React.FC<NotificationPreferencesFormPr
                 type="checkbox"
                 id="emailEnabled"
                 className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                data-test-id="email-notifications-checkbox"
                 {...register('emailEnabled')}
               />
             </div>
@@ -136,6 +137,7 @@ export const NotificationPreferencesForm: React.FC<NotificationPreferencesFormPr
             options={frequencyOptions}
             disabled={!emailEnabled}
             error={errors.emailFrequency?.message}
+            data-test-id="email-frequency-select"
             {...register('emailFrequency')}
           />
         </div>
@@ -154,6 +156,7 @@ export const NotificationPreferencesForm: React.FC<NotificationPreferencesFormPr
                 type="checkbox"
                 id="inAppEnabled"
                 className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                data-test-id="in-app-notifications-checkbox"
                 {...register('inAppEnabled')}
               />
             </div>
@@ -173,6 +176,7 @@ export const NotificationPreferencesForm: React.FC<NotificationPreferencesFormPr
             options={frequencyOptions}
             disabled={!inAppEnabled}
             error={errors.inAppFrequency?.message}
+            data-test-id="in-app-frequency-select"
             {...register('inAppFrequency')}
           />
         </div>
@@ -214,6 +218,7 @@ export const NotificationPreferencesForm: React.FC<NotificationPreferencesFormPr
             variant="primary"
             loading={isSubmitting}
             disabled={!isDirty || isSubmitting}
+            data-test-id="save-notification-preferences-button"
           >
             {isSubmitting ? 'Zapisywanie...' : 'Zapisz preferencje'}
           </Button>
