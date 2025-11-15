@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useBloodLevelHistory } from '../useBloodLevelHistory';
 import * as rckikApi from '@/lib/api/endpoints/rckik';
 import type { BloodLevelHistoryResponse } from '@/types/rckik';
@@ -259,19 +259,37 @@ describe('useBloodLevelHistory', () => {
     });
 
     it('should set loading state during refetch', async () => {
-      vi.spyOn(rckikApi, 'fetchBloodLevelHistory').mockResolvedValue(mockHistoryResponse);
+      // Use a delayed mock to give us time to observe the loading state
+      const fetchSpy = vi.spyOn(rckikApi, 'fetchBloodLevelHistory').mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve(mockHistoryResponse), 100)
+          )
+      );
 
       const { result } = renderHook(() => useBloodLevelHistory(1));
 
+      // Wait for initial fetch to complete
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
 
-      result.current.refetch();
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(true);
+      // Trigger refetch
+      act(() => {
+        result.current.refetch();
       });
+
+      // Should be loading immediately after refetch
+      expect(result.current.loading).toBe(true);
+
+      // Wait for refetch to complete
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
   });
 
