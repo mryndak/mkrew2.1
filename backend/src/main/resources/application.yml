@@ -34,7 +34,7 @@ spring:
     enabled: false
 
 server:
-  port: ${PORT:9999}
+  port: ${SERVER_PORT:9999}
   error:
     include-message: always
     include-binding-errors: always

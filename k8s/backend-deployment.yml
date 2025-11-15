@@ -38,10 +38,12 @@ spec:
           JWT_SECRET=$(gcloud secrets versions access latest --secret="mkrew-jwt-secret" --project=mkrew-478317 || echo "VerySecureSecretKeyForJWTTokenSigningThatIsAtLeast256BitsLongForHS256Algorithm")
           SENDGRID_API_KEY=$(gcloud secrets versions access latest --secret="mkrew-sendgrid-api-key" --project=mkrew-478317 || echo "")
 
-          # Zainstaluj kubectl jeśli nie ma
+          # Zainstaluj kubectl jeśli nie ma (szybka metoda)
           if ! command -v kubectl &> /dev/null; then
             echo "Installing kubectl..."
-            gcloud components install kubectl --quiet
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            mv kubectl /usr/local/bin/
           fi
 
           # Utwórz lub zaktualizuj Kubernetes Secret
@@ -57,11 +59,11 @@ spec:
           echo "✅ Secrets successfully loaded!"
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
             memory: "256Mi"
             cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
 
       containers:
       - name: backend
