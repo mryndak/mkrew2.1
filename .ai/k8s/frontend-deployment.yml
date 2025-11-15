@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mkrew-frontend
+  namespace: default
+  labels:
+    app: mkrew-frontend
+    tier: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mkrew-frontend
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: mkrew-frontend
+        tier: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: REGION-docker.pkg.dev/PROJECT_ID/mkrew/frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 4321
+          name: http
+          protocol: TCP
+        env:
+        - name: PUBLIC_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: PUBLIC_ENV
+        - name: PUBLIC_APP_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: PUBLIC_APP_VERSION
+        - name: PUBLIC_API_BASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: PUBLIC_API_BASE_URL
+        - name: PUBLIC_SITE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: PUBLIC_SITE_URL
+        - name: PUBLIC_ENABLE_FAVORITES
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: PUBLIC_ENABLE_FAVORITES
+        - name: PUBLIC_ENABLE_SCRAPER_STATUS
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: PUBLIC_ENABLE_SCRAPER_STATUS
+        - name: PUBLIC_ENABLE_ANALYTICS
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: PUBLIC_ENABLE_ANALYTICS
+        - name: PUBLIC_RECAPTCHA_SITE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: PUBLIC_RECAPTCHA_SITE_KEY
+        - name: PUBLIC_GA_TRACKING_ID
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: PUBLIC_GA_TRACKING_ID
+        - name: PUBLIC_SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: PUBLIC_SENTRY_DSN
+        - name: PUBLIC_SENTRY_ENVIRONMENT
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: PUBLIC_SENTRY_ENVIRONMENT
+        - name: PUBLIC_CACHE_DURATION
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: PUBLIC_CACHE_DURATION
+        - name: PUBLIC_API_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: PUBLIC_API_TIMEOUT
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4321
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4321
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3

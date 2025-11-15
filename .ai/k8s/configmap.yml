@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mkrew-config
+  namespace: default
+data:
+  # Environment
+  ENVIRONMENT: "production"
+
+  # Frontend Config
+  PUBLIC_ENV: "production"
+  PUBLIC_APP_VERSION: "2.1.0"
+  PUBLIC_ENABLE_FAVORITES: "true"
+  PUBLIC_ENABLE_SCRAPER_STATUS: "true"
+  PUBLIC_ENABLE_ANALYTICS: "true"
+  PUBLIC_CACHE_DURATION: "300000"
+  PUBLIC_API_TIMEOUT: "30000"
+
+  # Backend Config
+  SPRING_PROFILES_ACTIVE: "prod"
+  SERVER_PORT: "8080"
+
+  # Database Config (Cloud SQL)
+  DB_HOST: "127.0.0.1"  # Cloud SQL Proxy
+  DB_PORT: "5432"
+  DB_NAME: "mkrew"
+
+  # Logging
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_APP: "INFO"

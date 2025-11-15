@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mkrew-backend
+  namespace: default
+  labels:
+    app: mkrew-backend
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mkrew-backend
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: mkrew-backend
+        tier: backend
+    spec:
+      serviceAccountName: mkrew-backend-sa
+      containers:
+      - name: backend
+        image: REGION-docker.pkg.dev/PROJECT_ID/mkrew/backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: SPRING_PROFILES_ACTIVE
+        - name: SERVER_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: SERVER_PORT
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: mkrew-config
+              key: DB_NAME
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: DB_PASSWORD
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+      # Cloud SQL Proxy sidecar
+      - name: cloud-sql-proxy
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.3
+        args:
+          - "--structured-logs"
+          - "--port=5432"
+          - "$(CLOUD_SQL_CONNECTION_NAME)"
+        env:
+        - name: CLOUD_SQL_CONNECTION_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: CLOUD_SQL_CONNECTION_NAME
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false

@@ -1,0 +1,100 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mkrew-ingress
+  namespace: default
+  annotations:
+    # GKE Ingress annotations
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "mkrew-ip"
+    networking.gke.io/managed-certificates: "mkrew-cert"
+
+    # Cloud CDN for static content
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "mkrew-backend-config"}'
+
+    # SSL redirect
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  rules:
+  # Frontend
+  - host: mkrew.pl
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mkrew-frontend
+            port:
+              number: 80
+
+  # Backend API
+  - host: api.mkrew.pl
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mkrew-backend
+            port:
+              number: 8080
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: mkrew-cert
+  namespace: default
+spec:
+  domains:
+    - mkrew.pl
+    - www.mkrew.pl
+    - api.mkrew.pl
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: mkrew-backend-config
+  namespace: default
+spec:
+  # Enable Cloud CDN
+  cdn:
+    enabled: true
+    cachePolicy:
+      includeHost: true
+      includeProtocol: true
+      includeQueryString: false
+    negativeCaching: true
+    negativeCachingPolicy:
+    - code: 404
+      ttl: 120
+    - code: 410
+      ttl: 120
+
+  # Health check configuration
+  healthCheck:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 2
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /
+    port: 80
+
+  # Connection draining
+  connectionDraining:
+    drainingTimeoutSec: 60
+
+  # Session affinity
+  sessionAffinity:
+    affinityType: "CLIENT_IP"
+    affinityCookieTtlSec: 3600
+
+  # Security policy (Cloud Armor)
+  securityPolicy:
+    name: "mkrew-security-policy"
+
+  # IAP (Identity-Aware Proxy) - optional
+  iap:
+    enabled: false
