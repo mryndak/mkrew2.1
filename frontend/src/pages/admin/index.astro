@@ -1,5 +1,7 @@
 ---
 import AdminLayout from '@/layouts/AdminLayout.astro';
+import { adminRckikApi } from '@/lib/api/endpoints/admin';
+import type { AdminStatsResponse } from '@/lib/types/admin-stats';
 
 /**
  * Admin Dashboard - Główna strona panelu administracyjnego
@@ -18,6 +20,17 @@ import AdminLayout from '@/layouts/AdminLayout.astro';
 
 const pageTitle = 'Panel Administracyjny | mkrew';
 const pageDescription = 'Dashboard panelu administracyjnego platformy mkrew - zarządzanie systemem monitorowania poziomów krwi w centrach RCKiK';
+
+// Fetch admin stats
+let stats: AdminStatsResponse | null = null;
+let statsError: string | null = null;
+
+try {
+  stats = await adminRckikApi.getStats();
+} catch (error) {
+  console.error('Failed to fetch admin stats:', error);
+  statsError = 'Nie udało się pobrać statystyk';
+}
 
 /**
  * Admin quick access cards
@@ -266,7 +279,9 @@ function getColorClasses(color: string) {
           </div>
           <h3 class="font-semibold text-gray-900">Centra RCKiK</h3>
         </div>
-        <p class="text-2xl font-bold text-gray-900 mb-1">-</p>
+        <p class="text-2xl font-bold text-gray-900 mb-1">
+          {statsError ? '-' : stats?.totalRckikCenters ?? '-'}
+        </p>
         <p class="text-sm text-gray-600">Aktywnych centrów w systemie</p>
       </div>
 
@@ -291,7 +306,9 @@ function getColorClasses(color: string) {
           </div>
           <h3 class="font-semibold text-gray-900">Użytkownicy</h3>
         </div>
-        <p class="text-2xl font-bold text-gray-900 mb-1">-</p>
+        <p class="text-2xl font-bold text-gray-900 mb-1">
+          {statsError ? '-' : stats?.totalUsers ?? '-'}
+        </p>
         <p class="text-sm text-gray-600">Zarejestrowanych użytkowników</p>
       </div>
     </div>
