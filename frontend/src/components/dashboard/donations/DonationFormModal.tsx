@@ -210,9 +210,15 @@ export function DonationFormModal({
       onClose={handleClose}
       title={mode === 'create' ? 'Dodaj donację' : 'Edytuj donację'}
       size="medium"
+      data-test-id="donation-form-modal"
       footer={
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isSubmitting}
+            data-test-id="donation-form-cancel-button"
+          >
             Anuluj
           </Button>
           <Button
@@ -220,16 +226,20 @@ export function DonationFormModal({
             onClick={handleSubmit(handleFormSubmit)}
             loading={isSubmitting}
             disabled={isSubmitting}
+            data-test-id="donation-form-submit-button"
           >
             {mode === 'create' ? 'Dodaj' : 'Zaktualizuj'}
           </Button>
         </div>
       }
     >
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5" data-test-id="donation-form">
         {/* Warning banner for 56 days */}
         {showWarning && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex gap-3">
+          <div
+            className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex gap-3"
+            data-test-id="donation-form-56-day-warning"
+          >
             <svg
               className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5"
               fill="none"
@@ -271,6 +281,7 @@ export function DonationFormModal({
           placeholder="Szukaj centrum RCKiK..."
           noResultsText="Nie znaleziono centrum"
           minSearchLength={2}
+          data-test-id="donation-form-rckik-autocomplete"
         />
 
         {/* Donation Date */}
@@ -281,6 +292,7 @@ export function DonationFormModal({
           min={minDate}
           max={today}
           disabled={mode === 'edit'} // Readonly in edit mode
+          data-test-id="donation-form-date-input"
           {...register('donationDate')}
         />
 
@@ -293,6 +305,7 @@ export function DonationFormModal({
           min={50}
           max={1000}
           step={50}
+          data-test-id="donation-form-quantity-input"
           {...register('quantityMl', {
             setValueAs: (v) => (v === '' ? undefined : parseInt(v, 10)),
           })}
@@ -303,6 +316,7 @@ export function DonationFormModal({
           label="Typ donacji *"
           options={donationTypeOptions}
           error={errors.donationType?.message}
+          data-test-id="donation-form-type-select"
           {...register('donationType')}
         />
 
@@ -315,6 +329,7 @@ export function DonationFormModal({
             id="notes"
             rows={4}
             maxLength={1000}
+            data-test-id="donation-form-notes-textarea"
             className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0 resize-none ${
               errors.notes
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500'

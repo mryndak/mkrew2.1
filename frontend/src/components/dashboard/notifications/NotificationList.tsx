@@ -110,7 +110,7 @@ export function NotificationList({
   }
 
   return (
-    <div className="space-y-6" role="list" aria-label="Lista powiadomień">
+    <div className="space-y-6" role="list" aria-label="Lista powiadomień" data-test-id="notification-list">
       {groupedNotifications.map((group) => (
         <NotificationGroup
           key={group.date}

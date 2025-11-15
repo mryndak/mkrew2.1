@@ -86,6 +86,9 @@ export function NotificationItem({
       role="listitem"
       aria-label={`Powiadomienie: ${notification.title}`}
       onClick={hasLink ? handleNotificationClick : undefined}
+      data-test-id="notification-item"
+      data-notification-id={notification.id}
+      data-notification-read={!isUnread}
     >
       <div className="p-5">
         <div className="flex items-start gap-4">
@@ -102,18 +105,19 @@ export function NotificationItem({
                 text-base mb-1
                 ${isUnread ? 'font-bold text-gray-900' : 'font-medium text-gray-800'}
               `}
+              data-test-id="notification-title"
             >
               {notification.title}
             </h3>
 
             {/* Message */}
-            <p className="text-sm text-gray-600 mb-2 whitespace-pre-wrap">
+            <p className="text-sm text-gray-600 mb-2 whitespace-pre-wrap" data-test-id="notification-message">
               {notification.message}
             </p>
 
             {/* RCKiK info (if available) */}
             {notification.rckik && (
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2" data-test-id="notification-rckik-info">
                 <svg
                   className="w-4 h-4 text-gray-400"
                   fill="none"
@@ -157,7 +161,7 @@ export function NotificationItem({
 
               {/* Read indicator (if read) */}
               {!isUnread && (
-                <div className="flex items-center gap-1 text-xs text-gray-400">
+                <div className="flex items-center gap-1 text-xs text-gray-400" data-test-id="notification-read-indicator">
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -179,7 +183,7 @@ export function NotificationItem({
 
             {/* Expired indicator */}
             {isExpired && (
-              <div className="mt-2 text-xs text-gray-400 italic">
+              <div className="mt-2 text-xs text-gray-400 italic" data-test-id="notification-expired-indicator">
                 Powiadomienie wygasło
               </div>
             )}

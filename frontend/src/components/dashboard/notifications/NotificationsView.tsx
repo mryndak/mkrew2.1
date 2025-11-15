@@ -240,12 +240,12 @@ export function NotificationsView() {
   }, [currentPage, totalElements]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-test-id="notifications-view-container">
       {/* Toast notifications */}
       <Toaster position="top-right" richColors closeButton />
 
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6" data-test-id="notifications-view-header">
         <h1 className="text-3xl font-bold text-gray-900">Powiadomienia</h1>
         <p className="mt-2 text-gray-600">
           Przeglądaj alerty o krytycznych stanach krwi i inne powiadomienia
@@ -261,7 +261,7 @@ export function NotificationsView() {
 
       {/* Mark all as read button (only show if there are unread notifications) */}
       {unreadCount > 0 && (
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex justify-end" data-test-id="mark-all-as-read-container">
           <MarkAllAsReadButton
             unreadCount={unreadCount}
             onMarkAllAsRead={handleMarkAllAsRead}
@@ -325,7 +325,7 @@ export function NotificationsView() {
  */
 function NotificationsLoadingSkeleton() {
   return (
-    <div className="space-y-4" role="status" aria-label="Ładowanie powiadomień">
+    <div className="space-y-4" role="status" aria-label="Ładowanie powiadomień" data-test-id="notifications-loading-skeleton">
       {[...Array(5)].map((_, i) => (
         <div
           key={i}
@@ -356,7 +356,7 @@ function NotificationsErrorState({
   onRetry: () => void;
 }) {
   return (
-    <div className="bg-white rounded-lg shadow p-8 text-center">
+    <div className="bg-white rounded-lg shadow p-8 text-center" data-test-id="notifications-error-state">
       <div className="flex flex-col items-center justify-center space-y-4">
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
           <svg
@@ -378,6 +378,7 @@ function NotificationsErrorState({
         <button
           onClick={onRetry}
           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          data-test-id="notifications-retry-button"
         >
           Spróbuj ponownie
         </button>

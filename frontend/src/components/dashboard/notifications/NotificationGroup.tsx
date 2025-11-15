@@ -40,11 +40,12 @@ export function NotificationGroup({
   onMarkAsRead,
 }: NotificationGroupProps) {
   return (
-    <div className="notification-group" role="group" aria-labelledby={`group-header-${date}`}>
+    <div className="notification-group" role="group" aria-labelledby={`group-header-${date}`} data-test-id="notification-group" data-group-date={date}>
       {/* Group header - Data */}
       <div
         id={`group-header-${date}`}
         className="mb-3 px-2"
+        data-test-id="notification-group-header"
       >
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
           {label}
@@ -52,7 +53,7 @@ export function NotificationGroup({
       </div>
 
       {/* Group items - Lista powiadomień */}
-      <div className="space-y-3">
+      <div className="space-y-3" data-test-id="notification-group-items">
         {notifications.map((notification) => (
           <NotificationItem
             key={notification.id}

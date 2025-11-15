@@ -1,42 +1,111 @@
-# Page Objects - E2E Tests
+# Page Objects - E2E Testing
 
-Ten katalog zawiera implementacje Page Object Model dla testów e2e Playwright.
+Ten katalog zawiera klasy Page Object dla testów E2E Playwright.
 
 ## Struktura
 
 ```
 page-objects/
-├── BasePage.ts                    # Bazowa klasa z wspólnymi metodami
-├── HomePage.ts                    # Strona główna aplikacji
-├── admin/                         # Page Objects panelu administracyjnego
-│   ├── AdminLoginPage.ts          # Logowanie administratora
-│   ├── AdminRckikManagementPage.ts # Zarządzanie RCKiK (US-019)
-│   ├── AdminScraperPage.ts        # Manualne parsowanie (US-017)
-│   ├── AdminReportsPage.ts        # Zgłoszenia użytkowników (US-021)
-│   └── index.ts                   # Eksport wszystkich admin page objects
-├── index.ts                       # Main export file
-└── README.md                      # Ten plik
+├── BasePage.ts                      # Bazowa klasa z wspólną funkcjonalnością
+├── HomePage.ts                      # Strona główna/landing page
+├── LoginPage.ts                     # Strona logowania
+├── RegisterPage.ts                  # Strona rejestracji
+├── ResetPasswordRequestPage.ts      # Reset hasła
+├── VerificationPage.ts              # Weryfikacja email
+├── NotificationsPage.ts             # Strona powiadomień (US-011)
+├── NotificationPreferencesPage.ts   # Ustawienia powiadomień (US-006, US-010)
+├── admin/                           # Page Objects panelu administracyjnego
+│   ├── AdminLoginPage.ts            # Logowanie administratora
+│   ├── AdminRckikManagementPage.ts  # Zarządzanie RCKiK (US-019)
+│   ├── AdminScraperPage.ts          # Manualne parsowanie (US-017)
+│   ├── AdminReportsPage.ts          # Zgłoszenia użytkowników (US-021)
+│   └── index.ts                     # Eksport wszystkich admin page objects
+├── index.ts                         # Barrel export
+└── README.md                        # Ta dokumentacja
 ```
 
-## Użycie
+## Wzorzec Page Object Model (POM)
 
-### Import Page Objects
+Zgodnie z najlepszymi praktykami Playwright, stosujemy wzorzec Page Object Model dla:
+- **Reużywalności** - DRY (Don't Repeat Yourself)
+- **Czytelności** - Testy są bardziej deklaratywne
+- **Łatwości utrzymania** - Zmiany w UI wymagają modyfikacji tylko Page Object
+- **Enkapsulacji** - Logika interakcji z elementami jest ukryta w Page Object
+
+## Konwencje
+
+### Lokatory
+- **Preferowane**: `data-testid` - najbardziej stabilne
+- Używamy metody `getByTestId()` z `BasePage`
+- Unikamy selektorów CSS/XPath (niestabilne przy zmianach UI)
+
+### Nazewnictwo
+- Klasy: `PascalCase` zakończone na `Page` (np. `NotificationsPage`, `AdminRckikManagementPage`)
+- Metody: `camelCase` - czasowniki (np. `markAsRead()`, `switchToUnreadTab()`, `clickAddButton()`)
+- Lokatory: `camelCase` - rzeczowniki (np. `notificationList`, `tabAll`, `submitButton`)
+
+### Struktura klasy
+1. **Lokatory** - deklaracja wszystkich elementów w konstruktorze
+2. **Metody nawigacyjne** - `goto()`, `waitFor...()`, etc.
+3. **Gettery** - pobieranie danych z elementów
+4. **Akcje** - interakcje użytkownika (klik, wypełnianie pól)
+5. **Weryfikacje** - metody `verify...()` używające `expect()`
+
+## Przykłady użycia
+
+### Import
 
 ```typescript
-// Import pojedynczego Page Object
-import { AdminRckikManagementPage } from '@/e2e/page-objects/admin';
+// Import pojedynczej klasy
+import { NotificationsPage } from '../page-objects/NotificationsPage';
+import { AdminRckikManagementPage } from '../page-objects/admin';
 
-// Import wszystkich Page Objects
-import { BasePage, HomePage, AdminLoginPage } from '@/e2e/page-objects';
+// Import wielu klas (barrel export)
+import { NotificationsPage, NotificationPreferencesPage, AdminLoginPage } from '../page-objects';
 ```
 
-### Przykład testu
+### Przykładowy test - Notifications
 
 ```typescript
 import { test, expect } from '@playwright/test';
-import { AdminLoginPage, AdminRckikManagementPage } from '@/e2e/page-objects';
+import { NotificationsPage } from '../page-objects';
 
-test.describe('Admin RCKiK Management', () => {
+test.describe('Notifications - US-011', () => {
+  let notificationsPage: NotificationsPage;
+
+  test.beforeEach(async ({ page }) => {
+    notificationsPage = new NotificationsPage(page);
+    await notificationsPage.goto();
+  });
+
+  test('TC-NOTIF-03: Display and mark notifications as read', async () => {
+    // Verify page loaded
+    await notificationsPage.verifyPageLoaded();
+
+    // Get unread count
+    const unreadCount = await notificationsPage.getUnreadCount();
+    expect(unreadCount).toBeGreaterThan(0);
+
+    // Mark first notification as read
+    await notificationsPage.markNotificationAsReadByIndex(0);
+
+    // Verify notification is now read
+    await notificationsPage.verifyNotificationIsRead(0);
+
+    // Verify unread count decreased
+    const newUnreadCount = await notificationsPage.getUnreadCount();
+    expect(newUnreadCount).toBe(unreadCount - 1);
+  });
+});
+```
+
+### Przykładowy test - Admin RCKiK Management
+
+```typescript
+import { test, expect } from '@playwright/test';
+import { AdminLoginPage, AdminRckikManagementPage } from '../page-objects';
+
+test.describe('Admin RCKiK Management - US-019', () => {
   test('should add new RCKiK center', async ({ page }) => {
     // Arrange - Login as admin
     const loginPage = new AdminLoginPage(page);
@@ -82,11 +151,58 @@ Bazowa klasa zawierająca wspólne metody używane przez wszystkie Page Objects.
 - `fillInput(locator, value)` - wypełnianie pól input
 - `clickButton(locator)` - klikanie przycisków z czekaniem
 
+---
+
+### NotificationsPage
+
+**Lokalizacja:** `/dashboard/notifications`
+
+**Scenariusze testowe:**
+- **TC-NOTIF-03**: Sprawdzenie wyświetlania i oznaczania powiadomień in-app
+
+**Główne metody:**
+- `goto()` - Nawigacja do strony powiadomień
+- `getUnreadCount()` - Pobierz liczbę nieprzeczytanych
+- `switchToAllTab()` / `switchToUnreadTab()` - Przełączanie tabów
+- `markNotificationAsReadByIndex(index)` - Oznacz pojedyncze jako przeczytane
+- `markAllAsRead()` - Oznacz wszystkie jako przeczytane
+- `verifyNotificationIsUnread(index)` - Weryfikacja nieprzeczytanego
+- `verifyNotificationIsRead(index)` - Weryfikacja przeczytanego
+
+---
+
+### NotificationPreferencesPage
+
+**Lokalizacja:** `/dashboard/profil` (sekcja NotificationPreferencesForm)
+
+**Scenariusze testowe:**
+- **TC-NOTIF-02**: Zmiana preferencji powiadomień
+
+**Główne metody:**
+- `goto()` - Nawigacja do profilu
+- `enableEmailNotifications()` / `disableEmailNotifications()`
+- `enableInAppNotifications()` / `disableInAppNotifications()`
+- `setEmailFrequency(frequency)` - Ustaw częstotliwość email
+- `setInAppFrequency(frequency)` - Ustaw częstotliwość in-app
+- `savePreferences()` - Zapisz zmiany
+- `verifyEmailSettings(enabled, frequency)` - Weryfikacja ustawień email
+- `verifyInAppSettings(enabled, frequency)` - Weryfikacja ustawień in-app
+
+**Częstotliwości:**
+- `'DISABLED'` - Wyłączone
+- `'ONLY_CRITICAL'` - Tylko krytyczne
+- `'DAILY'` - Codziennie
+- `'IMMEDIATE'` - Natychmiast
+
+---
+
 ### AdminRckikManagementPage
 
-Page Object dla zarządzania centrami RCKiK (US-019).
+**Lokalizacja:** `/admin/rckik`
 
-**Kluczowe metody:**
+**Scenariusze testowe:** US-019
+
+**Główne metody:**
 - `clickAddButton()` - otwiera modal dodawania centrum
 - `fillRckikForm(data)` - wypełnia formularz centrum
 - `submitForm()` - zapisuje formularz
@@ -98,11 +214,15 @@ Page Object dla zarządzania centrami RCKiK (US-019).
 - `rckikExists(name)` - sprawdza czy centrum istnieje
 - `getRckikStatus(name)` - pobiera status centrum
 
+---
+
 ### AdminScraperPage
 
-Page Object dla manualnego uruchamiania scrapera (US-017).
+**Lokalizacja:** `/admin/scraper`
 
-**Kluczowe metody:**
+**Scenariusze testowe:** US-017
+
+**Główne metody:**
 - `clickManualTriggerButton()` - otwiera modal manualnego uruchomienia
 - `selectRckiks(names)` - wybiera centra do parsowania
 - `setCustomUrl(url)` - ustawia custom URL
@@ -116,11 +236,15 @@ Page Object dla manualnego uruchamiania scrapera (US-017).
 - `clickViewDetails(runId)` - otwiera szczegóły uruchomienia
 - `waitForRunCompletion(runId)` - czeka na zakończenie
 
+---
+
 ### AdminReportsPage
 
-Page Object dla zarządzania zgłoszeniami (US-021).
+**Lokalizacja:** `/admin/reports`
 
-**Kluczowe metody:**
+**Scenariusze testowe:** US-021
+
+**Główne metody:**
 - `filterByStatus(status)` - filtruje po statusie
 - `filterByRckik(rckikId)` - filtruje po centrum
 - `filterByDateRange(from, to)` - filtruje po dacie
@@ -133,6 +257,8 @@ Page Object dla zarządzania zgłoszeniami (US-021).
 - `resolveReport(reportId, notes)` - pełny flow rozwiązania
 - `rejectReport(reportId, notes)` - pełny flow odrzucenia
 - `updateReport(reportId, status, notes)` - aktualizacja ze statusem
+
+---
 
 ## Zasady tworzenia Page Objects
 
@@ -227,26 +353,62 @@ async goto() {
 }
 ```
 
-## Konwencje nazewnictwa
+## Najlepsze praktyki
 
-- **Klasy**: PascalCase z suffixem `Page` (np. `AdminLoginPage`)
-- **Metody**: camelCase, opisowe nazwy (np. `clickAddButton()`, `fillRckikForm()`)
-- **Locatory**: camelCase z suffixem typu (np. `submitButton`, `emailInput`, `confirmModal`)
-- **Parametry**: camelCase, opisowe (np. `reportId`, `rckikNames`)
+### ✅ DO:
+- Używaj `data-testid` dla selektorów
+- Hermetyzuj logikę w metodach Page Object
+- Dodawaj metody weryfikacyjne (`verify...()`)
+- Używaj `async/await` konsekwentnie
+- Dodawaj komentarze JSDoc dla metod publicznych
+- Grupuj powiązane metody razem
+- Używaj opisowych nazw metod
 
-## Testowanie
+### ❌ DON'T:
+- Nie używaj selektorów CSS/XPath bez potrzeby
+- Nie kopiuj kodu - twórz metody pomocnicze
+- Nie testuj implementacji - testuj behavior
+- Nie hardcoduj delays (`waitForTimeout`) bez powodu
+- Nie duplikuj logiki między Page Objects
 
-Przykłady testów używających Page Objects znajdują się w katalogu `e2e/tests/`.
+## Debugowanie
 
-```typescript
-// e2e/tests/admin/rckik-management.spec.ts
-import { test, expect } from '@playwright/test';
-import { AdminRckikManagementPage } from '@/e2e/page-objects';
-
-test.describe('Admin RCKiK Management', () => {
-  // ... testy
-});
+### Playwright Inspector
+```bash
+PWDEBUG=1 npx playwright test notifications.spec.ts
 ```
+
+### Trace Viewer
+```typescript
+// playwright.config.ts
+use: {
+  trace: 'on-first-retry',
+}
+```
+
+Potem:
+```bash
+npx playwright show-trace trace.zip
+```
+
+### Screenshots on Failure
+```typescript
+// playwright.config.ts
+use: {
+  screenshot: 'only-on-failure',
+}
+```
+
+## Związane dokumenty
+
+- **Scenariusze testowe**: `/.ai/test-plan.md`
+- **Reguły Playwright**: `/.ai/playwright-e2e-testing.mdc`
+- **US-010**: Email Notifications - `/backend/docs/API-EMAIL-NOTIFICATIONS.md`
+- **US-011**: In-App Notifications - `/frontend/src/components/dashboard/notifications/README.md`
+- **US-006**: Notification Preferences - `/backend/docs/API-NOTIFICATION-PREFERENCES.md`
+- **US-017**: Manualne parsowanie - `/frontend/src/pages/admin/scraper.astro`
+- **US-019**: Zarządzanie RCKiK - `/frontend/src/pages/admin/rckik.astro`
+- **US-021**: Zgłoszenia problemów - `/frontend/src/pages/admin/reports.astro`
 
 ## Wsparcie
 

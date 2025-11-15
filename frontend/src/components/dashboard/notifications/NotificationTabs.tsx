@@ -38,7 +38,7 @@ export function NotificationTabs({
   onTabChange,
 }: NotificationTabsProps) {
   return (
-    <div className="mb-6">
+    <div className="mb-6" data-test-id="notification-tabs-container">
       <div
         className="border-b border-gray-200"
         role="tablist"
@@ -61,6 +61,7 @@ export function NotificationTabs({
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }
             `}
+            data-test-id="notification-tab-all"
           >
             Wszystkie
           </button>
@@ -82,6 +83,7 @@ export function NotificationTabs({
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }
             `}
+            data-test-id="notification-tab-unread"
           >
             Nieprzeczytane
             {/* Badge with unread count */}
@@ -96,6 +98,7 @@ export function NotificationTabs({
                   }
                 `}
                 aria-label={`${unreadCount} nieprzeczytanych powiadomień`}
+                data-test-id="notification-unread-badge"
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
