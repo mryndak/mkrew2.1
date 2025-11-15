@@ -46,12 +46,6 @@ const mockRunsData = {
   totalPages: 0,
 };
 
-const mockRckikOptions = [
-  { id: 1, name: 'RCKiK Warszawa', code: 'RCKIK-WAW', city: 'Warszawa' },
-  { id: 2, name: 'RCKiK Kraków', code: 'RCKIK-KRK', city: 'Kraków' },
-  { id: 3, name: 'RCKiK Wrocław', code: 'RCKIK-WRO', city: 'Wrocław' },
-];
-
 /**
  * W produkcji:
  *
@@ -89,7 +83,6 @@ const mockRckikOptions = [
     data-initial-page={mockRunsData.page}
     data-initial-total-pages={mockRunsData.totalPages}
     data-initial-total-elements={mockRunsData.totalElements}
-    data-rckik-options={JSON.stringify(mockRckikOptions)}
   ></div>
 
   <!-- Run Details Modal Container -->
@@ -200,14 +193,9 @@ const mockRckikOptions = [
       // Manual Trigger Button
       const manualTriggerContainer = document.getElementById('manual-trigger-button-container');
       if (manualTriggerContainer) {
-        const rckikOptions = JSON.parse(
-          document.getElementById('scraper-runs-list-container')?.dataset.rckikOptions || '[]'
-        );
-
         const manualTriggerRoot = createRoot(manualTriggerContainer);
         manualTriggerRoot.render(
           React.createElement(ManualTriggerButton, {
-            rckikOptions,
             onSuccess: (runId: number) => {
               console.log('Scraper triggered successfully, run ID:', runId);
               // Runs list will auto-refresh due to RUNNING status
