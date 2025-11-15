@@ -1,9 +1,37 @@
 # mkrew Backend - Spring Boot Application
 
-## Overview
+> REST API backend dla platformy mkrew - blood donation platform
+
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-green.svg)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+
+## 📋 Spis treści
+
+- [Overview](#-overview)
+- [Stack technologiczny](#-stack-technologiczny)
+- [Struktura projektu](#-struktura-projektu)
+- [Szybki start](#-szybki-start)
+- [Konfiguracja](#-konfiguracja)
+- [API Documentation](#-api-documentation)
+- [Zaimplementowane funkcjonalności](#-zaimplementowane-funkcjonalności)
+- [Testy](#-testy)
+- [Deployment](#-deployment)
+- [Troubleshooting](#-troubleshooting)
+
+## 🎯 Overview
 Backend application for the mkrew blood donation platform built with Java 21 and Spring Boot 3.2.
 
-## Tech Stack
+### Kluczowe funkcjonalności
+- **REST API** - pełne API zgodne z OpenAPI 3.0 (Swagger)
+- **Authentication** - JWT tokens z refresh mechanism
+- **Email Notifications** - SendGrid integration dla critical blood level alerts
+- **Web Scraping Ready** - architecture prepared dla Jsoup scraper
+- **Database Migrations** - Liquibase dla version control schematu
+- **Security** - BCrypt password hashing, rate limiting, CORS
+
+## 🛠 Stack technologiczny
 - **Java 21**
 - **Spring Boot 3.2.1**
   - Spring Web (REST API)
@@ -19,7 +47,7 @@ Backend application for the mkrew blood donation platform built with Java 21 and
 - **Lombok** (code generation)
 - **Gradle 8.5** (build tool)
 
-## Project Structure
+## 📁 Struktura projektu
 ```
 backend/
 ├── src/
@@ -36,7 +64,7 @@ backend/
 └── README.md
 ```
 
-## JPA Entities
+### 🗄️ JPA Entities
 
 All 15 entities implemented matching the database schema:
 
@@ -67,7 +95,9 @@ All 15 entities implemented matching the database schema:
 14. **UserReport** - User-submitted data issues
 15. **AuditLog** - Immutable audit trail
 
-## Prerequisites
+## 🚀 Szybki start
+
+### Prerequisites
 
 - **Java 21** (JDK)
 - **Docker** and **Docker Compose**
@@ -130,7 +160,7 @@ Run JAR:
 java -jar build/libs/mkrew-backend-0.0.1-SNAPSHOT.jar
 ```
 
-## Configuration
+## ⚙️ Konfiguracja
 
 ### Environment Variables
 
@@ -149,9 +179,9 @@ java -jar build/libs/mkrew-backend-0.0.1-SNAPSHOT.jar
 
 See `src/main/resources/application.yml` for full configuration.
 
-## Endpoints
+## 📚 API Documentation
 
-### Swagger UI (API Documentation)
+### Swagger UI
 
 Interactive API documentation with Swagger UI:
 
@@ -190,14 +220,14 @@ Response:
 - `/actuator/info` - Application info
 - `/actuator/metrics` - Application metrics
 
-## Testing
+## 🧪 Testy
 
 Run all tests:
 ```bash
 ./gradlew test
 ```
 
-## Database Schema
+## 🗃️ Database Schema
 
 Database schema is managed by Liquibase. Migration files are located in `../db/changelog/changesets/`
 
@@ -206,7 +236,7 @@ Database schema is managed by Liquibase. Migration files are located in `../db/c
 - 016: Additional indexes
 - 017: Materialized view (mv_latest_blood_levels)
 
-## Development Notes
+## 💻 Development Notes
 
 ### JPA Entity Mappings
 
@@ -244,7 +274,7 @@ PostgreSQL arrays use Hibernate's array support:
 private String[] aliases;
 ```
 
-## Implemented Features
+## ✨ Zaimplementowane funkcjonalności
 
 ### ✅ US-001: User Registration
 - **Endpoint:** `POST /api/v1/auth/register`
@@ -470,7 +500,7 @@ backend/src/main/java/pl/mkrew/backend/
 └── MkrewBackendApplication.java
 ```
 
-## Next Steps
+## 🗺️ Roadmap & Next Steps
 
 1. ✅ Project structure created
 2. ✅ All 15 JPA entities implemented
@@ -495,7 +525,7 @@ backend/src/main/java/pl/mkrew/backend/
 21. ⏳ Donation diary management (US-012)
 22. ⏳ Add integration tests
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Port conflicts
 If port 5433 or 8080 is already in use, modify `docker-compose.yml`:
@@ -523,6 +553,10 @@ Verify PostgreSQL is healthy:
 docker-compose ps
 ```
 
-## License
+## 📄 License
 
 Proprietary - mkrew Project
+
+---
+
+**Built with ☕ Java + 🍃 Spring Boot**

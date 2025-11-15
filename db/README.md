@@ -1,6 +1,41 @@
 # mkrew Database Setup
 
-## Struktura katalogów
+> PostgreSQL 16 database with Liquibase migrations dla platformy mkrew
+
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
+[![Liquibase](https://img.shields.io/badge/Liquibase-4.25-orange.svg)](https://www.liquibase.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+
+## 📋 Spis treści
+
+- [Przegląd](#-przegląd)
+- [Struktura katalogów](#-struktura-katalogów)
+- [Szybki start](#-szybki-start)
+- [Migracje Liquibase](#-migracje-liquibase)
+- [Struktura bazy danych](#-struktura-bazy-danych)
+- [Optymalizacje](#-optymalizacje)
+- [Bezpieczeństwo](#-bezpieczeństwo)
+- [Backup i restore](#-backup-i-restore)
+- [Monitoring](#-monitoring)
+
+## 🎯 Przegląd
+
+Baza danych mkrew zbudowana na **PostgreSQL 16** z pełnym systemem migracji **Liquibase**:
+- **15 tabel biznesowych** + **1 materialized view**
+- **17 changesets** z rollback support
+- **Seed data**: 21 RCKiK + scraper configs
+- **Advanced indexing**: composite, partial, GIN indexes
+- **Audit trail**: immutable logs (trigger-protected)
+
+### Kluczowe cechy
+- ✅ **Liquibase migrations** - version control dla schematu
+- ✅ **Docker Compose** - lokalne środowisko dev
+- ✅ **Seeded data** - gotowe dane dla RCKiK i scraperów
+- ✅ **ERD Diagram** - wizualizacja schematu (Draw.io)
+- ✅ **Performance optimized** - indeksy, materialized views
+- ✅ **Production-ready** - prepared dla GCP Cloud SQL
+
+## 📁 Struktura katalogów
 
 ```
 db/
@@ -29,7 +64,7 @@ db/
 └── README.md                   # Ten plik
 ```
 
-## Uruchomienie bazy danych
+## 🚀 Szybki start
 
 ### 1. Uruchomienie PostgreSQL, Liquibase i pgAdmin
 
@@ -106,7 +141,7 @@ docker-compose down -v
 
 **UWAGA:** Flaga `-v` usunie volume z danymi. Baza danych zostanie całkowicie wyczyszczona!
 
-## Migracje Liquibase
+## 🔄 Migracje Liquibase
 
 ### Uruchomienie migracji z poziomu aplikacji Spring Boot
 
@@ -147,7 +182,7 @@ liquibase update
 liquibase rollback-count 1
 ```
 
-## Struktura bazy danych
+## 🗃️ Struktura bazy danych
 
 ### Tabele główne
 
@@ -193,13 +228,13 @@ liquibase rollback-count 1
     - Odświeżanie: `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_latest_blood_levels;`
     - Powinno być uruchamiane po każdym scrapingu
 
-## Diagram ERD
+## 📊 Diagram ERD
 
 Plik `erd-diagram.drawio` można otworzyć w:
 - **Draw.io Desktop**: https://github.com/jgraph/drawio-desktop/releases
 - **Draw.io Online**: https://app.diagrams.net/
 
-## Optymalizacje wydajności
+## ⚡ Optymalizacje wydajności
 
 ### Indeksy
 
@@ -220,7 +255,7 @@ Tabele kandydujące do partycjonowania:
 - `mv_latest_blood_levels` - automatyczne odświeżanie po scrapingu
 - CONCURRENTLY refresh pozwala na odświeżanie bez blokowania odczytów
 
-## Zarządzanie Volume i danymi
+## 💾 Zarządzanie Volume i danymi
 
 ### Lokalizacja Volume
 
@@ -283,7 +318,7 @@ docker volume rm db_postgres_data
 docker volume prune
 ```
 
-## Bezpieczeństwo
+## 🔐 Bezpieczeństwo
 
 ### Row Level Security (RLS)
 
@@ -308,14 +343,14 @@ CREATE POLICY donations_user_policy ON donations
 - `audit_logs` - trigger blokujący modyfikacje
 - Wszystkie operacje tylko INSERT
 
-## Retencja danych
+## 🗑️ Retencja danych
 
 - `scraper_logs`: 90 dni
 - `email_logs`: 90 dni (szczegóły), agregacje na stałe
 - `in_app_notifications`: auto-czyszczenie przeczytanych (>30 dni)
 - `user_tokens`: auto-czyszczenie wygasłych tokenów
 
-## Backup i restore
+## 💾 Backup i restore
 
 ### Backup
 
@@ -329,7 +364,7 @@ docker exec mkrew-postgres pg_dump -U mkrew_user mkrew > backup_$(date +%Y%m%d).
 docker exec -i mkrew-postgres psql -U mkrew_user mkrew < backup_20250108.sql
 ```
 
-## Monitoring
+## 📈 Monitoring
 
 ### Przydatne zapytania
 
@@ -359,9 +394,52 @@ FROM pg_stat_user_indexes
 ORDER BY idx_scan ASC;
 ```
 
-## Wsparcie
+## 🔧 Troubleshooting
 
 W razie problemów sprawdź:
-1. Logi PostgreSQL: `docker-compose logs postgres`
-2. Status migracji Liquibase: tabela `databasechangelog`
-3. Połączenie z bazą: `docker exec -it mkrew-postgres psql -U mkrew_user -d mkrew`
+1. **Logi PostgreSQL**: `docker-compose logs postgres`
+2. **Status migracji Liquibase**: tabela `databasechangelog`
+   ```sql
+   SELECT id, author, filename, dateexecuted
+   FROM databasechangelog
+   ORDER BY orderexecuted DESC;
+   ```
+3. **Połączenie z bazą**: `docker exec -it mkrew-postgres psql -U mkrew_user -d mkrew`
+4. **Sprawdź volume**: `docker volume inspect db_postgres_data`
+
+### Częste problemy
+
+#### Port 5432 zajęty
+```bash
+# Zmień port w docker-compose.yml
+ports:
+  - "5433:5432"  # Użyj portu 5433 zamiast 5432
+```
+
+#### Liquibase nie wykona migracji
+```bash
+# Sprawdź logi
+docker-compose logs liquibase
+
+# Uruchom ponownie
+docker-compose up liquibase
+```
+
+#### Brak dostępu do pgAdmin
+- Upewnij się, że port 5050 nie jest zajęty
+- Login: `admin@mkrew.pl` / `admin`
+
+## 📚 Dodatkowe zasoby
+
+- [Plan DB (detailed)](./../.ai/plan-db.md) - pełna specyfikacja schematu
+- [PostgreSQL 16 Docs](https://www.postgresql.org/docs/16/)
+- [Liquibase Docs](https://docs.liquibase.com/)
+- [Draw.io](https://app.diagrams.net/) - do przeglądania ERD
+
+## 📄 License
+
+Proprietary - mkrew Project
+
+---
+
+**Powered by 🐘 PostgreSQL + 🔄 Liquibase**
