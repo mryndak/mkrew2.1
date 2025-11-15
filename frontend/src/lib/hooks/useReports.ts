@@ -171,12 +171,12 @@ export function useReports(props?: UseReportsProps) {
 
       setState((prev) => ({
         ...prev,
-        reports: response.reports,
+        reports: response.reports || [],
         pagination: {
-          page: response.page,
-          size: response.size,
-          totalElements: response.totalElements,
-          totalPages: response.totalPages,
+          page: response.page ?? 0,
+          size: response.size ?? 20,
+          totalElements: response.totalElements ?? 0,
+          totalPages: response.totalPages ?? 0,
         },
         loading: false,
       }));
@@ -184,6 +184,7 @@ export function useReports(props?: UseReportsProps) {
       console.error('Failed to load reports:', error);
       setState((prev) => ({
         ...prev,
+        reports: [],
         error: 'Nie udało się załadować raportów. Spróbuj ponownie.',
         loading: false,
       }));
