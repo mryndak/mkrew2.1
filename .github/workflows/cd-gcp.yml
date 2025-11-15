@@ -38,6 +38,7 @@ jobs:
   build-and-push-backend:
     name: Build & Push Backend
     runs-on: ubuntu-latest
+    environment: mkrew
     permissions:
       contents: read
       id-token: write
@@ -76,6 +77,7 @@ jobs:
   build-and-push-frontend:
     name: Build & Push Frontend
     runs-on: ubuntu-latest
+    environment: mkrew
     permissions:
       contents: read
       id-token: write
@@ -127,6 +129,7 @@ jobs:
   build-and-push-liquibase:
     name: Build & Push Liquibase
     runs-on: ubuntu-latest
+    environment: mkrew
     permissions:
       contents: read
       id-token: write
@@ -166,6 +169,7 @@ jobs:
   deploy-database:
     name: Deploy Database Migrations
     runs-on: ubuntu-latest
+    environment: mkrew
     needs: [build-and-push-liquibase]
     permissions:
       contents: read
@@ -247,6 +251,7 @@ jobs:
   deploy-to-gke:
     name: Deploy to GKE
     runs-on: ubuntu-latest
+    environment: mkrew
     needs: [build-and-push-backend, build-and-push-frontend, deploy-database]
     permissions:
       contents: read
