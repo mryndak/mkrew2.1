@@ -60,14 +60,14 @@ export const testimonials: Testimonial[] = [
     author: 'Jan Kowalski',
     role: 'Dawca krwi od 3 lat',
     content: 'Dzięki mkrew zawsze wiem, kiedy moja krew jest najbardziej potrzebna. Aplikacja jest intuicyjna i bardzo pomocna.',
-    avatar: '/avatars/user1.jpg'
+    avatar: '/avatars/user1.svg'
   },
   {
     id: 'testimonial-2',
     author: 'Anna Nowak',
     role: 'Honorowy dawca krwi',
     content: 'Wreszcie mogę łatwo śledzić historię swoich donacji i otrzymywać powiadomienia. Polecam każdemu dawcy!',
-    avatar: '/avatars/user2.jpg'
+    avatar: '/avatars/user2.svg'
   }
 ];
 
