@@ -65,6 +65,8 @@ export function MarkAsReadButton({
       `}
       aria-label="Oznacz jako przeczytane"
       aria-disabled={isLoading}
+      data-test-id="mark-as-read-button"
+      data-notification-id={notificationId}
     >
       {/* Loading spinner or checkmark icon */}
       {isLoading ? (
