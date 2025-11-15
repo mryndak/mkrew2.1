@@ -20,6 +20,7 @@ spec:
     spec:
       serviceAccountName: mkrew-backend-sa
       restartPolicy: Never
+      shareProcessNamespace: true  # Enable process namespace sharing to allow terminating the proxy
 
       # Init container - fetch secrets from GCP Secret Manager
       initContainers:
@@ -93,6 +94,12 @@ spec:
             update
 
           echo "✅ Liquibase migration completed successfully!"
+
+          # Terminate the Cloud SQL Proxy sidecar to allow the Job to complete
+          echo "🛑 Terminating Cloud SQL Proxy..."
+          killall cloud-sql-proxy || true
+          sleep 2
+          echo "✅ Migration job completed!"
         env:
         - name: DB_HOST
           value: "localhost"  # Cloud SQL Proxy runs on localhost
