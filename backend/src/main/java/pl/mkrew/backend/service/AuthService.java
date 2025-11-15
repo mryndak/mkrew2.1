@@ -74,6 +74,7 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .bloodGroup(request.getBloodGroup())
                 .emailVerified(false)
+                .role(pl.mkrew.backend.entity.UserRole.USER)
                 .consentTimestamp(LocalDateTime.now())
                 .consentVersion(request.getConsentVersion())
                 .build();

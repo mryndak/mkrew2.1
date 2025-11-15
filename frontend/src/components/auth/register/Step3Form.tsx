@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RckikCheckboxItem } from './RckikCheckboxItem';
 import { SelectedFavorites } from './SelectedFavorites';
 import type { Step3FormProps, RckikBasic } from '@/types/auth';
+import { fetchRckikList } from '@/lib/api/endpoints/rckik';
 
 /**
  * Step3Form component
@@ -40,28 +41,32 @@ export function Step3Form({
 
   // Fetch RCKiK list on mount
   useEffect(() => {
-    const fetchRckikList = async () => {
+    const loadRckikList = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // TODO: Replace with actual API call when endpoint is available
-        // For now, use mock data
-        const mockData: RckikBasic[] = [
-          { id: 1, name: 'RCKiK Warszawa', city: 'Warszawa', latitude: 52.2297, longitude: 21.0122 },
-          { id: 2, name: 'RCKiK Kraków', city: 'Kraków', latitude: 50.0647, longitude: 19.9450 },
-          { id: 3, name: 'RCKiK Wrocław', city: 'Wrocław', latitude: 51.1079, longitude: 17.0385 },
-          { id: 4, name: 'RCKiK Poznań', city: 'Poznań', latitude: 52.4064, longitude: 16.9252 },
-          { id: 5, name: 'RCKiK Gdańsk', city: 'Gdańsk', latitude: 54.3520, longitude: 18.6466 },
-          { id: 6, name: 'RCKiK Łódź', city: 'Łódź', latitude: 51.7592, longitude: 19.4560 },
-          { id: 7, name: 'RCKiK Katowice', city: 'Katowice', latitude: 50.2649, longitude: 19.0238 },
-          { id: 8, name: 'RCKiK Lublin', city: 'Lublin', latitude: 51.2465, longitude: 22.5684 },
-        ];
+        // Fetch all active RCKiK centers (no pagination limit for registration)
+        const response = await fetchRckikList({
+          page: 0,
+          size: 100, // Get all centers
+          active: true,
+          sortBy: 'name',
+          sortOrder: 'ASC',
+          search: '',
+          city: null,
+        });
 
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Map RckikSummary to RckikBasic
+        const mappedData: RckikBasic[] = response.content.map((rckik) => ({
+          id: rckik.id,
+          name: rckik.name,
+          city: rckik.city,
+          latitude: rckik.latitude,
+          longitude: rckik.longitude,
+        }));
 
-        setRckikList(mockData);
+        setRckikList(mappedData);
       } catch (err) {
         console.error('Failed to fetch RCKiK list:', err);
         setError('Nie udało się pobrać listy centrów krwiodawstwa');
@@ -70,7 +75,7 @@ export function Step3Form({
       }
     };
 
-    fetchRckikList();
+    loadRckikList();
   }, []);
 
   // Filter RCKiK list by search term
