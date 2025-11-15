@@ -7,6 +7,7 @@ import type {
   FilterState,
   SortConfig,
 } from '@/lib/types/admin';
+import type { AdminStatsResponse } from '@/lib/types/admin-stats';
 
 /**
  * Admin RCKiK API endpoints
@@ -184,5 +185,14 @@ export const adminRckikApi = {
       console.error('Failed to fetch available cities:', error);
       return [];
     }
+  },
+
+  /**
+   * GET /admin/stats
+   * Pobiera statystyki dla dashboardu administracyjnego
+   */
+  getStats: async (): Promise<AdminStatsResponse> => {
+    const response = await apiClient.get<AdminStatsResponse>('/admin/stats');
+    return response.data;
   },
 };
