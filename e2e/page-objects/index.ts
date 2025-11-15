@@ -9,6 +9,7 @@
  * - Public: Landing pages
  * - Authentication: Login, Register, Password Reset, Verification
  * - Dashboard: Notifications, Preferences
+ * - Admin: Panel administracyjny (RCKiK Management, Scraper, Reports)
  */
 
 // Base
@@ -26,3 +27,6 @@ export { VerificationPage } from './VerificationPage';
 // Dashboard pages
 export { NotificationsPage } from './NotificationsPage';
 export { NotificationPreferencesPage } from './NotificationPreferencesPage';
+
+// Admin panel page objects
+export * from './admin';
