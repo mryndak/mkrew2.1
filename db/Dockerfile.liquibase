@@ -1,0 +1,12 @@
+# Liquibase Dockerfile for GCP deployment
+FROM liquibase/liquibase:4.25-alpine
+
+# Set working directory
+WORKDIR /liquibase/changelog
+
+# Copy all changelogs from local db/changelog directory
+COPY changelog/ /liquibase/changelog/
+
+# PostgreSQL JDBC driver is already included in the official image
+# Default command will be overridden by Kubernetes Job
+CMD ["--help"]

@@ -5,6 +5,12 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 [![Liquibase](https://img.shields.io/badge/Liquibase-4.25-orange.svg)](https://www.liquibase.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![GCP](https://img.shields.io/badge/GCP-Ready-blue.svg)](https://cloud.google.com/)
+
+## 🚀 Deployment Environments
+
+- **Local Development**: Docker Compose (ten dokument)
+- **GCP Production**: Kubernetes Job → **[Zobacz README-GCP.md](README-GCP.md)**
 
 ## 📋 Spis treści
 
@@ -39,29 +45,19 @@ Baza danych mkrew zbudowana na **PostgreSQL 16** z pełnym systemem migracji **L
 
 ```
 db/
-├── docker-compose.yml          # Docker Compose dla PostgreSQL i pgAdmin
+├── docker-compose.yml              # Docker Compose dla PostgreSQL i pgAdmin
+├── Dockerfile.liquibase            # Dockerfile dla GCP deployment
+├── deploy-liquibase.sh             # Helper script dla GCP deployment
 ├── changelog/
-│   ├── db.changelog-master.yaml  # Główny plik Liquibase
-│   └── changesets/               # Poszczególne changesets
+│   ├── db.changelog-master.yaml    # Główny plik Liquibase
+│   └── changesets/                 # Poszczególne changesets (22 pliki)
 │       ├── 001-create-users-table.yaml
 │       ├── 002-create-rckik-table.yaml
-│       ├── 003-create-blood-snapshots-table.yaml
-│       ├── 004-create-user-favorite-rckik-table.yaml
-│       ├── 005-create-donations-table.yaml
-│       ├── 006-create-notification-preferences-table.yaml
-│       ├── 007-create-in-app-notifications-table.yaml
-│       ├── 008-create-email-logs-table.yaml
-│       ├── 009-create-user-tokens-table.yaml
-│       ├── 010-create-user-sessions-table.yaml
-│       ├── 011-create-scraper-runs-table.yaml
-│       ├── 012-create-scraper-logs-table.yaml
-│       ├── 013-create-scraper-configs-table.yaml
-│       ├── 014-create-user-reports-table.yaml
-│       ├── 015-create-audit-logs-table.yaml
-│       ├── 016-create-indexes.yaml
-│       └── 017-create-materialized-view.yaml
-├── erd-diagram.drawio          # Diagram ERD (Draw.io)
-└── README.md                   # Ten plik
+│       ├── ...
+│       └── 022-seed-admin-user.yaml
+├── erd-diagram.drawio              # Diagram ERD (Draw.io)
+├── README.md                       # Ten plik (Local Development)
+└── README-GCP.md                   # GCP Production Deployment
 ```
 
 ## 🚀 Szybki start

@@ -1,5 +1,18 @@
 name: CD - Deploy to GCP
 
+# Deployment Flow:
+# 1. Build & Push (parallel):
+#    - Backend Docker image
+#    - Frontend Docker image
+#    - Liquibase Docker image (database migrations)
+# 2. Deploy Database:
+#    - Run Liquibase migrations via Kubernetes Job
+#    - Wait for migrations to complete (blocks app deployment)
+# 3. Deploy to GKE:
+#    - Deploy backend application
+#    - Deploy frontend application
+# 4. Notify deployment status
+
 on:
   push:
     branches:
@@ -89,6 +102,19 @@ jobs:
         working-directory: ./frontend
         run: |
           docker build \
+            --build-arg PUBLIC_API_BASE_URL=https://api.mkrew.pl/api/v1 \
+            --build-arg PUBLIC_SITE_URL=https://mkrew.pl \
+            --build-arg PUBLIC_ENV=production \
+            --build-arg PUBLIC_APP_VERSION=2.1.0 \
+            --build-arg PUBLIC_ENABLE_FAVORITES=true \
+            --build-arg PUBLIC_ENABLE_SCRAPER_STATUS=true \
+            --build-arg PUBLIC_ENABLE_ANALYTICS=false \
+            --build-arg PUBLIC_RECAPTCHA_SITE_KEY=${{ secrets.PUBLIC_RECAPTCHA_SITE_KEY }} \
+            --build-arg PUBLIC_GA_TRACKING_ID=${{ secrets.PUBLIC_GA_TRACKING_ID }} \
+            --build-arg PUBLIC_SENTRY_DSN=${{ secrets.PUBLIC_SENTRY_DSN }} \
+            --build-arg PUBLIC_SENTRY_ENVIRONMENT=production \
+            --build-arg PUBLIC_CACHE_DURATION=300000 \
+            --build-arg PUBLIC_API_TIMEOUT=30000 \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             .
@@ -98,10 +124,130 @@ jobs:
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
+  build-and-push-liquibase:
+    name: Build & Push Liquibase
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE_NAME: liquibase
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build Liquibase Docker image
+        working-directory: ./db
+        run: |
+          docker build \
+            -f Dockerfile.liquibase \
+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            .
+
+      - name: Push Liquibase Docker image
+        run: |
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+  deploy-database:
+    name: Deploy Database Migrations
+    runs-on: ubuntu-latest
+    needs: [build-and-push-liquibase]
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region=${{ env.GCP_REGION }} \
+            --project=${{ env.GCP_PROJECT_ID }}
+
+      - name: Delete previous migration job (if exists)
+        run: |
+          kubectl delete job liquibase-migration --ignore-not-found=true --namespace=default
+          echo "Waiting for job deletion to complete..."
+          sleep 5
+
+      - name: Deploy Liquibase migration job
+        run: |
+          kubectl apply -f k8s/liquibase-job.yml
+
+      - name: Wait for migration to complete
+        run: |
+          echo "⏳ Waiting for Liquibase migration to complete (timeout: 5 minutes)..."
+          kubectl wait --for=condition=complete --timeout=300s job/liquibase-migration --namespace=default
+
+      - name: Get migration logs
+        if: always()
+        run: |
+          echo "📜 Fetching migration logs..."
+          POD_NAME=$(kubectl get pods -l app=mkrew-liquibase -o jsonpath='{.items[0].metadata.name}' --namespace=default 2>/dev/null || echo "")
+          if [ -n "$POD_NAME" ]; then
+            echo "Pod: $POD_NAME"
+            echo ""
+            echo "=== Init Container Logs (Secret Fetching) ==="
+            kubectl logs $POD_NAME -c secret-init --namespace=default || echo "No init container logs available"
+            echo ""
+            echo "=== Liquibase Migration Logs ==="
+            kubectl logs $POD_NAME -c liquibase --namespace=default || echo "No liquibase logs available"
+            echo ""
+            echo "=== Cloud SQL Proxy Logs ==="
+            kubectl logs $POD_NAME -c cloud-sql-proxy --namespace=default || echo "No proxy logs available"
+          else
+            echo "⚠️ No Liquibase pod found"
+          fi
+
+      - name: Check migration job status
+        if: always()
+        run: |
+          echo "📊 Migration job status:"
+          kubectl get jobs liquibase-migration --namespace=default
+          echo ""
+          kubectl get pods -l app=mkrew-liquibase --namespace=default
+
+      - name: Migration Failed
+        if: failure()
+        run: |
+          echo "❌ Database migration failed!"
+          echo "Check the logs above for details."
+          exit 1
+
   deploy-to-gke:
     name: Deploy to GKE
     runs-on: ubuntu-latest
-    needs: [build-and-push-backend, build-and-push-frontend]
+    needs: [build-and-push-backend, build-and-push-frontend, deploy-database]
     permissions:
       contents: read
       id-token: write
@@ -153,19 +299,34 @@ jobs:
   notify-deployment:
     name: Notify Deployment Status
     runs-on: ubuntu-latest
-    needs: [deploy-to-gke]
+    needs: [deploy-database, deploy-to-gke]
     if: always()
 
     steps:
       - name: Deployment Success
-        if: needs.deploy-to-gke.result == 'success'
+        if: needs.deploy-to-gke.result == 'success' && needs.deploy-database.result == 'success'
         run: |
-          echo "✅ Deployment to GKE succeeded!"
-          echo "Backend: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }}"
-          echo "Frontend: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/frontend:${{ github.sha }}"
+          echo "✅ Full deployment to GKE succeeded!"
+          echo ""
+          echo "📦 Deployed Images:"
+          echo "  Database: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/liquibase:${{ github.sha }}"
+          echo "  Backend: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }}"
+          echo "  Frontend: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/frontend:${{ github.sha }}"
+          echo ""
+          echo "✅ Database migrations completed successfully"
+          echo "✅ Application deployed successfully"
 
-      - name: Deployment Failed
-        if: needs.deploy-to-gke.result == 'failure'
+      - name: Database Migration Failed
+        if: needs.deploy-database.result == 'failure'
         run: |
-          echo "❌ Deployment to GKE failed!"
+          echo "❌ Database migration failed!"
+          echo "Application deployment was skipped due to database migration failure."
+          exit 1
+
+      - name: Application Deployment Failed
+        if: needs.deploy-to-gke.result == 'failure' && needs.deploy-database.result == 'success'
+        run: |
+          echo "❌ Application deployment to GKE failed!"
+          echo "✅ Database migrations completed successfully"
+          echo "⚠️ Application deployment needs to be retried"
           exit 1
