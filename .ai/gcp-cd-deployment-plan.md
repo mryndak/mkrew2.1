@@ -24,7 +24,7 @@
 │   Frontend   │          │   Backend    │
 │  (Astro SSR) │          │(Spring Boot) │
 │   GKE Pods   │          │   GKE Pods   │
-│   Replicas:2 │          │   Replicas:2 │
+│   Replicas:1 │          │   Replicas:1 │
 └──────────────┘          └───────┬──────┘
                                   │
                           ┌───────┴──────────┐
@@ -46,7 +46,7 @@
 #### Compute & Orchestration
 - **GKE Cluster**: Standard cluster z autoscalingiem
   - Node pool: e2-standard-2 (2 vCPU, 8GB RAM)
-  - Min nodes: 2, Max nodes: 6
+  - Min nodes: 1, Max nodes: 4
   - Auto-upgrade: enabled
   - Auto-repair: enabled
 
@@ -388,14 +388,14 @@ kubectl rollout undo deployment/mkrew-backend --to-revision=2
 
 ### 8.1 Oszacowanie Miesięcznych Kosztów (Development)
 
-- **GKE Cluster**: ~$73/miesiąc (2x e2-standard-2)
+- **GKE Cluster**: ~$37/miesiąc (1x e2-standard-2)
 - **Cloud SQL**: ~$15/miesiąc (db-f1-micro)
 - **Load Balancer**: ~$18/miesiąc
 - **Artifact Registry**: ~$0.10/GB/miesiąc
 - **Cloud Logging**: ~$0.50/GB
 - **Cloud Monitoring**: Darmowe do 150MB/miesiąc
 
-**Łączne koszty (dev)**: ~$110-130/miesiąc
+**Łączne koszty (dev)**: ~$75-85/miesiąc (~300-350 PLN/miesiąc)
 
 ### 8.2 Optymalizacja Kosztów
 

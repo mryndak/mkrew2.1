@@ -7,7 +7,7 @@ metadata:
     app: mkrew-frontend
     tier: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mkrew-frontend

@@ -59,11 +59,11 @@ gcloud artifacts repositories create mkrew \
 ```bash
 gcloud container clusters create $CLUSTER_NAME \
   --zone=$ZONE \
-  --num-nodes=2 \
+  --num-nodes=1 \
   --machine-type=e2-standard-2 \
   --enable-autoscaling \
-  --min-nodes=2 \
-  --max-nodes=6 \
+  --min-nodes=1 \
+  --max-nodes=4 \
   --enable-autorepair \
   --enable-autoupgrade \
   --workload-pool=$PROJECT_ID.svc.id.goog \

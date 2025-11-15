@@ -55,7 +55,7 @@ Frontend   Backend ──> Cloud SQL Proxy ──> Cloud SQL
 - ✅ **Zero-downtime deployment** - Rolling updates
 - ✅ **Auto-scaling** - HPA dla podów, cluster autoscaling
 - ✅ **Health checks** - Liveness & readiness probes
-- ✅ **Multi-replica** - 2 repliki dla HA
+- ✅ **Single replica** - Optymalizacja kosztów dla początkowej fazy projektu (niski ruch)
 
 ### Security
 - ✅ **Workload Identity** - Keyless authentication
@@ -78,10 +78,10 @@ Frontend   Backend ──> Cloud SQL Proxy ──> Cloud SQL
 
 | Komponent | Technologia | Repliki | Resources |
 |-----------|-------------|---------|-----------|
-| Frontend | Astro + Node 20 | 2 | 128Mi-256Mi / 100m-200m CPU |
-| Backend | Spring Boot + Java 21 | 2 | 512Mi-1Gi / 250m-500m CPU |
+| Frontend | Astro + Node 20 | 1 | 128Mi-256Mi / 100m-200m CPU |
+| Backend | Spring Boot + Java 21 | 1 | 512Mi-1Gi / 250m-500m CPU |
 | Database | Cloud SQL PostgreSQL 15 | 1 (managed) | db-f1-micro (dev) |
-| Proxy | Cloud SQL Proxy | 2 (sidecar) | 64Mi-128Mi / 50m-100m CPU |
+| Proxy | Cloud SQL Proxy | 1 (sidecar) | 64Mi-128Mi / 50m-100m CPU |
 
 ## 🔧 GitHub Secrets (Wymagane)
 
@@ -131,17 +131,18 @@ kubectl describe managedcertificate mkrew-cert
 
 | Service | Monthly Cost (PLN) |
 |---------|-------------------|
-| GKE (2x e2-standard-2) | ~300 PLN |
+| GKE (1x e2-standard-2) | ~150 PLN |
 | Cloud SQL (db-f1-micro) | ~60 PLN |
 | Load Balancer | ~75 PLN |
 | Artifact Registry | ~5 PLN |
 | Logging & Monitoring | ~20 PLN |
-| **Total** | **~460 PLN/month** |
+| **Total** | **~310 PLN/month** |
 
 ### Cost Optimization
-- Użyj Preemptible VMs (-60% cost)
-- Skonfiguruj autoscaling do 0 w nocy (-30% cost)
-- Użyj GKE Autopilot (pay per pod)
+- ✅ Używa 1 repliki dla minimalnego ruchu
+- Użyj Preemptible VMs (-60% cost) - może obniżyć do ~150 PLN/month
+- Skonfiguruj autoscaling do 0 w nocy (opcjonalne)
+- Użyj GKE Autopilot (pay per pod) - może być tańsze dla bardzo małego ruchu
 - Skonfiguruj log retention (7 days)
 
 ## 🔄 CI/CD Pipeline
