@@ -66,11 +66,32 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
+ * Get API base URL from runtime environment
+ * For SSR, we check both client-side (import.meta.env) and server-side (process.env)
+ */
+function getApiBaseUrl(): string {
+  // In browser, use the PUBLIC_ prefixed variable
+  if (typeof window !== 'undefined') {
+    // Try to get from window object (injected by server)
+    if (window.__ENV__?.PUBLIC_API_BASE_URL) {
+      return window.__ENV__.PUBLIC_API_BASE_URL;
+    }
+  }
+
+  // On server or fallback, use process.env or import.meta.env
+  return (
+    (typeof process !== 'undefined' && process.env?.PUBLIC_API_BASE_URL) ||
+    import.meta.env.PUBLIC_API_BASE_URL ||
+    'http://localhost:8080/api/v1'
+  );
+}
+
+/**
  * Axios client dla komunikacji z backend API
  * Bazowy URL pobierany z zmiennej środowiskowej PUBLIC_API_BASE_URL
  */
 export const apiClient = axios.create({
-  baseURL: import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1',
+  baseURL: getApiBaseUrl(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

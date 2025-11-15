@@ -74,15 +74,31 @@ Non-sensitive environment variables:
 - `DB_PORT`: 5432
 - `DB_NAME`: mkrew
 
-#### `secrets.yml.template`
-Template for sensitive data (DO NOT commit actual secrets):
+#### Secrets Management (GCP Secret Manager + Init Container)
+
+**Sekrety są automatycznie zarządzane przez:**
+1. **GCP Secret Manager** - przechowuje wrażliwe dane
+2. **Init Container** - pobiera sekrety przed startem aplikacji
+3. **Kubernetes Secret** - tworzone dynamicznie przy każdym deployment
+
+**Automatycznie zarządzane sekrety:**
 - `DB_USERNAME`: Cloud SQL user
 - `DB_PASSWORD`: Cloud SQL password
 - `CLOUD_SQL_CONNECTION_NAME`: Instance connection string
-- `PUBLIC_API_BASE_URL`: Backend API URL
-- `PUBLIC_RECAPTCHA_SITE_KEY`: reCAPTCHA key (optional)
+- `JWT_SECRET`: Klucz do podpisywania JWT tokens
+- `SENDGRID_API_KEY`: SendGrid API key (opcjonalny)
 
-**Uwaga:** Użyj Google Secret Manager w production zamiast Kubernetes Secrets.
+**Setup:**
+```bash
+# Użyj skryptu do utworzenia sekretów w GCP Secret Manager
+chmod +x ../scripts/setup-gcp-secrets.sh
+../scripts/setup-gcp-secrets.sh
+```
+
+**RBAC dla init container:**
+- ServiceAccount: `mkrew-backend-sa`
+- Role: `secret-manager` (do tworzenia Kubernetes Secrets)
+- Workload Identity: połączony z GCP Service Account
 
 ### Networking
 
@@ -113,30 +129,35 @@ Template for sensitive data (DO NOT commit actual secrets):
 ### Quick Deploy
 
 ```bash
-# 1. Set environment variables
-export PROJECT_ID="your-project-id"
-export REGION="europe-central2"
+# 1. Setup GCP Secrets in Secret Manager
+cd scripts/
+chmod +x setup-gcp-secrets.sh
+./setup-gcp-secrets.sh
+cd ../k8s/
 
-# 2. Get Cloud SQL connection name
-export CLOUD_SQL_CONNECTION=$(gcloud sql instances describe mkrew-db --format='value(connectionName)')
+# 2. Grant permissions to Service Account
+export PROJECT_ID="mkrew-478317"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:mkrew-backend@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
 
-# 3. Create ConfigMap
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:mkrew-backend@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/cloudsql.client"
+
+# 3. Setup Workload Identity
+gcloud iam service-accounts add-iam-policy-binding \
+  mkrew-backend@$PROJECT_ID.iam.gserviceaccount.com \
+  --role roles/iam.workloadIdentityUser \
+  --member "serviceAccount:$PROJECT_ID.svc.id.goog[default/mkrew-backend-sa]"
+
+# 4. Apply RBAC (for init container)
+kubectl apply -f rbac.yml
+
+# 5. Create ConfigMap
 kubectl apply -f configmap.yml
 
-# 4. Create Secrets (replace with actual values)
-kubectl create secret generic mkrew-secrets \
-  --from-literal=DB_USERNAME=mkrew-user \
-  --from-literal=DB_PASSWORD='YOUR_PASSWORD' \
-  --from-literal=CLOUD_SQL_CONNECTION_NAME=$CLOUD_SQL_CONNECTION \
-  --from-literal=PUBLIC_API_BASE_URL=https://api.mkrew.pl/api/v1
-
-# 5. Update image paths in deployments (replace PROJECT_ID and REGION)
-sed -i "s/PROJECT_ID/$PROJECT_ID/g" backend-deployment.yml
-sed -i "s/REGION/$REGION/g" backend-deployment.yml
-sed -i "s/PROJECT_ID/$PROJECT_ID/g" frontend-deployment.yml
-sed -i "s/REGION/$REGION/g" frontend-deployment.yml
-
-# 6. Deploy backend
+# 6. Deploy backend (init container will create secrets automatically)
 kubectl apply -f backend-deployment.yml
 kubectl apply -f backend-service.yml
 
@@ -152,6 +173,8 @@ kubectl apply -f ingress.yml
 
 # 10. Verify deployment
 kubectl get pods
+kubectl logs -f deployment/mkrew-backend -c secret-init  # Check init container
+kubectl logs -f deployment/mkrew-backend -c backend       # Check application
 kubectl get services
 kubectl get ingress
 ```
@@ -317,23 +340,71 @@ kubectl get events --field-selector involvedObject.name=<pod-name>
 - CrashLoopBackOff: Sprawdź logi aplikacji
 - Pending: Sprawdź resource requests (GKE Autopilot może ograniczać)
 
+### Init container nie może pobrać sekretów
+
+```bash
+# Check init container logs
+kubectl logs <backend-pod> -c secret-init
+
+# Verify GCP Secret Manager permissions
+gcloud projects get-iam-policy mkrew-478317 \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:mkrew-backend@mkrew-478317.iam.gserviceaccount.com"
+```
+
+**Fix:**
+```bash
+# Grant Secret Manager access
+gcloud projects add-iam-policy-binding mkrew-478317 \
+  --member="serviceAccount:mkrew-backend@mkrew-478317.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+
+# Verify secrets exist in Secret Manager
+gcloud secrets list --project=mkrew-478317
+```
+
+### Init container nie może utworzyć Kubernetes Secret
+
+```bash
+# Check RBAC
+kubectl get role secret-manager
+kubectl get rolebinding mkrew-backend-secret-manager
+kubectl describe pod <backend-pod>
+```
+
+**Fix:**
+```bash
+# Apply RBAC
+kubectl apply -f rbac.yml
+
+# Delete pod to retry (deployment will recreate it)
+kubectl delete pod <backend-pod>
+```
+
 ### Brak połączenia z Cloud SQL
 
 ```bash
 # Check Cloud SQL Proxy logs
 kubectl logs <backend-pod> -c cloud-sql-proxy
 
-# Verify connection name
-echo $CLOUD_SQL_CONNECTION_NAME
+# Verify Kubernetes Secret
+kubectl get secret mkrew-secrets
+kubectl get secret mkrew-secrets -o jsonpath='{.data.CLOUD_SQL_CONNECTION_NAME}' | base64 -d
 
 # Check Workload Identity
 kubectl describe serviceaccount mkrew-backend-sa
 ```
 
 **Fix:**
-- Verify `CLOUD_SQL_CONNECTION_NAME` secret
+- Verify `CLOUD_SQL_CONNECTION_NAME` in GCP Secret Manager
 - Check Workload Identity binding
 - Verify Cloud SQL instance is running
+- Grant Cloud SQL Client role:
+```bash
+gcloud projects add-iam-policy-binding mkrew-478317 \
+  --member="serviceAccount:mkrew-backend@mkrew-478317.iam.gserviceaccount.com" \
+  --role="roles/cloudsql.client"
+```
 
 ### Ingress nie działa
 

@@ -19,6 +19,50 @@ spec:
         tier: backend
     spec:
       serviceAccountName: mkrew-backend-sa
+
+      # Init container - pobiera sekrety z GCP Secret Manager i tworzy Kubernetes Secret
+      initContainers:
+      - name: secret-init
+        image: google/cloud-sdk:alpine
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          echo "🔐 Fetching secrets from GCP Secret Manager..."
+
+          # Pobierz sekrety z GCP Secret Manager
+          DB_USERNAME=$(gcloud secrets versions access latest --secret="mkrew-db-username" --project=mkrew-478317)
+          DB_PASSWORD=$(gcloud secrets versions access latest --secret="mkrew-db-password" --project=mkrew-478317)
+          CLOUD_SQL_CONNECTION_NAME=$(gcloud secrets versions access latest --secret="mkrew-cloud-sql-connection" --project=mkrew-478317)
+          JWT_SECRET=$(gcloud secrets versions access latest --secret="mkrew-jwt-secret" --project=mkrew-478317 || echo "VerySecureSecretKeyForJWTTokenSigningThatIsAtLeast256BitsLongForHS256Algorithm")
+          SENDGRID_API_KEY=$(gcloud secrets versions access latest --secret="mkrew-sendgrid-api-key" --project=mkrew-478317 || echo "")
+
+          # Zainstaluj kubectl jeśli nie ma
+          if ! command -v kubectl &> /dev/null; then
+            echo "Installing kubectl..."
+            gcloud components install kubectl --quiet
+          fi
+
+          # Utwórz lub zaktualizuj Kubernetes Secret
+          echo "📝 Creating/updating Kubernetes Secret..."
+          kubectl create secret generic mkrew-secrets \
+            --from-literal=DB_USERNAME="$DB_USERNAME" \
+            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+            --from-literal=CLOUD_SQL_CONNECTION_NAME="$CLOUD_SQL_CONNECTION_NAME" \
+            --from-literal=JWT_SECRET="$JWT_SECRET" \
+            --from-literal=SENDGRID_API_KEY="$SENDGRID_API_KEY" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "✅ Secrets successfully loaded!"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+
       containers:
       - name: backend
         image: europe-central2-docker.pkg.dev/mkrew-478317/mkrew/backend:latest
@@ -63,6 +107,16 @@ spec:
             secretKeyRef:
               name: mkrew-secrets
               key: DB_PASSWORD
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: JWT_SECRET
+        - name: SENDGRID_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mkrew-secrets
+              key: SENDGRID_API_KEY
         resources:
           requests:
             memory: "512Mi"

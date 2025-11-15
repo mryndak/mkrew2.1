@@ -24,6 +24,17 @@ const {
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+
+		<!-- Inject runtime environment variables for client-side access -->
+		<script is:inline define:vars={{
+			PUBLIC_API_BASE_URL: import.meta.env.PUBLIC_API_BASE_URL
+		}}>
+			window.__ENV__ = window.__ENV__ || {};
+			window.__ENV__.PUBLIC_API_BASE_URL = PUBLIC_API_BASE_URL;
+		</script>
+
 		<slot name="head" />
 	</head>
 	<body class="flex flex-col min-h-screen">

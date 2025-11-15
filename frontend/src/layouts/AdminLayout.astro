@@ -102,6 +102,15 @@ const currentPath = Astro.url.pathname;
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     <title>{title}</title>
+
+    <!-- Inject runtime environment variables for client-side access -->
+    <script is:inline define:vars={{
+      PUBLIC_API_BASE_URL: import.meta.env.PUBLIC_API_BASE_URL
+    }}>
+      window.__ENV__ = window.__ENV__ || {};
+      window.__ENV__.PUBLIC_API_BASE_URL = PUBLIC_API_BASE_URL;
+    </script>
+
     <slot name="head" />
   </head>
   <body class="flex flex-col min-h-screen bg-gray-50">
