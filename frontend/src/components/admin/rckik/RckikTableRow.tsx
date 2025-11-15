@@ -56,10 +56,10 @@ export function RckikTableRow({ rckik, onEdit, onDelete }: RckikTableRowProps) {
   };
 
   return (
-    <tr className="hover:bg-gray-50 transition-colors border-b border-gray-200">
+    <tr className="hover:bg-gray-50 transition-colors border-b border-gray-200" data-test-id="admin-rckik-table-row">
       {/* Nazwa */}
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">{rckik.name}</div>
+        <div className="text-sm font-medium text-gray-900" data-test-id="admin-rckik-row-name">{rckik.name}</div>
         {rckik.aliases && rckik.aliases.length > 0 && (
           <div className="text-xs text-gray-500">
             Aliasy: {rckik.aliases.join(', ')}
@@ -69,14 +69,14 @@ export function RckikTableRow({ rckik, onEdit, onDelete }: RckikTableRowProps) {
 
       {/* Kod */}
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800" data-test-id="admin-rckik-row-code">
           {rckik.code}
         </span>
       </td>
 
       {/* Miasto */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        {rckik.city}
+        <span data-test-id="admin-rckik-row-city">{rckik.city}</span>
         {rckik.address && (
           <div className="text-xs text-gray-500 mt-0.5">{rckik.address}</div>
         )}
@@ -85,7 +85,7 @@ export function RckikTableRow({ rckik, onEdit, onDelete }: RckikTableRowProps) {
       {/* Status */}
       <td className="px-6 py-4 whitespace-nowrap">
         {rckik.active ? (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" data-test-id="admin-rckik-row-status-active">
             <svg
               className="w-3 h-3 mr-1"
               fill="currentColor"
@@ -101,7 +101,7 @@ export function RckikTableRow({ rckik, onEdit, onDelete }: RckikTableRowProps) {
             Aktywne
           </span>
         ) : (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" data-test-id="admin-rckik-row-status-inactive">
             <svg
               className="w-3 h-3 mr-1"
               fill="currentColor"
@@ -128,6 +128,7 @@ export function RckikTableRow({ rckik, onEdit, onDelete }: RckikTableRowProps) {
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
         {/* Przycisk Edytuj */}
         <button
+          data-test-id="admin-rckik-edit-button"
           onClick={handleEdit}
           className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
           aria-label={`Edytuj centrum ${rckik.name}`}
@@ -151,6 +152,7 @@ export function RckikTableRow({ rckik, onEdit, onDelete }: RckikTableRowProps) {
 
         {/* Przycisk Usuń */}
         <button
+          data-test-id="admin-rckik-delete-button"
           onClick={handleDelete}
           className="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
           aria-label={`Usuń centrum ${rckik.name}`}

@@ -60,16 +60,17 @@ export function RckikManagementView({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-test-id="admin-rckik-management-view">
       {/* Header z przyciskiem "Dodaj nowe centrum" */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Zarządzanie centrami RCKiK</h1>
+          <h1 className="text-2xl font-bold text-gray-900" data-test-id="admin-rckik-page-title">Zarządzanie centrami RCKiK</h1>
           <p className="mt-1 text-sm text-gray-500">
             Zarządzaj kanoniczną listą Regionalnych Centrów Krwiodawstwa i Krwiolecznictwa
           </p>
         </div>
         <button
+          data-test-id="admin-rckik-add-button"
           onClick={actions.openCreateModal}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
         >
@@ -100,7 +101,7 @@ export function RckikManagementView({
 
       {/* Error State */}
       {state.error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4" data-test-id="admin-rckik-error-state">
           <div className="flex items-start">
             <svg
               className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0"
@@ -116,8 +117,9 @@ export function RckikManagementView({
             </svg>
             <div className="flex-1">
               <h3 className="text-sm font-medium text-red-800">Błąd ładowania danych</h3>
-              <p className="mt-1 text-sm text-red-700">{state.error}</p>
+              <p className="mt-1 text-sm text-red-700" data-test-id="admin-rckik-error-message">{state.error}</p>
               <button
+                data-test-id="admin-rckik-retry-button"
                 onClick={actions.refreshRckikList}
                 className="mt-3 inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
               >

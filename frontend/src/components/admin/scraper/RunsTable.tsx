@@ -37,7 +37,7 @@ export function RunsTable({ runs, isLoading, onViewDetails }: RunsTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" data-test-id="admin-scraper-runs-table">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
@@ -91,9 +91,9 @@ export function RunsTable({ runs, isLoading, onViewDetails }: RunsTableProps) {
             const successRateColor = getSuccessRateColor(successRate);
 
             return (
-              <tr key={run.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={run.id} className="hover:bg-gray-50 transition-colors" data-test-id="admin-scraper-run-row">
                 {/* ID */}
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-test-id="admin-scraper-run-id">
                   #{run.id}
                 </td>
 
@@ -172,6 +172,7 @@ export function RunsTable({ runs, isLoading, onViewDetails }: RunsTableProps) {
                 {/* Actions */}
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
+                    data-test-id="admin-scraper-run-details-button"
                     onClick={() => onViewDetails(run.id)}
                     className="text-primary-600 hover:text-primary-900 font-medium"
                   >
@@ -249,7 +250,7 @@ function LoadingSkeleton() {
  */
 function EmptyState() {
   return (
-    <div className="text-center py-12">
+    <div className="text-center py-12" data-test-id="admin-scraper-runs-empty-state">
       <svg
         className="mx-auto h-12 w-12 text-gray-400"
         fill="none"
