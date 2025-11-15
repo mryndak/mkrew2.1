@@ -56,6 +56,7 @@ export function StatsCard({
       className={cardClasses}
       onClick={hasAction ? handleClick : undefined}
       type={hasAction ? 'button' : undefined}
+      data-test-id="stats-card"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">

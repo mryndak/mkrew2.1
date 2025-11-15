@@ -162,7 +162,7 @@ export function DonationsToolbar({
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4" data-test-id="donations-toolbar">
       {/* Top row: Add button + Export/Sort */}
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
         {/* Left: Add button */}
@@ -170,6 +170,7 @@ export function DonationsToolbar({
           variant="primary"
           onClick={onAddDonation}
           className="w-full sm:w-auto"
+          data-test-id="donations-toolbar-add-button"
         >
           <svg
             className="w-5 h-5 mr-2"
@@ -196,6 +197,7 @@ export function DonationsToolbar({
             onChange={(e) => handleSortChange(e.target.value)}
             className="text-sm"
             wrapperClassName="flex-1 sm:w-48"
+            data-test-id="donations-toolbar-sort-select"
           />
 
           {/* Export dropdown */}
@@ -204,6 +206,7 @@ export function DonationsToolbar({
               variant="outline"
               onClick={() => setShowExportMenu(!showExportMenu)}
               className="whitespace-nowrap"
+              data-test-id="donations-toolbar-export-button"
             >
               <svg
                 className="w-5 h-5 mr-2"
@@ -230,6 +233,7 @@ export function DonationsToolbar({
                     setShowExportMenu(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  data-test-id="donations-toolbar-export-csv-button"
                 >
                   Eksportuj do CSV
                 </button>
@@ -239,6 +243,7 @@ export function DonationsToolbar({
                     setShowExportMenu(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  data-test-id="donations-toolbar-export-json-button"
                 >
                   Eksportuj do JSON
                 </button>
@@ -258,6 +263,7 @@ export function DonationsToolbar({
           onChange={(e) => handleDateChange('fromDate', e.target.value)}
           max={today}
           className="text-sm"
+          data-test-id="donations-toolbar-filter-from-date"
         />
 
         {/* Date to */}
@@ -268,6 +274,7 @@ export function DonationsToolbar({
           onChange={(e) => handleDateChange('toDate', e.target.value)}
           max={today}
           className="text-sm"
+          data-test-id="donations-toolbar-filter-to-date"
         />
 
         {/* Donation type */}
@@ -277,6 +284,7 @@ export function DonationsToolbar({
           value={filters.donationType || ''}
           onChange={(e) => handleDonationTypeChange(e.target.value)}
           className="text-sm"
+          data-test-id="donations-toolbar-filter-type"
         />
 
         {/* RCKiK center */}
@@ -286,6 +294,7 @@ export function DonationsToolbar({
           value={filters.rckikId?.toString() || ''}
           onChange={(e) => handleRckikChange(e.target.value)}
           className="text-sm"
+          data-test-id="donations-toolbar-filter-rckik"
         />
       </div>
 
@@ -295,6 +304,7 @@ export function DonationsToolbar({
           <button
             onClick={handleClearFilters}
             className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors"
+            data-test-id="donations-toolbar-clear-filters-button"
           >
             Wyczyść filtry
           </button>
