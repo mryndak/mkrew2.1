@@ -20,6 +20,9 @@ export const formatTimestamp = (isoString: string | null | undefined): string =>
 
   try {
     const date = new Date(isoString);
+    if (isNaN(date.getTime())) {
+      return 'Data niedostępna';
+    }
     return date.toLocaleString('pl-PL', {
       day: '2-digit',
       month: '2-digit',
@@ -44,6 +47,9 @@ export const formatTimestamp = (isoString: string | null | undefined): string =>
 export const formatDate = (isoDate: string): string => {
   try {
     const date = new Date(isoDate);
+    if (isNaN(date.getTime())) {
+      return isoDate;
+    }
     return date.toLocaleDateString('pl-PL', {
       day: '2-digit',
       month: '2-digit',
@@ -65,7 +71,25 @@ export const formatDate = (isoDate: string): string => {
  */
 export const formatDateShort = (isoDate: string): string => {
   try {
-    const [, month, day] = isoDate.split('-');
+    if (!isoDate) return isoDate;
+
+    // Extract date part if timestamp includes time component
+    const datePart = isoDate.split('T')[0];
+    const parts = datePart.split('-');
+
+    if (parts.length !== 3) {
+      return isoDate;
+    }
+
+    const [year, month, day] = parts;
+
+    // Validate that parts look like a valid ISO date (YYYY-MM-DD)
+    if (!year || !month || !day ||
+        year.length !== 4 || month.length !== 2 || day.length !== 2 ||
+        isNaN(Number(year)) || isNaN(Number(month)) || isNaN(Number(day))) {
+      return isoDate;
+    }
+
     return `${day}.${month}`;
   } catch {
     return isoDate;
@@ -84,6 +108,9 @@ export const formatDateShort = (isoDate: string): string => {
 export const formatDateFull = (isoDate: string): string => {
   try {
     const date = new Date(isoDate);
+    if (isNaN(date.getTime())) {
+      return 'Data niedostępna';
+    }
     return date.toLocaleDateString('pl-PL', {
       day: '2-digit',
       month: 'long',
@@ -109,6 +136,9 @@ export const getTimeSinceLastUpdate = (isoString: string | null): string | null 
 
   try {
     const date = new Date(isoString);
+    if (isNaN(date.getTime())) {
+      return null;
+    }
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
