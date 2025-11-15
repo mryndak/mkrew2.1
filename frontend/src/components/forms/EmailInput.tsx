@@ -31,6 +31,7 @@ export const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
           ref={ref}
           type="email"
           id="email"
+          data-test-id="email-input"
           autoComplete="email"
           disabled={disabled}
           aria-invalid={!!error}
@@ -45,7 +46,7 @@ export const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
           placeholder="twoj@email.com"
           {...props}
         />
-        {error && <FieldError message={error} />}
+        {error && <FieldError message={error} data-test-id="email-input-error" />}
       </div>
     );
   }

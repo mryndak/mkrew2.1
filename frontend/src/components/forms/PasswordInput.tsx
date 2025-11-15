@@ -34,6 +34,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             ref={ref}
             type={showPassword ? 'text' : 'password'}
             id="password"
+            data-test-id="password-input"
             autoComplete="current-password"
             disabled={disabled}
             aria-invalid={!!error}
@@ -50,6 +51,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           />
           <button
             type="button"
+            data-test-id="password-toggle-visibility"
             onClick={() => setShowPassword(!showPassword)}
             disabled={disabled}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 disabled:opacity-50"
@@ -94,7 +96,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             )}
           </button>
         </div>
-        {error && <FieldError message={error} />}
+        {error && <FieldError message={error} data-test-id="password-input-error" />}
       </div>
     );
   }

@@ -32,7 +32,7 @@ export function Step2Form({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center" data-test-id="register-step2-header">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Dane osobowe
         </h2>
@@ -52,6 +52,7 @@ export function Step2Form({
         <input
           type="text"
           id="firstName"
+          data-test-id="register-first-name-input"
           value={formData.firstName}
           onChange={(e) => onChange('firstName', e.target.value)}
           autoComplete="given-name"
@@ -65,7 +66,7 @@ export function Step2Form({
           `}
           placeholder="Jan"
         />
-        {errors.firstName && <FieldError message={errors.firstName} />}
+        {errors.firstName && <FieldError message={errors.firstName} data-test-id="register-first-name-error" />}
       </div>
 
       {/* Last name field */}
@@ -79,6 +80,7 @@ export function Step2Form({
         <input
           type="text"
           id="lastName"
+          data-test-id="register-last-name-input"
           value={formData.lastName}
           onChange={(e) => onChange('lastName', e.target.value)}
           autoComplete="family-name"
@@ -92,7 +94,7 @@ export function Step2Form({
           `}
           placeholder="Kowalski"
         />
-        {errors.lastName && <FieldError message={errors.lastName} />}
+        {errors.lastName && <FieldError message={errors.lastName} data-test-id="register-last-name-error" />}
       </div>
 
       {/* Blood group select */}
@@ -107,6 +109,7 @@ export function Step2Form({
         {/* Previous button */}
         <button
           type="button"
+          data-test-id="register-step2-previous-button"
           onClick={onPrevious}
           className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium
             hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
@@ -118,6 +121,7 @@ export function Step2Form({
         {/* Next button */}
         <button
           type="button"
+          data-test-id="register-step2-next-button"
           onClick={onNext}
           className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-medium
             hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2

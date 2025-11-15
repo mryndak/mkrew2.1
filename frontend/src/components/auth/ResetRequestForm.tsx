@@ -86,6 +86,7 @@ export function ResetRequestForm({ className = '' }: ResetRequestFormProps) {
         <div
           role="alert"
           aria-live="polite"
+          data-test-id="reset-request-success-message"
           className="bg-green-50 border border-green-200 rounded-lg p-6"
         >
           <div className="flex items-start gap-3">
@@ -138,20 +139,23 @@ export function ResetRequestForm({ className = '' }: ResetRequestFormProps) {
 
   // Form state
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className={`space-y-4 ${className}`}>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className={`space-y-4 ${className}`} data-test-id="reset-request-form">
       {/* Global error message */}
-      {error && <ErrorMessage message={error} type="error" />}
+      {error && <div data-test-id="reset-request-error"><ErrorMessage message={error} type="error" /></div>}
 
       {/* Email field */}
-      <EmailInput
-        {...register('email')}
-        error={errors.email?.message}
-        disabled={isSubmitting}
-      />
+      <div data-test-id="reset-request-email-input">
+        <EmailInput
+          {...register('email')}
+          error={errors.email?.message}
+          disabled={isSubmitting}
+        />
+      </div>
 
       {/* Submit button */}
       <button
         type="submit"
+        data-test-id="reset-request-submit-button"
         disabled={isSubmitting}
         className={`
           w-full flex justify-center items-center gap-2 py-3 px-4

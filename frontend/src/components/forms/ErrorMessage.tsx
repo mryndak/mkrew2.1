@@ -8,11 +8,12 @@ import type { ErrorMessageProps } from '@/types/auth';
  *
  * @param message - Komunikat błędu
  * @param type - Typ komunikatu (error, warning, info) - wpływa na styling
+ * @param data-test-id - ID testowe dla automatycznych testów
  *
  * @example
- * <ErrorMessage message="Nieprawidłowy email lub hasło" type="error" />
+ * <ErrorMessage message="Nieprawidłowy email lub hasło" type="error" data-test-id="login-error" />
  */
-export function ErrorMessage({ message, type = 'error' }: ErrorMessageProps) {
+export function ErrorMessage({ message, type = 'error', 'data-test-id': dataTestId }: ErrorMessageProps & { 'data-test-id'?: string }) {
   const styles = {
     error: {
       bg: 'bg-red-50',
@@ -40,6 +41,7 @@ export function ErrorMessage({ message, type = 'error' }: ErrorMessageProps) {
     <div
       role="alert"
       aria-live="assertive"
+      data-test-id={dataTestId || 'error-message'}
       className={`rounded-lg border ${style.border} ${style.bg} p-4 mb-4`}
     >
       <div className="flex items-start gap-3">
