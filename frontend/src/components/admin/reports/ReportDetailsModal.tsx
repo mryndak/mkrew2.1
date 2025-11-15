@@ -203,17 +203,18 @@ export function ReportDetailsModal({
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="relative transform overflow-hidden rounded-lg bg-white shadow-xl transition-all w-full max-w-4xl max-h-[90vh] flex flex-col" data-test-id="admin-reports-details-modal">
           {/* Header */}
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
-                <h2 className="text-xl font-semibold text-gray-900" id="modal-title">
+                <h2 className="text-xl font-semibold text-gray-900" id="modal-title" data-test-id="admin-reports-modal-title">
                   Raport #{reportId}
                 </h2>
                 {report && <ReportStatusBadge status={report.status} size="medium" />}
               </div>
               <button
+                data-test-id="admin-reports-modal-close-button"
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 aria-label="Zamknij modal"
@@ -368,6 +369,7 @@ export function ReportDetailsModal({
                   </label>
                   <textarea
                     id="adminNotes"
+                    data-test-id="admin-reports-admin-notes-textarea"
                     {...register('adminNotes')}
                     rows={6}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
@@ -394,6 +396,7 @@ export function ReportDetailsModal({
                   </label>
                   <select
                     id="status"
+                    data-test-id="admin-reports-status-select"
                     {...register('status')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   >
@@ -456,6 +459,7 @@ export function ReportDetailsModal({
                       onClick={handleResolve}
                       loading={saving}
                       disabled={saving}
+                      data-test-id="admin-reports-resolve-button"
                     >
                       <svg
                         className="w-4 h-4 mr-1.5"
@@ -482,6 +486,7 @@ export function ReportDetailsModal({
                       onClick={handleReject}
                       loading={saving}
                       disabled={saving}
+                      data-test-id="admin-reports-reject-button"
                     >
                       <svg
                         className="w-4 h-4 mr-1.5"
@@ -504,7 +509,7 @@ export function ReportDetailsModal({
 
                 {/* Main Actions */}
                 <div className="flex items-center gap-2">
-                  <Button type="button" variant="ghost" size="medium" onClick={onClose}>
+                  <Button type="button" variant="ghost" size="medium" onClick={onClose} data-test-id="admin-reports-cancel-button">
                     Anuluj
                   </Button>
                   <Button
@@ -514,6 +519,7 @@ export function ReportDetailsModal({
                     onClick={handleSubmit(onSubmit)}
                     loading={saving}
                     disabled={!isDirty || saving || charsRemaining < 0}
+                    data-test-id="admin-reports-save-button"
                   >
                     Zapisz zmiany
                   </Button>

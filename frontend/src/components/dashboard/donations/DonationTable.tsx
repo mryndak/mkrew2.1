@@ -166,7 +166,7 @@ export function DonationTable({
   // Empty state
   if (!isLoading && donations.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-12">
+      <div className="bg-white rounded-lg border border-gray-200 p-12" data-test-id="donation-table-empty-state">
         <div className="text-center">
           <svg
             className="mx-auto h-12 w-12 text-gray-400"
@@ -191,11 +191,11 @@ export function DonationTable({
           </p>
           <div className="mt-6">
             {hasFilters ? (
-              <Button variant="outline" onClick={onClearFilters}>
+              <Button variant="outline" onClick={onClearFilters} data-test-id="donation-table-clear-filters-button">
                 Wyczyść filtry
               </Button>
             ) : (
-              <Button variant="primary" onClick={() => onEdit(0)}>
+              <Button variant="primary" onClick={() => onEdit(0)} data-test-id="donation-table-add-first-button">
                 Dodaj pierwszą donację
               </Button>
             )}
@@ -206,7 +206,7 @@ export function DonationTable({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden" data-test-id="donation-table">
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -282,7 +282,11 @@ export function DonationTable({
               const typeBadge = getDonationTypeBadge(donation.donationType);
 
               return (
-                <tr key={donation.id} className="hover:bg-gray-50 transition-colors" data-testid={`donation-row-${donation.id}`}>
+                <tr
+                  key={donation.id}
+                  className="hover:bg-gray-50 transition-colors"
+                  data-test-id={`donation-table-row-${donation.id}`}
+                >
                   {/* Data */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {formatDate(donation.donationDate)}
@@ -337,7 +341,7 @@ export function DonationTable({
                         size="small"
                         onClick={() => onEdit(donation.id)}
                         className="text-primary-600 hover:text-primary-700"
-                        data-testid={`edit-donation-${donation.id}`}
+                        data-test-id={`donation-table-edit-button-${donation.id}`}
                       >
                         Edytuj
                       </Button>
@@ -346,7 +350,7 @@ export function DonationTable({
                         size="small"
                         onClick={() => onDelete(donation.id)}
                         className="text-red-600 hover:text-red-700"
-                        data-testid={`delete-donation-${donation.id}`}
+                        data-test-id={`donation-table-delete-button-${donation.id}`}
                       >
                         Usuń
                       </Button>
@@ -361,7 +365,7 @@ export function DonationTable({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200" data-test-id="donation-table-pagination">
           <div className="flex items-center justify-between">
             {/* Info */}
             <div className="text-sm text-gray-700">
@@ -379,7 +383,7 @@ export function DonationTable({
                 size="small"
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 0}
-                data-testid="pagination-previous"
+                data-test-id="donation-table-prev-button"
               >
                 Poprzednia
               </Button>
@@ -400,6 +404,7 @@ export function DonationTable({
                     variant={pageNum === currentPage ? 'primary' : 'outline'}
                     size="small"
                     onClick={() => onPageChange(pageNum)}
+                    data-test-id={`donation-table-page-button-${pageNum + 1}`}
                   >
                     {pageNum + 1}
                   </Button>
@@ -412,7 +417,7 @@ export function DonationTable({
                 size="small"
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages - 1}
-                data-testid="pagination-next"
+                data-test-id="donation-table-next-button"
               >
                 Następna
               </Button>

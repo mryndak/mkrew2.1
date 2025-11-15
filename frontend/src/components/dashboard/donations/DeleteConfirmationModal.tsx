@@ -84,6 +84,7 @@ export function DeleteConfirmationModal({
       showCloseButton={!isDeleting}
       closeOnOverlayClick={!isDeleting}
       closeOnEsc={!isDeleting}
+      data-test-id="delete-confirmation-modal"
     >
       <div className="text-center">
         {/* Warning icon */}
@@ -156,7 +157,7 @@ export function DeleteConfirmationModal({
             onClick={onClose}
             disabled={isDeleting}
             className="flex-1"
-            data-testid="delete-modal-cancel"
+            data-test-id="delete-confirmation-cancel-button"
           >
             Anuluj
           </Button>
@@ -165,7 +166,7 @@ export function DeleteConfirmationModal({
             loading={isDeleting}
             disabled={isDeleting}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white focus:ring-red-500"
-            data-testid="delete-modal-confirm"
+            data-test-id="delete-confirmation-delete-button"
           >
             Usuń
           </Button>

@@ -41,22 +41,22 @@ export class DonationFormModal extends BasePage {
     super(page);
 
     // Modal
-    this.modal = page.locator('[role="dialog"]');
+    this.modal = this.getByTestId('donation-form-modal');
     this.modalTitle = this.modal.locator('h2, h3').first();
 
     // Form fields
-    this.rckikInput = this.getByTestId('donation-form-rckik');
-    this.dateInput = this.getByTestId('donation-form-date');
-    this.quantityInput = this.getByTestId('donation-form-quantity');
-    this.typeSelect = this.getByTestId('donation-form-type');
-    this.notesTextarea = this.getByTestId('donation-form-notes');
+    this.rckikInput = this.getByTestId('donation-form-rckik-autocomplete');
+    this.dateInput = this.getByTestId('donation-form-date-input');
+    this.quantityInput = this.getByTestId('donation-form-quantity-input');
+    this.typeSelect = this.getByTestId('donation-form-type-select');
+    this.notesTextarea = this.getByTestId('donation-form-notes-textarea');
 
     // Buttons
-    this.cancelButton = this.getByTestId('donation-form-cancel');
-    this.submitButton = this.getByTestId('donation-form-submit');
+    this.cancelButton = this.getByTestId('donation-form-cancel-button');
+    this.submitButton = this.getByTestId('donation-form-submit-button');
 
     // Validation
-    this.warningBanner = page.locator('.bg-yellow-50').filter({ hasText: '56 dni' });
+    this.warningBanner = this.getByTestId('donation-form-56-day-warning');
     this.errorMessages = page.locator('[role="alert"]');
   }
 

@@ -63,9 +63,9 @@ export function NotificationsWidget({
   });
 
   return (
-    <section className="bg-white rounded-lg border border-gray-200 p-6">
+    <section className="bg-white rounded-lg border border-gray-200 p-6" data-test-id="notifications-widget">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4" data-test-id="notifications-widget-header">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
           <svg
             className="w-6 h-6 text-primary-600"
@@ -83,7 +83,7 @@ export function NotificationsWidget({
           </svg>
           Powiadomienia
           {unreadCount > 0 && (
-            <Badge variant="error" size="small">
+            <Badge variant="error" size="small" data-test-id="notifications-widget-badge">
               {unreadCount}
             </Badge>
           )}
@@ -92,6 +92,7 @@ export function NotificationsWidget({
           <a
             href="/dashboard/notifications"
             className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+            data-test-id="notifications-widget-view-all-link"
           >
             Zobacz wszystkie →
           </a>
@@ -100,7 +101,7 @@ export function NotificationsWidget({
 
       {/* Content */}
       {sortedNotifications.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-3" data-test-id="notifications-widget-list">
           {sortedNotifications.slice(0, 5).map((notification) => (
             <NotificationItem
               key={notification.id}
@@ -111,7 +112,7 @@ export function NotificationsWidget({
         </div>
       ) : (
         // Empty state
-        <div className="text-center py-8">
+        <div className="text-center py-8" data-test-id="notifications-widget-empty-state">
           <div className="mb-4 text-gray-300">
             <svg
               className="w-16 h-16 mx-auto"

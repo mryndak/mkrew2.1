@@ -34,7 +34,7 @@ export function RecentDonationsTimeline({
   };
 
   return (
-    <section className="bg-white rounded-lg border border-gray-200 p-6">
+    <section className="bg-white rounded-lg border border-gray-200 p-6" data-test-id="recent-donations-timeline">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
@@ -58,6 +58,7 @@ export function RecentDonationsTimeline({
           <a
             href="/dashboard/donations"
             className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
+            data-test-id="recent-donations-view-all-link"
           >
             Zobacz wszystkie →
           </a>
@@ -77,7 +78,7 @@ export function RecentDonationsTimeline({
         </div>
       ) : (
         // Empty state
-        <div className="text-center py-8">
+        <div className="text-center py-8" data-test-id="recent-donations-empty-state">
           <div className="mb-4 text-gray-300">
             <svg
               className="w-16 h-16 mx-auto"
@@ -104,6 +105,7 @@ export function RecentDonationsTimeline({
           <a
             href="/dashboard/donations"
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+            data-test-id="recent-donations-add-first-button"
           >
             <svg
               className="w-5 h-5"

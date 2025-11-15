@@ -28,7 +28,7 @@ export class BasePage {
    * Get element by test ID
    */
   getByTestId(testId: string): Locator {
-    return this.page.locator(`[data-testid="${testId}"]`);
+    return this.page.locator(`[data-test-id="${testId}"]`);
   }
 
   /**

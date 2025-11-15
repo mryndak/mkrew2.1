@@ -57,33 +57,33 @@ export class DonationsPage extends BasePage {
 
     // Header & Statistics
     this.pageTitle = page.locator('h1').filter({ hasText: 'Moje donacje' });
-    this.statsTotalDonations = page.locator('text=Liczba donacji').locator('..');
-    this.statsTotalQuantity = page.locator('text=Oddana krew').locator('..');
-    this.statsLastDonation = page.locator('text=Ostatnia donacja').locator('..');
-    this.statsNextEligible = page.locator('text=Następna możliwa').locator('..');
+    this.statsTotalDonations = this.getByTestId('donations-stats-total-count');
+    this.statsTotalQuantity = this.getByTestId('donations-stats-total-ml');
+    this.statsLastDonation = this.getByTestId('donations-stats-last-donation');
+    this.statsNextEligible = this.getByTestId('donations-stats-next-eligible');
 
     // Toolbar - Actions
-    this.addDonationButton = this.getByTestId('add-donation-button');
-    this.sortSelect = this.getByTestId('sort-select');
-    this.exportButton = this.getByTestId('export-button');
-    this.exportMenu = this.getByTestId('export-menu');
-    this.exportCsvButton = this.getByTestId('export-csv-button');
-    this.exportJsonButton = this.getByTestId('export-json-button');
+    this.addDonationButton = this.getByTestId('donations-toolbar-add-button');
+    this.sortSelect = this.getByTestId('donations-toolbar-sort-select');
+    this.exportButton = this.getByTestId('donations-toolbar-export-button');
+    this.exportMenu = page.locator('[data-test-id*="export"]').filter({ hasText: 'Eksportuj do' });
+    this.exportCsvButton = this.getByTestId('donations-toolbar-export-csv-button');
+    this.exportJsonButton = this.getByTestId('donations-toolbar-export-json-button');
 
     // Toolbar - Filters
-    this.filterDateFrom = this.getByTestId('filter-date-from');
-    this.filterDateTo = this.getByTestId('filter-date-to');
-    this.filterDonationType = this.getByTestId('filter-donation-type');
-    this.filterRckik = this.getByTestId('filter-rckik');
-    this.clearFiltersButton = this.getByTestId('clear-filters-button');
+    this.filterDateFrom = this.getByTestId('donations-toolbar-filter-from-date');
+    this.filterDateTo = this.getByTestId('donations-toolbar-filter-to-date');
+    this.filterDonationType = this.getByTestId('donations-toolbar-filter-type');
+    this.filterRckik = this.getByTestId('donations-toolbar-filter-rckik');
+    this.clearFiltersButton = this.getByTestId('donations-toolbar-clear-filters-button');
 
     // Table
-    this.donationTable = page.locator('table');
-    this.donationRows = page.locator('[data-testid^="donation-row-"]');
+    this.donationTable = this.getByTestId('donation-table');
+    this.donationRows = page.locator('[data-test-id^="donation-table-row-"]');
 
     // Pagination
-    this.paginationPrevious = this.getByTestId('pagination-previous');
-    this.paginationNext = this.getByTestId('pagination-next');
+    this.paginationPrevious = this.getByTestId('donation-table-prev-button');
+    this.paginationNext = this.getByTestId('donation-table-next-button');
     this.paginationInfo = page.locator('text=/Strona \\d+ z \\d+/');
   }
 
@@ -100,21 +100,21 @@ export class DonationsPage extends BasePage {
    * Get donation row by ID
    */
   getDonationRow(donationId: number): Locator {
-    return this.getByTestId(`donation-row-${donationId}`);
+    return this.getByTestId(`donation-table-row-${donationId}`);
   }
 
   /**
    * Get edit button for specific donation
    */
   getEditButton(donationId: number): Locator {
-    return this.getByTestId(`edit-donation-${donationId}`);
+    return this.getByTestId(`donation-table-edit-button-${donationId}`);
   }
 
   /**
    * Get delete button for specific donation
    */
   getDeleteButton(donationId: number): Locator {
-    return this.getByTestId(`delete-donation-${donationId}`);
+    return this.getByTestId(`donation-table-delete-button-${donationId}`);
   }
 
   /**

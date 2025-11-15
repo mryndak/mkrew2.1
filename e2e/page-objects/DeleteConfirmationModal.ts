@@ -32,7 +32,7 @@ export class DeleteConfirmationModal extends BasePage {
     super(page);
 
     // Modal
-    this.modal = page.locator('[role="dialog"]');
+    this.modal = this.getByTestId('delete-confirmation-modal');
     this.modalTitle = this.modal.locator('h3').filter({ hasText: 'Potwierdź usunięcie' });
 
     // Content
@@ -41,8 +41,8 @@ export class DeleteConfirmationModal extends BasePage {
     this.donationDetails = this.modal.locator('.bg-gray-50');
 
     // Buttons
-    this.cancelButton = this.getByTestId('delete-modal-cancel');
-    this.confirmButton = this.getByTestId('delete-modal-confirm');
+    this.cancelButton = this.getByTestId('delete-confirmation-cancel-button');
+    this.confirmButton = this.getByTestId('delete-confirmation-delete-button');
   }
 
   /**
