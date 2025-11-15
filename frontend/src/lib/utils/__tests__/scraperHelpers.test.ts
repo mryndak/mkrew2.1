@@ -568,6 +568,9 @@ describe('scraperHelpers utilities', () => {
 
     describe('Edge cases', () => {
       it('should return false when Clipboard API fails', async () => {
+        // Mock console.error to suppress error output in tests
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
         Object.defineProperty(navigator, 'clipboard', {
           value: {
             writeText: vi.fn().mockRejectedValue(new Error('Permission denied')),
@@ -579,6 +582,12 @@ describe('scraperHelpers utilities', () => {
         const result = await copyToClipboard('test');
 
         expect(result).toBe(false);
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Failed to copy to clipboard:',
+          expect.any(Error)
+        );
+
+        consoleErrorSpy.mockRestore();
       });
 
       it('should use fallback when Clipboard API is not available', async () => {
