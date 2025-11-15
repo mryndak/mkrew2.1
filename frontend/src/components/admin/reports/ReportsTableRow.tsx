@@ -65,9 +65,10 @@ export function ReportsTableRow({ report, onClick }: ReportsTableRowProps) {
       tabIndex={0}
       role="button"
       aria-label={`Szczegóły raportu #${report.id} od ${userName}`}
+      data-test-id="admin-reports-table-row"
     >
       {/* ID Raportu */}
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-test-id="admin-reports-row-id">
         #{report.id}
       </td>
 
@@ -78,13 +79,13 @@ export function ReportsTableRow({ report, onClick }: ReportsTableRowProps) {
 
       {/* Użytkownik */}
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-900">{userName}</div>
+        <div className="text-sm font-medium text-gray-900" data-test-id="admin-reports-row-user-name">{userName}</div>
         <div className="text-sm text-gray-500">{report.user.email}</div>
       </td>
 
       {/* RCKiK */}
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm text-gray-900">{report.rckikName}</div>
+        <div className="text-sm text-gray-900" data-test-id="admin-reports-row-rckik-name">{report.rckikName}</div>
         {report.bloodSnapshotId && (
           <div className="text-xs text-gray-500">
             Snapshot ID: {report.bloodSnapshotId}
@@ -100,6 +101,7 @@ export function ReportsTableRow({ report, onClick }: ReportsTableRowProps) {
       {/* Akcje - Ikona podglądu */}
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
         <button
+          data-test-id="admin-reports-view-details-button"
           className="text-red-600 hover:text-red-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 rounded p-1"
           onClick={(e) => {
             e.stopPropagation(); // Zatrzymaj propagację do wiersza
