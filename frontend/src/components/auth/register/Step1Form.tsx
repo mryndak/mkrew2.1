@@ -73,7 +73,7 @@ export function Step1Form({
           placeholder="twoj@email.com"
         />
         {errors.email && <FieldError message={errors.email} data-test-id="register-email-error" />}
-        <EmailUniquenessIndicator status={emailCheckStatus} email={formData.email} />
+        {!errors.email && <EmailUniquenessIndicator status={emailCheckStatus} email={formData.email} />}
       </div>
 
       {/* Password field */}
@@ -187,12 +187,12 @@ export function Step1Form({
             aria-invalid={!!errors.consentAccepted}
             aria-describedby={errors.consentAccepted ? 'consentAccepted-error' : undefined}
             className={`
-              h-4 w-4 mt-0.5 text-blue-600 border-gray-300 rounded
+              h-5 w-5 mt-0.5 text-blue-600 border-gray-300 rounded cursor-pointer
               focus:ring-2 focus:ring-blue-500
               ${errors.consentAccepted ? 'border-red-500' : ''}
             `}
           />
-          <label htmlFor="consentAccepted" className="ml-2 text-sm text-gray-700">
+          <label htmlFor="consentAccepted" className="ml-3 text-sm text-gray-700 cursor-pointer">
             Akceptuję{' '}
             <a
               href="/polityka-prywatnosci"
@@ -226,9 +226,9 @@ export function Step1Form({
             data-test-id="register-marketing-checkbox"
             checked={formData.marketingConsent}
             onChange={(e) => onChange('marketingConsent', e.target.checked)}
-            className="h-4 w-4 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            className="h-5 w-5 mt-0.5 text-blue-600 border-gray-300 rounded cursor-pointer focus:ring-2 focus:ring-blue-500"
           />
-          <label htmlFor="marketingConsent" className="ml-2 text-sm text-gray-700">
+          <label htmlFor="marketingConsent" className="ml-3 text-sm text-gray-700 cursor-pointer">
             Zgadzam się na otrzymywanie informacji marketingowych (opcjonalnie)
           </label>
         </div>
