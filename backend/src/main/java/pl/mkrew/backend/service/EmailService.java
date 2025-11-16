@@ -35,6 +35,9 @@ public class EmailService {
     @Value("${mkrew.email.enabled:true}")
     private boolean emailEnabled;
 
+    @Value("${mkrew.app.base-url}")
+    private String appBaseUrl;
+
     /**
      * Send email notification
      *
@@ -392,6 +395,194 @@ public class EmailService {
                         "consecutiveFailures", String.valueOf(consecutiveFailures),
                         "lastSuccessfulTimestamp", lastSuccessfulTimestamp != null ? lastSuccessfulTimestamp : "Never",
                         "statusUrl", statusUrl
+                ))
+                .userId(null)
+                .rckikId(null)
+                .build();
+
+        return sendEmail(request);
+    }
+
+    /**
+     * Send email verification email with token
+     * US-001: User Registration
+     *
+     * @param recipientEmail Recipient email
+     * @param firstName      Recipient first name
+     * @param verificationToken Email verification token
+     * @return true if sent successfully
+     */
+    public boolean sendVerificationEmail(
+            String recipientEmail,
+            String firstName,
+            String verificationToken) {
+
+        String subject = "Potwierdź swój adres email - mkrew";
+
+        // Build verification URL
+        String verificationUrl = appBaseUrl + "/verify-email?token=" + verificationToken;
+
+        String htmlTemplate = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Weryfikacja adresu email</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #d32f2f; margin: 0;">mkrew</h1>
+                            <p style="color: #666; font-size: 14px; margin: 5px 0;">Platforma dla dawców krwi</p>
+                        </div>
+
+                        <h2 style="color: #333;">Witaj {{firstName}}! 👋</h2>
+                        <p>Dziękujemy za rejestrację w serwisie mkrew!</p>
+                        <p>Aby dokończyć proces rejestracji i aktywować swoje konto, musisz potwierdzić swój adres email.</p>
+
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{{verificationUrl}}" style="background-color: #d32f2f; color: white; padding: 14px 40px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; font-size: 16px;">
+                                Potwierdź adres email
+                            </a>
+                        </div>
+
+                        <div style="background-color: #f5f5f5; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0;">
+                            <p style="margin: 0; font-size: 14px; color: #666;">
+                                <strong>Ważne:</strong> Link weryfikacyjny jest ważny przez <strong>24 godziny</strong>.
+                            </p>
+                        </div>
+
+                        <p style="font-size: 14px; color: #666;">
+                            Jeśli przycisk nie działa, skopiuj i wklej poniższy link do przeglądarki:
+                        </p>
+                        <p style="font-size: 12px; word-break: break-all; color: #2196f3; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
+                            {{verificationUrl}}
+                        </p>
+
+                        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+                        <p style="font-size: 12px; color: #999;">
+                            Jeśli to nie Ty zarejestrowałeś/aś to konto, zignoruj tę wiadomość.
+                        </p>
+
+                        <p style="font-size: 12px; color: #999; margin-top: 30px;">
+                            mkrew - Platforma dla dawców krwi<br>
+                            <a href="https://mkrew.pl" style="color: #d32f2f;">mkrew.pl</a>
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """;
+
+        EmailNotificationRequest request = EmailNotificationRequest.builder()
+                .recipientEmail(recipientEmail)
+                .recipientName(firstName)
+                .subject(subject)
+                .notificationType("OTHER")
+                .templateName(htmlTemplate)
+                .templateVariables(java.util.Map.of(
+                        "firstName", firstName,
+                        "verificationUrl", verificationUrl
+                ))
+                .userId(null)
+                .rckikId(null)
+                .build();
+
+        return sendEmail(request);
+    }
+
+    /**
+     * Send welcome email after successful email verification
+     * US-002: Email Verification
+     *
+     * @param recipientEmail Recipient email
+     * @param firstName      Recipient first name
+     * @return true if sent successfully
+     */
+    public boolean sendWelcomeEmail(
+            String recipientEmail,
+            String firstName) {
+
+        String subject = "Witamy w mkrew! 🩸";
+
+        String loginUrl = appBaseUrl + "/login";
+        String dashboardUrl = appBaseUrl + "/dashboard";
+
+        String htmlTemplate = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Witamy w mkrew</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #d32f2f; margin: 0;">mkrew</h1>
+                            <p style="color: #666; font-size: 14px; margin: 5px 0;">Platforma dla dawców krwi</p>
+                        </div>
+
+                        <h2 style="color: #333;">Witamy, {{firstName}}! 🎉</h2>
+                        <p>Twoje konto zostało pomyślnie aktywowane!</p>
+                        <p>Jesteś teraz częścią społeczności mkrew - platformy wspierającej dawców krwi w Polsce.</p>
+
+                        <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #1976d2;">Co możesz teraz zrobić?</h3>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>📍 Sprawdź aktualne poziomy krwi w centrach krwiodawstwa</li>
+                                <li>⭐ Dodaj swoje ulubione centra do obserwowanych</li>
+                                <li>📝 Prowadź dziennik swoich donacji</li>
+                                <li>🔔 Otrzymuj powiadomienia o krytycznych poziomach krwi</li>
+                                <li>👤 Uzupełnij swój profil i ustawienia powiadomień</li>
+                            </ul>
+                        </div>
+
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{{loginUrl}}" style="background-color: #d32f2f; color: white; padding: 14px 40px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; font-size: 16px; margin: 0 5px;">
+                                Zaloguj się
+                            </a>
+                            <a href="{{dashboardUrl}}" style="background-color: #2196f3; color: white; padding: 14px 40px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; font-size: 16px; margin: 0 5px;">
+                                Zobacz poziomy krwi
+                            </a>
+                        </div>
+
+                        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #f57f17;">💡 Wskazówka</h3>
+                            <p style="margin: 0; font-size: 14px;">
+                                Jeśli chcesz otrzymywać powiadomienia o krytycznych poziomach krwi w swoich ulubionych centrach,
+                                przejdź do <strong>Ustawień > Powiadomienia</strong> i dostosuj swoje preferencje.
+                            </p>
+                        </div>
+
+                        <p style="margin-top: 30px;">
+                            Dziękujemy za dołączenie do nas i wspieranie dawstwa krwi w Polsce! 🇵🇱
+                        </p>
+
+                        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+                        <p style="font-size: 12px; color: #999;">
+                            Jeśli masz jakiekolwiek pytania, skontaktuj się z nami poprzez formularz kontaktowy na stronie.
+                        </p>
+
+                        <p style="font-size: 12px; color: #999; margin-top: 30px;">
+                            mkrew - Platforma dla dawców krwi<br>
+                            <a href="https://mkrew.pl" style="color: #d32f2f;">mkrew.pl</a>
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """;
+
+        EmailNotificationRequest request = EmailNotificationRequest.builder()
+                .recipientEmail(recipientEmail)
+                .recipientName(firstName)
+                .subject(subject)
+                .notificationType("OTHER")
+                .templateName(htmlTemplate)
+                .templateVariables(java.util.Map.of(
+                        "firstName", firstName,
+                        "loginUrl", loginUrl,
+                        "dashboardUrl", dashboardUrl
                 ))
                 .userId(null)
                 .rckikId(null)
