@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParserConfigs } from '@/lib/hooks/useParserConfigs';
 import { ParserConfigFilters } from './ParserConfigFilters';
 import { ParserConfigTable } from './ParserConfigTable';
 import { ParserConfigFormModal } from './ParserConfigFormModal';
+import { TestParserModal } from './TestParserModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import type { ParserConfigListResponse } from '@/lib/types/parserConfig';
+import type { ParserConfigListResponse, ParserConfigDto } from '@/lib/types/parserConfig';
 
 /**
  * Props dla ParserConfigView
@@ -35,6 +36,10 @@ interface ParserConfigViewProps {
 export function ParserConfigView({ initialData, userRole }: ParserConfigViewProps) {
   // Użyj custom hook do zarządzania stanem
   const { state, actions } = useParserConfigs({ initialData });
+
+  // Stan dla TestParserModal
+  const [testModalOpen, setTestModalOpen] = useState(false);
+  const [testingConfig, setTestingConfig] = useState<ParserConfigDto | null>(null);
 
   /**
    * Handler dla zapisania formularza (create/edit)
@@ -69,6 +74,30 @@ export function ParserConfigView({ initialData, userRole }: ParserConfigViewProp
         console.error('Delete failed:', err);
       }
     }
+  };
+
+  /**
+   * Handler dla otwarcia modalu testowania
+   */
+  const handleOpenTestModal = (config: ParserConfigDto) => {
+    setTestingConfig(config);
+    setTestModalOpen(true);
+  };
+
+  /**
+   * Handler dla zamknięcia modalu testowania
+   */
+  const handleCloseTestModal = () => {
+    setTestModalOpen(false);
+    setTestingConfig(null);
+  };
+
+  /**
+   * Handler dla zapisania wyników testu
+   */
+  const handleSaveTestResults = async (testId: string) => {
+    // Odśwież listę konfiguracji po zapisaniu wyników testu
+    await actions.fetchConfigs();
   };
 
   return (
@@ -152,10 +181,7 @@ export function ParserConfigView({ initialData, userRole }: ParserConfigViewProp
         onPageChange={actions.setPage}
         onSort={actions.setSort}
         onEdit={actions.openEditModal}
-        onTest={(config) => {
-          // TODO: Implement test modal
-          console.log('Test parser:', config);
-        }}
+        onTest={handleOpenTestModal}
         onDelete={actions.openDeleteConfirm}
       />
 
@@ -228,6 +254,16 @@ export function ParserConfigView({ initialData, userRole }: ParserConfigViewProp
         onClose={actions.closeFormModal}
         onSave={handleFormSave}
       />
+
+      {/* Test Parser Modal */}
+      {testingConfig && (
+        <TestParserModal
+          isOpen={testModalOpen}
+          configId={testingConfig.id}
+          onClose={handleCloseTestModal}
+          onSaveResults={handleSaveTestResults}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal
