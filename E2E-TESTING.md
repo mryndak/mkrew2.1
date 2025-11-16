@@ -306,7 +306,7 @@ environment:
   RATE_LIMIT_ENABLED: "false"  # ⚠️ WYŁĄCZONE dla testów
   EMAIL_ENABLED: "false"       # ⚠️ WYŁĄCZONE dla testów
   DB_NAME: mkrew_test          # Oddzielna baza testowa
-  LIQUIBASE_CONTEXTS: test     # Ładuje dane testowe
+  LIQUIBASE_COMMAND_CONTEXTS: test  # Ładuje dane testowe
 ```
 
 ### Frontend testowy (`.env.test`)
