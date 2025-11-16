@@ -1,5 +1,8 @@
 import React from 'react';
 import { useBloodSnapshots } from '@/lib/hooks/useBloodSnapshots';
+import { FiltersPanel } from './FiltersPanel';
+import { ManualSnapshotModal } from './ManualSnapshotModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import type { BloodSnapshotsListResponse } from '@/lib/types/bloodSnapshots';
 
 /**
@@ -166,35 +169,12 @@ export function BloodSnapshotsView({ initialData, userRole }: BloodSnapshotsView
         </div>
       </div>
 
-      {/* Filters Panel - TODO: Implement */}
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Filtry</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Źródło</label>
-            <select
-              value={state.filters.source || 'all'}
-              onChange={(e) =>
-                actions.setFilters({ source: e.target.value as 'manual' | 'scraped' | 'all' })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-            >
-              <option value="all">Wszystkie</option>
-              <option value="manual">Ręczne</option>
-              <option value="scraped">Automatyczne</option>
-            </select>
-          </div>
-
-          <div className="md:col-span-3 flex items-end">
-            <button
-              onClick={actions.resetFilters}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              Resetuj filtry
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Filters Panel */}
+      <FiltersPanel
+        filters={state.filters}
+        onChange={actions.setFilters}
+        onReset={actions.resetFilters}
+      />
 
       {/* Table - TODO: Implement proper table component */}
       <div className="bg-white shadow rounded-lg">
@@ -374,52 +354,32 @@ export function BloodSnapshotsView({ initialData, userRole }: BloodSnapshotsView
         </div>
       )}
 
-      {/* Modal placeholders - TODO: Implement actual modals */}
-      {state.isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              {state.modalMode === 'create' ? 'Dodaj snapshot' : 'Edytuj snapshot'}
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">Formularz w budowie...</p>
-            <button
-              onClick={actions.closeModal}
-              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
-            >
-              Zamknij
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Manual Snapshot Modal (Create/Edit) */}
+      <ManualSnapshotModal
+        isOpen={state.isModalOpen}
+        mode={state.modalMode}
+        initialData={state.editingSnapshot || undefined}
+        onClose={actions.closeModal}
+        onSubmit={async (data) => {
+          if (state.modalMode === 'create') {
+            await actions.createSnapshot(data as any);
+          } else if (state.editingSnapshot) {
+            await actions.updateSnapshot(state.editingSnapshot.id, data as any);
+          }
+        }}
+      />
 
-      {state.isDeleteConfirmOpen && state.deletingSnapshot && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Potwierdź usunięcie</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Czy na pewno chcesz usunąć snapshot dla {state.deletingSnapshot.rckikName} (
-              {state.deletingSnapshot.bloodGroup}) z dnia{' '}
-              {new Date(state.deletingSnapshot.snapshotDate).toLocaleDateString('pl-PL')}?
-            </p>
-            <div className="flex space-x-2">
-              <button
-                onClick={actions.closeDeleteConfirm}
-                className="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
-              >
-                Anuluj
-              </button>
-              <button
-                onClick={() =>
-                  state.deletingSnapshot && actions.deleteSnapshot(state.deletingSnapshot.id)
-                }
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Usuń
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirm Delete Modal */}
+      <ConfirmDeleteModal
+        isOpen={state.isDeleteConfirmOpen}
+        snapshot={state.deletingSnapshot}
+        onConfirm={async () => {
+          if (state.deletingSnapshot) {
+            await actions.deleteSnapshot(state.deletingSnapshot.id);
+          }
+        }}
+        onCancel={actions.closeDeleteConfirm}
+      />
     </div>
   );
 }
