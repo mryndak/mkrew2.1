@@ -1,0 +1,146 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+/**
+ * Blood Snapshots Management Page - Panel administracyjny do ręcznego wprowadzania stanów krwi
+ * Protected page dla użytkowników z rolą ADMIN
+ *
+ * Features:
+ * - Ręczne wprowadzanie snapshotów krwi (w tym danych historycznych/wstecznych)
+ * - Przeglądanie i filtrowanie istniejących snapshotów z rozróżnieniem źródła (manual/scraped)
+ * - Edycja i usuwanie ręcznie wprowadzonych snapshotów
+ * - Monitor statystyk ręcznie wprowadzonych danych
+ * - Pełny audit trail wszystkich operacji
+ *
+ * User Story:
+ * - US-028: Ręczne wprowadzanie stanów krwi dla zapewnienia ciągłości danych
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by AdminLayout)
+ * - Wymaga roli ADMIN
+ * - Redirect do /dashboard jeśli brak uprawnień
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Stany krwi | Admin | mkrew';
+const pageDescription = 'Panel administracyjny do ręcznego wprowadzania i zarządzania snapshotami stanów krwi w centrach RCKiK';
+
+/**
+ * SSR: Pobieranie początkowych danych z API
+ * TODO: W produkcji pobierz dane z API przez apiClient na serwerze
+ * Na razie używamy pustych danych dla development
+ */
+
+// Mock data dla development (empty state)
+const mockSnapshotsData = {
+  content: [],
+  page: 0,
+  size: 50,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+};
+
+/**
+ * W produkcji:
+ *
+ * import { adminBloodSnapshotsApi } from '@/lib/api/endpoints/adminBloodSnapshots';
+ *
+ * try {
+ *   const snapshotsData = await adminBloodSnapshotsApi.listSnapshots({
+ *     page: 0,
+ *     size: 50,
+ *     source: 'manual'
+ *   });
+ * } catch (error) {
+ *   console.error('Failed to fetch blood snapshots data:', error);
+ *   // Użyj mock danych lub wyświetl error state
+ * }
+ */
+
+/**
+ * User role - pobierz z JWT token lub session
+ * TODO: Implement actual role check from auth middleware
+ */
+const userRole = 'ADMIN'; // Mock - w produkcji pobierz z JWT/session
+---
+
+<AdminLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Blood Snapshots View Container -->
+  <div
+    id="blood-snapshots-container"
+    data-initial-data={JSON.stringify(mockSnapshotsData)}
+    data-user-role={userRole}
+  ></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- React Components Script -->
+  <script>
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { ToastContainer } from 'react-toastify';
+    import 'react-toastify/dist/ReactToastify.css';
+
+    import { BloodSnapshotsView } from '@/components/admin/blood-snapshots/BloodSnapshotsView';
+
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toast Container
+      const toastContainer = document.getElementById('toast-container');
+      if (toastContainer) {
+        const toastRoot = createRoot(toastContainer);
+        toastRoot.render(
+          React.createElement(ToastContainer, {
+            position: 'top-right',
+            autoClose: 5000,
+            hideProgressBar: false,
+            newestOnTop: true,
+            closeOnClick: true,
+            rtl: false,
+            pauseOnFocusLoss: true,
+            draggable: true,
+            pauseOnHover: true,
+            theme: 'light',
+          })
+        );
+      }
+
+      // Initialize BloodSnapshotsView component
+      const bloodSnapshotsContainer = document.getElementById('blood-snapshots-container');
+      if (bloodSnapshotsContainer) {
+        const initialDataStr = bloodSnapshotsContainer.dataset.initialData;
+        const userRole = bloodSnapshotsContainer.dataset.userRole;
+
+        let initialData = undefined;
+        if (initialDataStr) {
+          try {
+            const parsed = JSON.parse(initialDataStr);
+            // Tylko użyj initial data jeśli są jakieś snapshoty
+            if (parsed.content && parsed.content.length > 0) {
+              initialData = parsed;
+            }
+          } catch (error) {
+            console.error('Failed to parse initial data:', error);
+          }
+        }
+
+        const bloodSnapshotsRoot = createRoot(bloodSnapshotsContainer);
+        bloodSnapshotsRoot.render(
+          React.createElement(BloodSnapshotsView, {
+            initialData,
+            userRole: userRole || 'ADMIN',
+          })
+        );
+      }
+    });
+  </script>
+</AdminLayout>
