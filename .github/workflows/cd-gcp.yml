@@ -384,13 +384,14 @@ jobs:
             backend=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }} \
             --namespace=default
 
-      - name: Update frontend deployment image
+      - name: Deploy frontend
         if: needs.check-changes.outputs.deploy_frontend == 'true'
         run: |
           echo "🎨 Deploying frontend..."
-          kubectl set image deployment/mkrew-frontend \
-            frontend=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/frontend:${{ github.sha }} \
-            --namespace=default
+          # Update image tag in deployment file
+          sed -i "s|image: .*frontend:.*|image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/frontend:${{ github.sha }}|g" k8s/frontend-deployment.yml
+          # Apply the full deployment configuration to sync env vars and all settings
+          kubectl apply -f k8s/frontend-deployment.yml
 
       - name: Wait for backend rollout to complete
         if: needs.check-changes.outputs.deploy_backend == 'true'
