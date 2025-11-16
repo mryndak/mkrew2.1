@@ -43,9 +43,9 @@ public class ParserConfigService {
      * US-029: Implementacja parsera dla RCKiK
      */
     @Transactional
-    public ParserConfigResponse createParserConfig(ParserConfigRequest request, String adminEmail) {
-        log.info("Creating parser config for RCKiK ID: {}, parser type: {}, admin: {}",
-            request.getRckikId(), request.getParserType(), adminEmail);
+    public ParserConfigResponse createParserConfig(ParserConfigRequest request, Long userId) {
+        log.info("Creating parser config for RCKiK ID: {}, parser type: {}, userId: {}",
+            request.getRckikId(), request.getParserType(), userId);
 
         // Validate RCKiK exists
         Rckik rckik = rckikRepository.findById(request.getRckikId())
@@ -85,8 +85,8 @@ public class ParserConfigService {
             metadata.put("notes", request.getNotes());
         }
 
-        auditLogService.createAuditLog(
-            adminEmail,
+        auditLogService.logAction(
+            String.valueOf(userId),
             "PARSER_CONFIG_CREATED",
             "ScraperConfig",
             savedConfig.getId(),
@@ -140,8 +140,8 @@ public class ParserConfigService {
      * US-030: Aktualizacja konfiguracji
      */
     @Transactional
-    public ParserConfigResponse updateParserConfig(Long id, ParserConfigRequest request, String adminEmail) {
-        log.info("Updating parser config ID: {}, admin: {}", id, adminEmail);
+    public ParserConfigResponse updateParserConfig(Long id, ParserConfigRequest request, Long userId) {
+        log.info("Updating parser config ID: {}, userId: {}", id, userId);
 
         ScraperConfig config = scraperConfigRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Parser config not found with id: " + id));
@@ -184,8 +184,8 @@ public class ParserConfigService {
             metadata.put("notes", request.getNotes());
         }
 
-        auditLogService.createAuditLog(
-            adminEmail,
+        auditLogService.logAction(
+            String.valueOf(userId),
             "PARSER_CONFIG_UPDATED",
             "ScraperConfig",
             updatedConfig.getId(),
@@ -202,8 +202,8 @@ public class ParserConfigService {
      * US-030: Usuwanie konfiguracji
      */
     @Transactional
-    public void deleteParserConfig(Long id, String adminEmail) {
-        log.info("Deleting parser config ID: {}, admin: {}", id, adminEmail);
+    public void deleteParserConfig(Long id, Long userId) {
+        log.info("Deleting parser config ID: {}, userId: {}", id, userId);
 
         ScraperConfig config = scraperConfigRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Parser config not found with id: " + id));
@@ -219,8 +219,8 @@ public class ParserConfigService {
         metadata.put("rckikName", config.getRckik().getName());
         metadata.put("parserType", config.getParserType());
 
-        auditLogService.createAuditLog(
-            adminEmail,
+        auditLogService.logAction(
+            String.valueOf(userId),
             "PARSER_CONFIG_DELETED",
             "ScraperConfig",
             config.getId(),

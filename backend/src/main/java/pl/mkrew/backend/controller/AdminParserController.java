@@ -43,8 +43,8 @@ public class AdminParserController {
     public ResponseEntity<ParserConfigResponse> createParserConfig(
             @Valid @RequestBody ParserConfigRequest request) {
 
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        ParserConfigResponse response = parserConfigService.createParserConfig(request, adminEmail);
+        Long userId = SecurityUtils.getCurrentUserId();
+        ParserConfigResponse response = parserConfigService.createParserConfig(request, userId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -105,8 +105,8 @@ public class AdminParserController {
             @PathVariable Long id,
             @Valid @RequestBody ParserConfigRequest request) {
 
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        ParserConfigResponse response = parserConfigService.updateParserConfig(id, request, adminEmail);
+        Long userId = SecurityUtils.getCurrentUserId();
+        ParserConfigResponse response = parserConfigService.updateParserConfig(id, request, userId);
 
         return ResponseEntity.ok(response);
     }
@@ -123,8 +123,8 @@ public class AdminParserController {
         description = "Delete parser configuration (soft delete via active=false)"
     )
     public ResponseEntity<Void> deleteParserConfig(@PathVariable Long id) {
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        parserConfigService.deleteParserConfig(id, adminEmail);
+        Long userId = SecurityUtils.getCurrentUserId();
+        parserConfigService.deleteParserConfig(id, userId);
 
         return ResponseEntity.noContent().build();
     }

@@ -41,9 +41,9 @@ public class BloodSnapshotService {
      * US-028: Ręczne wprowadzanie stanów krwi przez administratora
      */
     @Transactional
-    public BloodSnapshotResponse createManualSnapshot(CreateBloodSnapshotRequest request, String adminEmail) {
-        log.info("Creating manual blood snapshot for RCKiK ID: {}, blood group: {}, date: {}, admin: {}",
-            request.getRckikId(), request.getBloodGroup(), request.getSnapshotDate(), adminEmail);
+    public BloodSnapshotResponse createManualSnapshot(CreateBloodSnapshotRequest request, Long userId) {
+        log.info("Creating manual blood snapshot for RCKiK ID: {}, blood group: {}, date: {}, userId: {}",
+            request.getRckikId(), request.getBloodGroup(), request.getSnapshotDate(), userId);
 
         // Validate RCKiK exists and is active
         Rckik rckik = rckikRepository.findById(request.getRckikId())
@@ -83,8 +83,8 @@ public class BloodSnapshotService {
             metadata.put("notes", request.getNotes());
         }
 
-        auditLogService.createAuditLog(
-            adminEmail,
+        auditLogService.logAction(
+            String.valueOf(userId),
             "MANUAL_SNAPSHOT_CREATED",
             "BloodSnapshot",
             savedSnapshot.getId(),
@@ -93,7 +93,7 @@ public class BloodSnapshotService {
 
         log.info("Manual blood snapshot created successfully with ID: {}", savedSnapshot.getId());
 
-        return mapToResponse(savedSnapshot, adminEmail, request.getNotes());
+        return mapToResponse(savedSnapshot, null, request.getNotes());
     }
 
     /**
@@ -145,8 +145,8 @@ public class BloodSnapshotService {
      * US-028: Aktualizacja ręcznie wprowadzonego snapshotu
      */
     @Transactional
-    public BloodSnapshotResponse updateManualSnapshot(Long id, UpdateBloodSnapshotRequest request, String adminEmail) {
-        log.info("Updating manual blood snapshot ID: {}, admin: {}", id, adminEmail);
+    public BloodSnapshotResponse updateManualSnapshot(Long id, UpdateBloodSnapshotRequest request, Long userId) {
+        log.info("Updating manual blood snapshot ID: {}, userId: {}", id, userId);
 
         BloodSnapshot snapshot = bloodSnapshotRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Blood snapshot not found with id: " + id));
@@ -170,8 +170,8 @@ public class BloodSnapshotService {
             metadata.put("notes", request.getNotes());
         }
 
-        auditLogService.createAuditLog(
-            adminEmail,
+        auditLogService.logAction(
+            String.valueOf(userId),
             "MANUAL_SNAPSHOT_UPDATED",
             "BloodSnapshot",
             updatedSnapshot.getId(),
@@ -180,7 +180,7 @@ public class BloodSnapshotService {
 
         log.info("Manual blood snapshot updated successfully with ID: {}", updatedSnapshot.getId());
 
-        return mapToResponse(updatedSnapshot, adminEmail, request.getNotes());
+        return mapToResponse(updatedSnapshot, null, request.getNotes());
     }
 
     /**
@@ -188,8 +188,8 @@ public class BloodSnapshotService {
      * US-028: Usuwanie ręcznie wprowadzonego snapshotu
      */
     @Transactional
-    public void deleteManualSnapshot(Long id, String adminEmail) {
-        log.info("Deleting manual blood snapshot ID: {}, admin: {}", id, adminEmail);
+    public void deleteManualSnapshot(Long id, Long userId) {
+        log.info("Deleting manual blood snapshot ID: {}, userId: {}", id, userId);
 
         BloodSnapshot snapshot = bloodSnapshotRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Blood snapshot not found with id: " + id));
@@ -207,8 +207,8 @@ public class BloodSnapshotService {
         metadata.put("levelPercentage", snapshot.getLevelPercentage());
         metadata.put("snapshotDate", snapshot.getSnapshotDate().toString());
 
-        auditLogService.createAuditLog(
-            adminEmail,
+        auditLogService.logAction(
+            String.valueOf(userId),
             "MANUAL_SNAPSHOT_DELETED",
             "BloodSnapshot",
             snapshot.getId(),

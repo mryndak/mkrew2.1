@@ -45,8 +45,8 @@ public class AdminBloodSnapshotController {
     public ResponseEntity<BloodSnapshotResponse> createManualSnapshot(
             @Valid @RequestBody CreateBloodSnapshotRequest request) {
 
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        BloodSnapshotResponse response = bloodSnapshotService.createManualSnapshot(request, adminEmail);
+        Long userId = SecurityUtils.getCurrentUserId();
+        BloodSnapshotResponse response = bloodSnapshotService.createManualSnapshot(request, userId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -112,8 +112,8 @@ public class AdminBloodSnapshotController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateBloodSnapshotRequest request) {
 
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        BloodSnapshotResponse response = bloodSnapshotService.updateManualSnapshot(id, request, adminEmail);
+        Long userId = SecurityUtils.getCurrentUserId();
+        BloodSnapshotResponse response = bloodSnapshotService.updateManualSnapshot(id, request, userId);
 
         return ResponseEntity.ok(response);
     }
@@ -130,8 +130,8 @@ public class AdminBloodSnapshotController {
         description = "Delete manual blood snapshot (hard delete, use with caution)"
     )
     public ResponseEntity<Void> deleteManualSnapshot(@PathVariable Long id) {
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        bloodSnapshotService.deleteManualSnapshot(id, adminEmail);
+        Long userId = SecurityUtils.getCurrentUserId();
+        bloodSnapshotService.deleteManualSnapshot(id, userId);
 
         return ResponseEntity.noContent().build();
     }
