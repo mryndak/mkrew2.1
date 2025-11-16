@@ -1,6 +1,9 @@
 name: CD - Deploy to GCP
 
 # Deployment Flow:
+# 0. Check Changes:
+#    - Verify if deployment is needed
+#    - Skip deployment if only .md files changed (documentation updates)
 # 1. Build & Push (parallel):
 #    - Backend Docker image
 #    - Frontend Docker image
@@ -35,9 +38,55 @@ env:
   ARTIFACT_REGISTRY: ${{ secrets.ARTIFACT_REGISTRY }}
 
 jobs:
+  check-changes:
+    name: Check if deployment needed
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check changed files
+        id: check
+        run: |
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo ""
+
+          # Check if any non-markdown files were changed
+          NON_MD_CHANGES=$(echo "$CHANGED_FILES" | grep -v '\.md$' || true)
+
+          if [ -z "$NON_MD_CHANGES" ]; then
+            echo "✅ Only .md files changed - skipping deployment"
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+          else
+            echo "📦 Non-markdown files changed - deployment needed"
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+          fi
+
+  skip-deployment:
+    name: Skip Deployment (Only docs changed)
+    runs-on: ubuntu-latest
+    needs: [check-changes]
+    if: needs.check-changes.outputs.should_deploy == 'false'
+    steps:
+      - name: Notify skip
+        run: |
+          echo "📝 Only .md files were modified in this commit"
+          echo "🚫 Skipping deployment to GCP - no application changes detected"
+          echo ""
+          echo "ℹ️ This is expected behavior when only documentation is updated"
+
   build-and-push-backend:
     name: Build & Push Backend
     runs-on: ubuntu-latest
+    needs: [check-changes]
+    if: needs.check-changes.outputs.should_deploy == 'true'
     environment: mkrew
     permissions:
       contents: read
@@ -77,6 +126,8 @@ jobs:
   build-and-push-frontend:
     name: Build & Push Frontend
     runs-on: ubuntu-latest
+    needs: [check-changes]
+    if: needs.check-changes.outputs.should_deploy == 'true'
     environment: mkrew
     permissions:
       contents: read
@@ -129,6 +180,8 @@ jobs:
   build-and-push-liquibase:
     name: Build & Push Liquibase
     runs-on: ubuntu-latest
+    needs: [check-changes]
+    if: needs.check-changes.outputs.should_deploy == 'true'
     environment: mkrew
     permissions:
       contents: read
@@ -170,7 +223,8 @@ jobs:
     name: Deploy Database Migrations
     runs-on: ubuntu-latest
     environment: mkrew
-    needs: [build-and-push-liquibase]
+    needs: [check-changes, build-and-push-liquibase]
+    if: needs.check-changes.outputs.should_deploy == 'true'
     permissions:
       contents: read
       id-token: write
@@ -252,7 +306,8 @@ jobs:
     name: Deploy to GKE
     runs-on: ubuntu-latest
     environment: mkrew
-    needs: [build-and-push-backend, build-and-push-frontend, deploy-database]
+    needs: [check-changes, build-and-push-backend, build-and-push-frontend, deploy-database]
+    if: needs.check-changes.outputs.should_deploy == 'true'
     permissions:
       contents: read
       id-token: write
@@ -304,8 +359,8 @@ jobs:
   notify-deployment:
     name: Notify Deployment Status
     runs-on: ubuntu-latest
-    needs: [deploy-database, deploy-to-gke]
-    if: always()
+    needs: [check-changes, deploy-database, deploy-to-gke]
+    if: always() && needs.check-changes.outputs.should_deploy == 'true'
 
     steps:
       - name: Deployment Success
