@@ -189,6 +189,11 @@ export function useRegisterForm() {
 
   // Submit form
   const submitForm = useCallback(async () => {
+    // Prevent duplicate submissions
+    if (isSubmitting) {
+      return;
+    }
+
     // Validate all steps
     const step1Valid = validateStep(1);
     const step2Valid = validateStep(2);
@@ -283,7 +288,7 @@ export function useRegisterForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateStep]);
+  }, [formData, validateStep, isSubmitting]);
 
   return {
     // State
