@@ -6,7 +6,7 @@
  *
  * Organized by functionality:
  * - Base: Common functionality
- * - Public: Landing pages
+ * - Public: Landing pages, RCKiK List, RCKiK Details
  * - Authentication: Login, Register, Password Reset, Verification
  * - Dashboard: Notifications, Preferences
  * - Admin: Panel administracyjny (RCKiK Management, Scraper, Reports)
@@ -17,6 +17,8 @@ export { BasePage } from './BasePage';
 
 // Public pages
 export { HomePage } from './HomePage';
+export { RckikListPage } from './RckikListPage';
+export { RckikDetailsPage } from './RckikDetailsPage';
 
 // Authentication pages
 export { LoginPage } from './LoginPage';
