@@ -95,10 +95,9 @@ spec:
 
           echo "✅ Liquibase migration completed successfully!"
 
-          # Terminate the Cloud SQL Proxy sidecar to allow the Job to complete
-          echo "🛑 Terminating Cloud SQL Proxy..."
-          killall cloud-sql-proxy || true
-          sleep 2
+          # Create a done marker file to signal the proxy to terminate
+          echo "🛑 Signaling Cloud SQL Proxy to terminate..."
+          touch /shared/liquibase-done
           echo "✅ Migration job completed!"
         env:
         - name: DB_HOST
@@ -127,14 +126,39 @@ spec:
           limits:
             memory: "1Gi"
             cpu: "500m"
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
 
       # Cloud SQL Proxy sidecar
       - name: cloud-sql-proxy
         image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.14.3
-        args:
-          - "--structured-logs"
-          - "--port=5432"
-          - "$(CLOUD_SQL_CONNECTION_NAME)"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Start Cloud SQL Proxy in the background
+          /cloud-sql-proxy \
+            --structured-logs \
+            --port=5432 \
+            "${CLOUD_SQL_CONNECTION_NAME}" &
+          PROXY_PID=$!
+          echo "Cloud SQL Proxy started with PID: $PROXY_PID"
+
+          # Monitor for completion signal from Liquibase
+          while [ ! -f /shared/liquibase-done ]; do
+            # Check if proxy is still running
+            if ! kill -0 $PROXY_PID 2>/dev/null; then
+              echo "Cloud SQL Proxy unexpectedly terminated"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "Liquibase completed, terminating Cloud SQL Proxy..."
+          kill -TERM $PROXY_PID 2>/dev/null || true
+          wait $PROXY_PID
+          echo "Cloud SQL Proxy terminated successfully"
         env:
         - name: CLOUD_SQL_CONNECTION_NAME
           valueFrom:
@@ -151,3 +175,10 @@ spec:
         securityContext:
           runAsNonRoot: true
           allowPrivilegeEscalation: false
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+
+      volumes:
+      - name: shared-data
+        emptyDir: {}
