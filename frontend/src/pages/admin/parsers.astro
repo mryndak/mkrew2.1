@@ -1,0 +1,148 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+
+/**
+ * Parser Configuration Management Page - Panel administracyjny do zarządzania konfiguracją parserów
+ * Protected page dla użytkowników z rolą ADMIN
+ *
+ * Features:
+ * - Zarządzanie konfiguracją parserów dla centrów RCKiK
+ * - Tworzenie, edycja, usuwanie (soft delete) konfiguracji
+ * - Testowanie parserów w trybie dry-run
+ * - Konfiguracja selektorów CSS, harmonogramów, timeoutów
+ * - Aktywacja/dezaktywacja automatycznego scrapingu
+ * - Monitor statusu parsowania i audit trail
+ *
+ * User Stories:
+ * - US-029: Implementacja parsera dla RCKiK Rzeszów
+ * - US-030: Zarządzanie konfiguracją parserów dla RCKiK
+ *
+ * Security:
+ * - Wymaga uwierzytelnienia JWT (handled by AdminLayout)
+ * - Wymaga roli ADMIN
+ * - Redirect do /dashboard jeśli brak uprawnień
+ */
+
+/**
+ * Page title i meta
+ */
+const pageTitle = 'Konfiguracja parserów | Admin | mkrew';
+const pageDescription = 'Panel administracyjny do zarządzania konfiguracją parserów dla automatycznego pobierania stanów krwi z centrów RCKiK';
+
+/**
+ * SSR: Pobieranie początkowych danych z API
+ * TODO: W produkcji pobierz dane z API przez apiClient na serwerze
+ * Na razie używamy pustych danych dla development
+ */
+
+// Mock data dla development (empty state)
+const mockParsersData = {
+  content: [],
+  page: 0,
+  size: 50,
+  totalElements: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+};
+
+/**
+ * W produkcji:
+ *
+ * import { adminParsersApi } from '@/lib/api/endpoints/adminParsers';
+ *
+ * try {
+ *   const parsersData = await adminParsersApi.getConfigs({
+ *     page: 0,
+ *     size: 50,
+ *     sort: 'rckikName,asc'
+ *   });
+ * } catch (error) {
+ *   console.error('Failed to fetch parser configs data:', error);
+ *   // Użyj mock danych lub wyświetl error state
+ * }
+ */
+
+/**
+ * User role - pobierz z JWT token lub session
+ * TODO: Implement actual role check from auth middleware
+ */
+const userRole = 'ADMIN'; // Mock - w produkcji pobierz z JWT/session
+---
+
+<AdminLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, nofollow" />
+  </Fragment>
+
+  <!-- Parser Config View Container -->
+  <div
+    id="parser-config-container"
+    data-initial-data={JSON.stringify(mockParsersData)}
+    data-user-role={userRole}
+  ></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- React Components Script -->
+  <script>
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { ToastContainer } from 'react-toastify';
+    import 'react-toastify/dist/ReactToastify.css';
+
+    import { ParserConfigView } from '@/components/admin/parser-config/ParserConfigView';
+
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toast Container
+      const toastContainer = document.getElementById('toast-container');
+      if (toastContainer) {
+        const toastRoot = createRoot(toastContainer);
+        toastRoot.render(
+          React.createElement(ToastContainer, {
+            position: 'top-right',
+            autoClose: 5000,
+            hideProgressBar: false,
+            newestOnTop: true,
+            closeOnClick: true,
+            rtl: false,
+            pauseOnFocusLoss: true,
+            draggable: true,
+            pauseOnHover: true,
+            theme: 'light',
+          })
+        );
+      }
+
+      // Initialize ParserConfigView component
+      const parserConfigContainer = document.getElementById('parser-config-container');
+      if (parserConfigContainer) {
+        const initialDataStr = parserConfigContainer.dataset.initialData;
+        const userRole = parserConfigContainer.dataset.userRole;
+
+        let initialData = undefined;
+        if (initialDataStr) {
+          try {
+            const parsed = JSON.parse(initialDataStr);
+            // Tylko użyj initial data jeśli są jakieś konfiguracje
+            if (parsed.content && parsed.content.length > 0) {
+              initialData = parsed;
+            }
+          } catch (error) {
+            console.error('Failed to parse initial data:', error);
+          }
+        }
+
+        const parserConfigRoot = createRoot(parserConfigContainer);
+        parserConfigRoot.render(
+          React.createElement(ParserConfigView, {
+            initialData,
+            userRole: userRole || 'ADMIN',
+          })
+        );
+      }
+    });
+  </script>
+</AdminLayout>
