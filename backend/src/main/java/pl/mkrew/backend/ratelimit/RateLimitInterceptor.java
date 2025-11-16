@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,10 +25,19 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final RateLimitService rateLimitService;
     private final RateLimitAuditService rateLimitAuditService;
 
+    @Value("${mkrew.rate-limit.enabled}")
+    private boolean rateLimitEnabled;
+
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request,
                              @NonNull HttpServletResponse response,
                              @NonNull Object handler) {
+        // Check if rate limiting is enabled
+        if (!rateLimitEnabled) {
+            log.debug("Rate limiting is disabled - skipping rate limit check");
+            return true;
+        }
+
         String requestUri = request.getRequestURI();
         String method = request.getMethod();
         String ipAddress = getClientIpAddress(request);

@@ -1,0 +1,87 @@
+version: '3.8'
+
+# Docker Compose configuration for E2E tests
+# This stack runs backend with disabled rate limiting for Playwright tests
+
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: mkrew-test-postgres
+    environment:
+      POSTGRES_DB: mkrew_test
+      POSTGRES_USER: mkrew_test_user
+      POSTGRES_PASSWORD: mkrew_test_password
+    ports:
+      - "5434:5432"  # Different port to avoid conflicts
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mkrew_test_user -d mkrew_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mkrew-test-network
+
+  liquibase-test:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    container_name: mkrew-test-liquibase
+    environment:
+      LIQUIBASE_COMMAND_URL: jdbc:postgresql://postgres-test:5432/mkrew_test
+      LIQUIBASE_COMMAND_USERNAME: mkrew_test_user
+      LIQUIBASE_COMMAND_PASSWORD: mkrew_test_password
+      LIQUIBASE_COMMAND_CHANGELOG_FILE: db/changelog/db.changelog-master.yaml
+    volumes:
+      - ./db/changelog:/liquibase/changelog
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    command: ["update"]
+    networks:
+      - mkrew-test-network
+
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mkrew-test-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      DB_HOST: postgres-test
+      DB_PORT: 5432
+      DB_NAME: mkrew_test
+      DB_USERNAME: mkrew_test_user
+      DB_PASSWORD: mkrew_test_password
+      # CRITICAL: Disable rate limiting for E2E tests
+      RATE_LIMIT_ENABLED: "false"
+      # Email disabled for tests
+      EMAIL_ENABLED: "false"
+      # JWT settings for tests
+      JWT_SECRET: TestSecretKeyForE2ETestingThatIsAtLeast256BitsLongForHS256AlgorithmSecurity
+      # App URL
+      APP_BASE_URL: http://localhost:4321
+    ports:
+      - "8080:8080"
+    depends_on:
+      liquibase-test:
+        condition: service_completed_successfully
+    networks:
+      - mkrew-test-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  postgres_test_data:
+    name: mkrew-test-postgres-data
+
+networks:
+  mkrew-test-network:
+    name: mkrew-test-network
+    driver: bridge
