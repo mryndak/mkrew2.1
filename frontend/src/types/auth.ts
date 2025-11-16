@@ -615,6 +615,11 @@ export const REGISTER_DRAFT_KEY = 'register_draft';
  * Save registration draft to sessionStorage (bez hasła!)
  */
 export function saveRegistrationDraft(formData: RegisterFormData): void {
+  // Check if running in browser (not during SSR)
+  if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+    return;
+  }
+
   try {
     const draftData = {
       ...formData,
@@ -631,6 +636,11 @@ export function saveRegistrationDraft(formData: RegisterFormData): void {
  * Load registration draft from sessionStorage
  */
 export function loadRegistrationDraft(): Partial<RegisterFormData> | null {
+  // Check if running in browser (not during SSR)
+  if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+    return null;
+  }
+
   try {
     const stored = sessionStorage.getItem(REGISTER_DRAFT_KEY);
     if (!stored) return null;
@@ -645,6 +655,11 @@ export function loadRegistrationDraft(): Partial<RegisterFormData> | null {
  * Clear registration draft from sessionStorage
  */
 export function clearRegistrationDraft(): void {
+  // Check if running in browser (not during SSR)
+  if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+    return;
+  }
+
   try {
     sessionStorage.removeItem(REGISTER_DRAFT_KEY);
   } catch (error) {

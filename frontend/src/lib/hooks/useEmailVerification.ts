@@ -55,16 +55,18 @@ export function useEmailVerification(token: string | null): UseEmailVerification
       setError(null);
 
       // Zapisz informację o weryfikacji w sessionStorage
-      try {
-        sessionStorage.setItem(
-          'email_verified',
-          JSON.stringify({
-            email: response.email,
-            timestamp: Date.now(),
-          })
-        );
-      } catch (storageError) {
-        console.warn('Failed to save verification state to sessionStorage:', storageError);
+      if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+        try {
+          sessionStorage.setItem(
+            'email_verified',
+            JSON.stringify({
+              email: response.email,
+              timestamp: Date.now(),
+            })
+          );
+        } catch (storageError) {
+          console.warn('Failed to save verification state to sessionStorage:', storageError);
+        }
       }
 
       // Usuń token z URL dla bezpieczeństwa (zapobiegaj leakom tokenów)
@@ -115,8 +117,10 @@ export function useEmailVerification(token: string | null): UseEmailVerification
   useEffect(() => {
     // Sprawdź czy weryfikacja była już wykonana (odświeżenie strony)
     if (!token) {
-      try {
-        const stored = sessionStorage.getItem('email_verified');
+      // Check if running in browser (not during SSR)
+      if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+        try {
+          const stored = sessionStorage.getItem('email_verified');
         if (stored) {
           const { email, timestamp } = JSON.parse(stored);
           const VERIFIED_SESSION_TTL_MS = 5 * 60 * 1000; // 5 minut
@@ -128,8 +132,9 @@ export function useEmailVerification(token: string | null): UseEmailVerification
             return;
           }
         }
-      } catch (storageError) {
-        console.warn('Failed to load verification state from sessionStorage:', storageError);
+        } catch (storageError) {
+          console.warn('Failed to load verification state from sessionStorage:', storageError);
+        }
       }
 
       // Brak tokenu i brak sesji - pokaż błąd

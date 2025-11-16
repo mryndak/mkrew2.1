@@ -27,6 +27,11 @@ export function useResendVerification(): UseResendVerificationReturn {
    * @returns true jeśli można wysłać, false jeśli limit przekroczony
    */
   const checkRateLimit = (): boolean => {
+    // Check if running in browser (not during SSR)
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+      return true;
+    }
+
     try {
       const stored = sessionStorage.getItem(STORAGE_KEY);
       if (!stored) return true;
@@ -57,6 +62,11 @@ export function useResendVerification(): UseResendVerificationReturn {
    * Zapisz próbę wysłania w sessionStorage
    */
   const recordAttempt = (): void => {
+    // Check if running in browser (not during SSR)
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+      return;
+    }
+
     try {
       const stored = sessionStorage.getItem(STORAGE_KEY);
       const attempts: ResendAttempts = stored
