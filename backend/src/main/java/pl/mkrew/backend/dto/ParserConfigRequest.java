@@ -31,16 +31,19 @@ public class ParserConfigRequest {
     @NotBlank(message = "CSS selectors are required")
     private String cssSelectors; // JSON string
 
+    @Builder.Default
     private Boolean active = true;
 
     @Pattern(
         regexp = "^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\\d+(ns|us|µs|ms|s|m|h))+)|(((\\d+,)*\\d+|(\\d+(\\/|-)\\d+)|\\d+|\\*) ){4}((\\d+,)*\\d+|(\\d+(\\/|-)\\d+)|\\d+|\\*)$",
         message = "Invalid cron expression"
     )
+    @Builder.Default
     private String scheduleCron = "0 2 * * *";
 
     @Min(value = 10, message = "Timeout must be at least 10 seconds")
     @Max(value = 120, message = "Timeout must be at most 120 seconds")
+    @Builder.Default
     private Integer timeoutSeconds = 30;
 
     @Size(max = 500, message = "Notes must not exceed 500 characters")
