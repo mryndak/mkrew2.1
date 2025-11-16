@@ -69,8 +69,8 @@ export class RckikListPage extends BasePage {
     this.sortOrderToggle = page.locator('button[aria-label*="Sortowanie"]');
     this.resetFiltersButton = page.locator('button:has-text("Resetuj filtry")');
 
-    // Results count - based on Pagination.tsx
-    this.resultsCount = page.locator('nav[aria-label*="Paginacja"] div.text-sm');
+    // Results count - based on Pagination.tsx (more specific selector to avoid page size selector)
+    this.resultsCount = page.locator('nav[aria-label*="Paginacja"] div.text-sm.text-gray-600');
 
     // RCKiK list - based on RckikList.tsx
     this.rckikCards = page.locator('article.card');
