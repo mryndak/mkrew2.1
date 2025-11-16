@@ -119,7 +119,7 @@ jobs:
 
       - name: Start test backend and database
         run: |
-          docker-compose -f docker-compose.test.yml up -d
+          docker compose -f docker-compose.test.yml up -d
           echo "Waiting for backend to be ready..."
           sleep 30
 
@@ -134,7 +134,7 @@ jobs:
           done
           if [ $attempt -eq $max_attempts ]; then
             echo "Backend failed to start"
-            docker-compose -f docker-compose.test.yml logs
+            docker compose -f docker-compose.test.yml logs
             exit 1
           fi
           echo "Backend is ready!"
@@ -178,11 +178,11 @@ jobs:
 
       - name: Show backend logs on failure
         if: failure()
-        run: docker-compose -f docker-compose.test.yml logs
+        run: docker compose -f docker-compose.test.yml logs
 
       - name: Stop test backend
         if: always()
-        run: docker-compose -f docker-compose.test.yml down -v
+        run: docker compose -f docker-compose.test.yml down -v
 
   # Accessibility tests
   accessibility-tests:
@@ -216,7 +216,7 @@ jobs:
 
       - name: Start test backend and database
         run: |
-          docker-compose -f docker-compose.test.yml up -d
+          docker compose -f docker-compose.test.yml up -d
           echo "Waiting for backend to be ready..."
           sleep 30
 
@@ -231,7 +231,7 @@ jobs:
           done
           if [ $attempt -eq $max_attempts ]; then
             echo "Backend failed to start"
-            docker-compose -f docker-compose.test.yml logs
+            docker compose -f docker-compose.test.yml logs
             exit 1
           fi
           echo "Backend is ready!"
@@ -253,11 +253,11 @@ jobs:
 
       - name: Show backend logs on failure
         if: failure()
-        run: docker-compose -f docker-compose.test.yml logs
+        run: docker compose -f docker-compose.test.yml logs
 
       - name: Stop test backend
         if: always()
-        run: docker-compose -f docker-compose.test.yml down -v
+        run: docker compose -f docker-compose.test.yml down -v
 
   # Security scan
   security-scan:
