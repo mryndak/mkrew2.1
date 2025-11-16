@@ -35,6 +35,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final LoginAttemptService loginAttemptService;
     private final RateLimitService rateLimitService;
+    private final EmailService emailService;
 
     private static final int TOKEN_VALIDITY_HOURS = 24;
     private static final int PASSWORD_RESET_TOKEN_VALIDITY_HOURS = 1;
@@ -91,9 +92,18 @@ public class AuthService {
         String verificationToken = generateVerificationToken(user);
         log.info("Verification token generated for user: {}", user.getId());
 
-        // 6. TODO: Send verification email (mock for now)
-        // emailService.sendVerificationEmail(user.getEmail(), verificationToken);
-        log.info("Verification email would be sent to: {} with token: {}", user.getEmail(), verificationToken);
+        // 6. Send verification email
+        boolean emailSent = emailService.sendVerificationEmail(
+                user.getEmail(),
+                user.getFirstName(),
+                verificationToken
+        );
+
+        if (emailSent) {
+            log.info("Verification email sent successfully to: {}", user.getEmail());
+        } else {
+            log.warn("Failed to send verification email to: {}. User registered but email not sent.", user.getEmail());
+        }
 
         // 7. Return response
         return RegisterResponse.builder()
@@ -190,6 +200,18 @@ public class AuthService {
         userToken.setUsedAt(LocalDateTime.now());
         userTokenRepository.save(userToken);
         log.info("Verification token marked as used");
+
+        // 8. Send welcome email
+        boolean welcomeEmailSent = emailService.sendWelcomeEmail(
+                user.getEmail(),
+                user.getFirstName()
+        );
+
+        if (welcomeEmailSent) {
+            log.info("Welcome email sent successfully to: {}", user.getEmail());
+        } else {
+            log.warn("Failed to send welcome email to: {}", user.getEmail());
+        }
 
         return VerifyEmailResponse.builder()
                 .message("Email verified successfully. You can now log in.")
@@ -404,9 +426,18 @@ public class AuthService {
                     String verificationToken = generateVerificationToken(user);
                     log.info("New verification token generated for user ID: {}", user.getId());
 
-                    // 5. TODO: Send verification email
-                    // emailService.sendVerificationEmail(user.getEmail(), verificationToken);
-                    log.info("Verification email would be resent to: {} with token: {}", user.getEmail(), verificationToken);
+                    // 5. Send verification email
+                    boolean emailSent = emailService.sendVerificationEmail(
+                            user.getEmail(),
+                            user.getFirstName(),
+                            verificationToken
+                    );
+
+                    if (emailSent) {
+                        log.info("Verification email resent successfully to: {}", user.getEmail());
+                    } else {
+                        log.warn("Failed to resend verification email to: {}", user.getEmail());
+                    }
                 });
 
         // 6. Always return success (prevent email enumeration)
