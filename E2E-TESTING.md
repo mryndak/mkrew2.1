@@ -326,14 +326,17 @@ Backend testowy automatycznie ładuje dane:
 - Źródło: `db/changelog/changesets/018-seed-rckik-data.yaml`
 
 **Blood Snapshots** (tylko dla testów E2E):
-- Snapshoty dla Warszawy (wszystkie 8 grup krwi) z różnymi poziomami
-- Snapshoty dla Krakowa (wybrane grupy)
-- Różne statusy: OPTIMAL, SUFFICIENT, LOW, CRITICAL
+- Snapshoty dla Warszawy (wszystkie 8 grup krwi) z różnymi poziomami:
+  * 0+: 85.5%, 0-: 45.2%, A+: 65.0%, A-: 18.5%
+  * B+: 55.0%, B-: 12.0%, AB+: 70.0%, AB-: 25.0%
+- Snapshoty dla Krakowa (wybrane grupy):
+  * 0+: 75.0%, A+: 50.0%
+- Wszystkie oznaczone jako is_manual=true
 - Źródło: `db/changelog/changesets/023-seed-test-data-e2e.yaml` (context: test)
 
 **Użytkownicy testowi**:
-- Test User: `test.e2e@mkrew.pl` / `TestE2E123!`
-- Admin: (z seed: 022-seed-admin-user.yaml)
+- Test User: `test.e2e@mkrew.pl` / `Admin123!`
+- Admin: `admin@mkrew.pl` / `Admin123!` (z seed: 022-seed-admin-user.yaml)
 
 **Konfiguracje scraperów**:
 - Źródło: `db/changelog/changesets/019-seed-scraper-configs.yaml`
@@ -376,8 +379,9 @@ Workflow `.github/workflows/test.yml` automatycznie:
 Backend w CI automatycznie ładuje:
 - ✅ **Wszystkie RCKiK centra** (seed: 018-seed-rckik-data.yaml)
 - ✅ **Blood snapshots dla testów** (seed: 023-seed-test-data-e2e.yaml - tylko context:test)
-- ✅ **Testowy użytkownik**: `test.e2e@mkrew.pl` / `TestE2E123!`
-- ✅ **Admin użytkownik** (seed: 022-seed-admin-user.yaml)
+  * 10 snapshots (Warszawa: 8, Kraków: 2) z różnymi poziomami krwi
+- ✅ **Testowy użytkownik**: `test.e2e@mkrew.pl` / `Admin123!`
+- ✅ **Admin użytkownik**: `admin@mkrew.pl` / `Admin123!` (seed: 022-seed-admin-user.yaml)
 
 ### Przykładowy workflow (już zaimplementowany)
 
