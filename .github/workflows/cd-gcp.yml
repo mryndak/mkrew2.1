@@ -4,6 +4,7 @@ name: CD - Deploy to GCP
 # 0. Check Changes:
 #    - Verify if deployment is needed
 #    - Skip deployment if only .md files changed (documentation updates)
+#    - Skip deployment if only test files changed (no production code affected)
 #    - Detect which components changed (backend/, frontend/, db/)
 # 1. Build & Push (parallel, conditional):
 #    - Backend Docker image (only if backend/ changed)
@@ -73,51 +74,96 @@ jobs:
             echo "deploy_database=false" >> $GITHUB_OUTPUT
           else
             echo "📦 Non-markdown files changed - checking components..."
-            echo "should_deploy=true" >> $GITHUB_OUTPUT
 
-            # Check backend changes
+            # Initialize should_deploy flag
+            SHOULD_DEPLOY=false
+
+            # Check backend changes (excluding test files)
             BACKEND_CHANGES=$(echo "$CHANGED_FILES" | grep '^backend/' || true)
             if [ -n "$BACKEND_CHANGES" ]; then
-              echo "🔧 Backend changes detected"
-              echo "deploy_backend=true" >> $GITHUB_OUTPUT
+              # Filter out test files from backend changes
+              # Patterns: src/test/, *Test.java, *Test.kt, *Tests.java, *Tests.kt
+              BACKEND_NON_TEST_CHANGES=$(echo "$BACKEND_CHANGES" | grep -v -E '(src/test/|Test\.(java|kt)$|Tests\.(java|kt)$)' || true)
+
+              if [ -n "$BACKEND_NON_TEST_CHANGES" ]; then
+                echo "🔧 Backend application changes detected:"
+                echo "$BACKEND_NON_TEST_CHANGES"
+                echo "deploy_backend=true" >> $GITHUB_OUTPUT
+                SHOULD_DEPLOY=true
+              else
+                echo "🧪 Only backend test files changed - skipping backend deployment"
+                echo "$BACKEND_CHANGES"
+                echo "deploy_backend=false" >> $GITHUB_OUTPUT
+              fi
             else
               echo "⏭️  No backend changes - skipping backend deployment"
               echo "deploy_backend=false" >> $GITHUB_OUTPUT
             fi
 
-            # Check frontend changes
+            # Check frontend changes (excluding test files)
             FRONTEND_CHANGES=$(echo "$CHANGED_FILES" | grep '^frontend/' || true)
             if [ -n "$FRONTEND_CHANGES" ]; then
-              echo "🎨 Frontend changes detected"
-              echo "deploy_frontend=true" >> $GITHUB_OUTPUT
+              # Filter out test files from frontend changes
+              # Patterns: *.test.ts, *.test.tsx, *.spec.ts, *.spec.tsx, e2e/, tests/, __tests__/
+              FRONTEND_NON_TEST_CHANGES=$(echo "$FRONTEND_CHANGES" | grep -v -E '(\.(test|spec)\.(ts|tsx|js|jsx)$|/e2e/|/tests/|/__tests__/)' || true)
+
+              if [ -n "$FRONTEND_NON_TEST_CHANGES" ]; then
+                echo "🎨 Frontend application changes detected:"
+                echo "$FRONTEND_NON_TEST_CHANGES"
+                echo "deploy_frontend=true" >> $GITHUB_OUTPUT
+                SHOULD_DEPLOY=true
+              else
+                echo "🧪 Only frontend test files changed - skipping frontend deployment"
+                echo "$FRONTEND_CHANGES"
+                echo "deploy_frontend=false" >> $GITHUB_OUTPUT
+              fi
             else
               echo "⏭️  No frontend changes - skipping frontend deployment"
               echo "deploy_frontend=false" >> $GITHUB_OUTPUT
             fi
 
-            # Check database changes
+            # Check database changes (excluding test files)
             DATABASE_CHANGES=$(echo "$CHANGED_FILES" | grep '^db/' || true)
             if [ -n "$DATABASE_CHANGES" ]; then
-              echo "🗄️  Database changes detected"
-              echo "deploy_database=true" >> $GITHUB_OUTPUT
+              # Filter out test files from database changes
+              # Patterns: test/, *test.sql, *Test.sql, sample*, example*
+              DATABASE_NON_TEST_CHANGES=$(echo "$DATABASE_CHANGES" | grep -v -E '(/test/|[Tt]est\.sql$|sample|example)' || true)
+
+              if [ -n "$DATABASE_NON_TEST_CHANGES" ]; then
+                echo "🗄️  Database migration changes detected:"
+                echo "$DATABASE_NON_TEST_CHANGES"
+                echo "deploy_database=true" >> $GITHUB_OUTPUT
+                SHOULD_DEPLOY=true
+              else
+                echo "🧪 Only database test files changed - skipping database deployment"
+                echo "$DATABASE_CHANGES"
+                echo "deploy_database=false" >> $GITHUB_OUTPUT
+              fi
             else
               echo "⏭️  No database changes - skipping database deployment"
               echo "deploy_database=false" >> $GITHUB_OUTPUT
             fi
+
+            # Set overall deployment flag
+            echo "should_deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
           fi
 
   skip-deployment:
-    name: Skip Deployment (Only docs changed)
+    name: Skip Deployment (No app changes)
     runs-on: ubuntu-latest
     needs: [check-changes]
     if: needs.check-changes.outputs.should_deploy == 'false'
     steps:
       - name: Notify skip
         run: |
-          echo "📝 Only .md files were modified in this commit"
           echo "🚫 Skipping deployment to GCP - no application changes detected"
           echo ""
-          echo "ℹ️ This is expected behavior when only documentation is updated"
+          echo "ℹ️ Deployment is skipped when only the following files change:"
+          echo "  📝 Documentation files (*.md)"
+          echo "  🧪 Test files (backend: src/test/, *Test.java/kt; frontend: *.test.*, *.spec.*, e2e/)"
+          echo "  🧪 Database test files (test/, *test.sql, sample*, example*)"
+          echo ""
+          echo "✅ This is expected behavior - tests don't affect production functionality"
 
   build-and-push-backend:
     name: Build & Push Backend
