@@ -233,26 +233,48 @@ databaseChangeLog:
             columns:
               - column:
                   name: email
-                  value: test.e2e@mkrew.pl
+                  value: 'test.e2e@mkrew.pl'
               - column:
                   name: password_hash
-                  # Password: TestE2E123!
-                  value: $2a$10$K8Zx1ZxGxGxGxGxGxGxGxe7RqZqZqZqZqZqZqZqZqZqZqZqZqZqZq
+                  # Password: Admin123!  (same as admin for testing)
+                  # BCrypt hash with cost factor 12
+                  value: '$2a$12$N3uB8Mm3qhzXatZHARRQEu.6I2PpgtK8TXrlC0KJRhgENrcejDtIO'
               - column:
                   name: first_name
-                  value: E2E
+                  value: 'E2E'
               - column:
                   name: last_name
-                  value: TestUser
+                  value: 'TestUser'
               - column:
-                  name: blood_type
-                  value: 0+
+                  name: blood_group
+                  value: '0+'
               - column:
-                  name: is_email_verified
-                  valueBoolean: true
-              - column:
-                  name: is_active
+                  name: email_verified
                   valueBoolean: true
               - column:
                   name: role
-                  value: USER
+                  value: 'USER'
+              - column:
+                  name: consent_timestamp
+                  valueComputed: 'CURRENT_TIMESTAMP'
+              - column:
+                  name: consent_version
+                  value: '1.0'
+              - column:
+                  name: created_at
+                  valueComputed: 'CURRENT_TIMESTAMP'
+              - column:
+                  name: updated_at
+                  valueComputed: 'CURRENT_TIMESTAMP'
+
+      rollback:
+        - delete:
+            tableName: users
+            where: email = 'test.e2e@mkrew.pl'
+
+      # Run only once - skip if test user already exists
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM users WHERE email = 'test.e2e@mkrew.pl'
