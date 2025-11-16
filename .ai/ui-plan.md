@@ -40,6 +40,8 @@ Poniższa lista to kluczowe endpointy wymagane przez UI (dokładna specyfikacja 
 - `GET /api/v1/donations` / `POST /api/v1/donations` / `PATCH /api/v1/donations/{id}` / `DELETE /api/v1/donations/{id}` — zarządzanie donacjami użytkownika + eksport.
 - `GET /api/v1/notifications` / `PATCH /api/v1/notifications/{id}/mark-read` — powiadomienia in-app.
 - Admin: `GET/POST/PATCH/DELETE /api/v1/admin/rckik`, `/api/v1/admin/scraper/status`, `/api/v1/admin/reports` — CRUD i monitoring.
+- Admin Blood Snapshots (US-028): `POST /api/v1/admin/blood-snapshots` — ręczne wprowadzanie stanów krwi, `GET /api/v1/admin/blood-snapshots` — listowanie z filtrowaniem (manual/scraped).
+- Admin Parsers (US-029, US-030): `GET /api/v1/admin/parsers/configs` — lista konfiguracji parserów, `POST /api/v1/admin/parsers/configs` — tworzenie konfiguracji, `PUT /api/v1/admin/parsers/configs/{id}` — aktualizacja, `POST /api/v1/admin/parsers/configs/{id}/test` — dry-run test parsera.
 - Token refresh: `POST /api/v1/auth/refresh` — odświeżanie tokena.
 
 Mapowanie UI↔API: każdy widok chroniony odczytuje `users/me` + specyficzne zasoby (donations, favorites, notifications). Publiczne korzystają z `rckik` endpoints.
@@ -161,6 +163,66 @@ Dla każdego widoku podaję: cel, kluczowe informacje, komponenty i wymagania UX
 - Kluczowe komponenty: ReportTable, ReportDetails, ExportTools.
 - UX/dostępność/bezpieczeństwo: Immutable audit trail, dostęp admins only.
 
+#### Ręczne wprowadzanie stanów krwi (US-028)
+- Ścieżka: `/admin/blood-snapshots`
+- Główny cel: Umożliwienie administratorowi ręcznego wprowadzania danych o stanach krwi dla RCKiK (w tym danych historycznych).
+- Kluczowe informacje:
+  - Formularz dodawania: wybór RCKiK (dropdown z wyszukiwaniem), data snapshotu (date picker z możliwością wyboru dat wstecznych), grupa krwi (select A+, A-, B+, B-, AB+, AB-, O+, O-), poziom procentowy (input 0-100% z walidacją).
+  - Tabela snapshotów z filtrowaniem: kolumny (data, RCKiK, grupa krwi, poziom, źródło [manual/scraped], utworzone przez, timestamp), filtry (zakres dat, RCKiK, grupa krwi, źródło), sortowanie, paginacja.
+  - Statystyki: liczba ręcznie wprowadzonych snapshotów dzisiaj/ten tydzień/ten miesiąc, ostatnio dodane snapshoty.
+  - Toast notifications: sukces po zapisaniu, błędy walidacji, ostrzeżenie przy wprowadzaniu duplikatów (ta sama data + RCKiK + grupa krwi).
+- Kluczowe komponenty:
+  - ManualSnapshotForm (modal lub slide-over, React Hook Form + Zod),
+  - BloodSnapshotTable (sortable, filterable),
+  - RckikSearchSelect (typeahead dropdown),
+  - DatePicker (z ograniczeniem: nie przyszłość),
+  - BloodGroupSelect,
+  - PercentageInput (0-100 z validacją),
+  - SourceBadge (manual/scraped indicator),
+  - StatsCards (mini dashboard z metrykami).
+- UX/dostępność/bezpieczeństwo:
+  - Walidacja inline: RCKiK exists and active, grupa krwi w dozwolonym zakresie, poziom 0-100%, data nie z przyszłości.
+  - Confirm modal przy wprowadzaniu duplikatu (ta sama data + RCKiK + grupa krwi) z opcją kontynuowania lub anulowania.
+  - Audit logging: każda operacja zapisywana w audit_log z userId, timestampem, szczegółami.
+  - Keyboard accessible: focus management, ARIA labels, Enter to submit.
+  - Oznaczenie "ręcznie wprowadzony" w tabeli i szczegółach RCKiK (badge + ikona).
+  - Rate limiting feedback (max X snapshotów na godzinę).
+
+#### Zarządzanie konfiguracją parserów (US-029, US-030)
+- Ścieżka: `/admin/parsers`
+- Główny cel: Zarządzanie konfiguracją parserów dla różnych centrów RCKiK i testowanie ich działania.
+- Kluczowe informacje:
+  - Lista konfiguracji parserów: tabela z kolumnami (RCKiK, parser type, source URL, status [active/inactive], last run status [success/failure], last run timestamp, actions [edit/test/delete]).
+  - Formularz tworzenia/edycji konfiguracji: pola (wybór RCKiK, parser type [dropdown: rzeszow, warszawa, etc.], source URL [input z walidacją URL], selectors [JSON editor z syntax highlighting i validation], parser version [auto-generated lub input], is_active [toggle]).
+  - Panel testowania (dry-run): przycisk "Test Parser" otwiera modal z:
+    - Progress indicator (loading, parsowanie),
+    - Preview wyników: tabela z wyekstraktowanymi danymi (grupa krwi, poziom),
+    - Błędy parsowania (jeśli wystąpiły),
+    - Opcja "Save to Database" lub "Discard" po udanym teście.
+  - Historia zmian konfiguracji (audit trail): kto, kiedy, co zmienił (diff view).
+  - Status parsowania: ostatni timestamp, success/failure rate (%), liczba błędów w ostatnim tygodniu.
+- Kluczowe komponenty:
+  - ParserConfigTable (sortable, filterable),
+  - ParserConfigForm (modal, React Hook Form + Zod),
+  - JsonEditor (Monaco Editor lub CodeMirror z syntax highlighting),
+  - TestParserModal (dry-run interface),
+  - ParseResultsPreview (tabela z wynikami testowania),
+  - ParserStatusBadge (active/inactive, success/failure),
+  - AuditTrailTimeline (historia zmian),
+  - RckikSelect (dropdown z wyszukiwaniem),
+  - UrlInput (z walidacją URL),
+  - ToggleSwitch (active/inactive).
+- UX/dostępność/bezpieczeństwo:
+  - Walidacja JSON selectors: syntax check przed zapisem, podświetlanie błędów składni.
+  - Walidacja URL: format check, opcjonalnie ping URL (check if accessible).
+  - Dry-run testing: nie zapisuje do bazy, tylko pokazuje preview wyników.
+  - Confirm modal przy dezaktywacji parsera (ostrzeżenie: scraping dla tego RCKiK będzie zatrzymane).
+  - Audit logging: każda zmiana konfiguracji zapisywana w audit_log.
+  - Role check: tylko ADMIN ma dostęp.
+  - Loading states: skeleton dla tabeli, spinner dla test operation.
+  - Error handling: toast notifications dla błędów API, friendly error messages przy błędach parsowania.
+  - Breadcrumbs: Admin → Parsers → [Parser Config for RCKiK Name].
+
 ## 3. Mapa podróży użytkownika
 
 Poniżej opisuję typowe scenariusze i krok po kroku główny przypadek użycia (Rejestracja → weryfikacja → dodanie ulubionego → obserwowanie powiadomień).
@@ -221,6 +283,21 @@ Komponenty skategoryzowane wg Atomic Design i domeny:
 - AdminTable — columns, filters, bulk actions.
 - AdminForm — create/edit forms, audit trail.
 - ScraperStatus & LogViewer — streaming/paginated logs.
+- ManualSnapshotForm — formularz ręcznego wprowadzania snapshotów (US-028).
+- BloodSnapshotTable — tabela snapshotów z filtrowaniem manual/scraped.
+- RckikSearchSelect — typeahead dropdown do wyboru RCKiK.
+- DatePicker — date picker z ograniczeniem (nie przyszłość).
+- BloodGroupSelect — select dla grup krwi (A+, A-, B+, B-, AB+, AB-, O+, O-).
+- PercentageInput — input z walidacją 0-100%.
+- SourceBadge — badge oznaczający źródło (manual/scraped).
+- ParserConfigTable — tabela konfiguracji parserów (US-029, US-030).
+- ParserConfigForm — formularz tworzenia/edycji konfiguracji parsera.
+- JsonEditor — edytor JSON z syntax highlighting (Monaco/CodeMirror).
+- TestParserModal — modal do testowania parsera (dry-run).
+- ParseResultsPreview — preview wyników parsowania.
+- ParserStatusBadge — badge statusu parsera (active/inactive, success/failure).
+- AuditTrailTimeline — timeline historii zmian konfiguracji.
+- UrlInput — input z walidacją URL.
 
 ## 6. Zarządzanie stanem, bezpieczeństwo i dostępność (skrót)
 
@@ -380,7 +457,22 @@ frontend/
 │   │   │   ├── AlertingPanel.tsx
 │   │   │   ├── ReportTable.tsx
 │   │   │   ├── ReportDetails.tsx
-│   │   │   └── ExportTools.tsx
+│   │   │   ├── ExportTools.tsx
+│   │   │   ├── ManualSnapshotForm.tsx  # Formularz ręcznego wprowadzania (US-028)
+│   │   │   ├── BloodSnapshotTable.tsx  # Tabela snapshotów z filtrowaniem
+│   │   │   ├── RckikSearchSelect.tsx   # Typeahead dropdown RCKiK
+│   │   │   ├── DatePicker.tsx          # Date picker z ograniczeniem
+│   │   │   ├── BloodGroupSelect.tsx    # Select grup krwi
+│   │   │   ├── PercentageInput.tsx     # Input 0-100%
+│   │   │   ├── SourceBadge.tsx         # Badge manual/scraped
+│   │   │   ├── ParserConfigTable.tsx   # Tabela konfiguracji parserów (US-029, US-030)
+│   │   │   ├── ParserConfigForm.tsx    # Formularz config parsera
+│   │   │   ├── JsonEditor.tsx          # JSON editor z syntax highlighting
+│   │   │   ├── TestParserModal.tsx     # Modal dry-run testowania
+│   │   │   ├── ParseResultsPreview.tsx # Preview wyników parsowania
+│   │   │   ├── ParserStatusBadge.tsx   # Badge statusu parsera
+│   │   │   ├── AuditTrailTimeline.tsx  # Timeline historii zmian
+│   │   │   └── UrlInput.tsx            # Input z walidacją URL
 │   │   │
 │   │   ├── common/                 # Wspólne komponenty
 │   │   │   ├── Navbar.astro        # Główna nawigacja
@@ -431,7 +523,9 @@ frontend/
 │   │   └── admin/
 │   │       ├── rckik.astro         # Zarządzanie RCKiK
 │   │       ├── scraper.astro       # Monitoring scrapera
-│   │       └── reports.astro       # Raporty użytkowników
+│   │       ├── reports.astro       # Raporty użytkowników
+│   │       ├── blood-snapshots.astro  # Ręczne wprowadzanie stanów krwi (US-028)
+│   │       └── parsers.astro       # Zarządzanie konfiguracją parserów (US-029, US-030)
 │   │
 │   ├── lib/                         # Biblioteki i utilities
 │   │   ├── api/                    # API client
@@ -443,7 +537,9 @@ frontend/
 │   │   │   │   ├── donations.ts
 │   │   │   │   ├── favorites.ts
 │   │   │   │   ├── notifications.ts
-│   │   │   │   └── admin.ts
+│   │   │   │   ├── admin.ts
+│   │   │   │   ├── adminBloodSnapshots.ts  # US-028 endpoints
+│   │   │   │   └── adminParsers.ts         # US-029, US-030 endpoints
 │   │   │   └── types.ts            # API types
 │   │   │
 │   │   ├── store/                  # Redux Toolkit store
@@ -936,6 +1032,86 @@ apiClient.interceptors.response.use(
 
 ---
 
+### 12.6 Sprint 6: Nowe funkcjonalności admina - Manual Data Entry & Parsers (Week 6-7)
+
+**Priority: P1 (High - Extended Admin Features)**
+
+#### Ręczne wprowadzanie stanów krwi (US-028)
+- [ ] **MANUAL-001**: Strona /admin/blood-snapshots.astro
+- [ ] **MANUAL-002**: ManualSnapshotForm component (modal/slide-over)
+- [ ] **MANUAL-003**: RckikSearchSelect (typeahead dropdown)
+- [ ] **MANUAL-004**: DatePicker component (z ograniczeniem: nie przyszłość)
+- [ ] **MANUAL-005**: BloodGroupSelect component (A+, A-, B+, B-, AB+, AB-, O+, O-)
+- [ ] **MANUAL-006**: PercentageInput component (0-100% z walidacją)
+- [ ] **MANUAL-007**: BloodSnapshotTable (sortable, filterable)
+- [ ] **MANUAL-008**: SourceBadge component (manual/scraped indicator)
+- [ ] **MANUAL-009**: Filtry: zakres dat, RCKiK, grupa krwi, źródło (manual/scraped)
+- [ ] **MANUAL-010**: StatsCards (snapshoty dzisiaj/tydzień/miesiąc)
+- [ ] **MANUAL-011**: Zod validation schema dla ManualSnapshotForm
+- [ ] **MANUAL-012**: API endpoint: POST /api/v1/admin/blood-snapshots
+- [ ] **MANUAL-013**: API endpoint: GET /api/v1/admin/blood-snapshots (z filtrowaniem)
+- [ ] **MANUAL-014**: Walidacja inline (RCKiK exists, grupa krwi valid, poziom 0-100%, data nie przyszłość)
+- [ ] **MANUAL-015**: Confirm modal przy duplikacie (ta sama data + RCKiK + grupa krwi)
+- [ ] **MANUAL-016**: Audit logging dla operacji CREATE
+- [ ] **MANUAL-017**: Toast notifications (sukces/błędy)
+- [ ] **MANUAL-018**: Obsługa rate limiting (max X snapshotów/godzinę)
+- [ ] **MANUAL-019**: Oznaczenie "ręcznie wprowadzony" w UI (badge + ikona)
+- [ ] **MANUAL-020**: Keyboard navigation i ARIA labels
+
+#### Zarządzanie konfiguracją parserów (US-029, US-030)
+- [ ] **PARSER-001**: Strona /admin/parsers.astro
+- [ ] **PARSER-002**: ParserConfigTable component (sortable, filterable)
+- [ ] **PARSER-003**: ParserConfigForm component (create/edit modal)
+- [ ] **PARSER-004**: JsonEditor component (Monaco Editor lub CodeMirror)
+- [ ] **PARSER-005**: RckikSelect dropdown (dla wyboru RCKiK)
+- [ ] **PARSER-006**: Parser type dropdown (rzeszow, warszawa, etc.)
+- [ ] **PARSER-007**: UrlInput component (z walidacją URL)
+- [ ] **PARSER-008**: ToggleSwitch component (active/inactive)
+- [ ] **PARSER-009**: TestParserModal component (dry-run interface)
+- [ ] **PARSER-010**: ParseResultsPreview component (tabela wyników)
+- [ ] **PARSER-011**: ParserStatusBadge component (active/inactive, success/failure)
+- [ ] **PARSER-012**: AuditTrailTimeline component (historia zmian)
+- [ ] **PARSER-013**: Zod validation schema dla ParserConfigForm
+- [ ] **PARSER-014**: API endpoint: GET /api/v1/admin/parsers/configs
+- [ ] **PARSER-015**: API endpoint: POST /api/v1/admin/parsers/configs
+- [ ] **PARSER-016**: API endpoint: PUT /api/v1/admin/parsers/configs/{id}
+- [ ] **PARSER-017**: API endpoint: POST /api/v1/admin/parsers/configs/{id}/test (dry-run)
+- [ ] **PARSER-018**: Walidacja JSON selectors (syntax check, highlighting errors)
+- [ ] **PARSER-019**: Walidacja URL (format check, optional ping)
+- [ ] **PARSER-020**: Dry-run testing logic (nie zapisuje do bazy, tylko preview)
+- [ ] **PARSER-021**: Confirm modal przy dezaktywacji parsera
+- [ ] **PARSER-022**: Audit logging dla zmian konfiguracji
+- [ ] **PARSER-023**: Loading states (skeleton, spinner dla test)
+- [ ] **PARSER-024**: Error handling (toast notifications, friendly error messages)
+- [ ] **PARSER-025**: Breadcrumbs (Admin → Parsers → [Parser Config])
+- [ ] **PARSER-026**: Status parsowania display (last run, success rate, błędy)
+- [ ] **PARSER-027**: Diff view dla historii zmian konfiguracji
+
+#### Integracja z istniejącym UI
+- [ ] **INT-001**: Dodanie linków do sidebara admina (Blood Snapshots, Parsers)
+- [ ] **INT-002**: Aktualizacja szczegółów RCKiK (/rckik/[id]) - badge "manual" dla ręcznych snapshotów
+- [ ] **INT-003**: Aktualizacja AdminLayout.astro (nowe menu items)
+- [ ] **INT-004**: Aktualizacja routing guards (role check dla nowych stron)
+- [ ] **INT-005**: E2E tests dla ręcznego wprowadzania snapshotów
+- [ ] **INT-006**: E2E tests dla zarządzania konfiguracją parserów
+- [ ] **INT-007**: Integration tests dla dry-run testowania
+
+**Acceptance Criteria:**
+- Admin może ręcznie wprowadzać snapshoty krwi (US-028)
+- Admin może dodawać snapshoty z datami wstecznymi
+- Wszystkie snapshoty są walidowane i oznaczane flagą is_manual
+- Audit log zapisuje wszystkie operacje ręcznego wprowadzania
+- Admin może zarządzać konfiguracją parserów (US-029, US-030)
+- JSON editor działa z syntax highlighting i walidacją
+- Dry-run testing parserów działa bez zapisu do bazy
+- Audit log zapisuje zmiany konfiguracji parserów
+- Tylko role=ADMIN ma dostęp do nowych stron
+- Mobile responsive design
+- Accessibility (WCAG 2.1 AA compliance)
+- E2E tests passed dla kluczowych scenariuszy
+
+---
+
 ### 12.7 Backlog (Post-MVP Features)
 
 **Priority: P2 (Nice to Have - Future Iterations)**
@@ -1012,7 +1188,13 @@ Każdy task jest "Done" gdy:
 
 **Total: ~6 weeks for MVP**
 
-**Backlog items**: Scheduled for post-MVP iterations (weeks 7-12)
+**Extended Timeline (with new admin features - 8 weeks):**
+- Sprint 0-5: MVP (6 weeks)
+- Sprint 6: Manual Data Entry & Parsers (US-028, US-029, US-030) (2 weeks)
+
+**Total with Sprint 6: ~8 weeks**
+
+**Backlog items**: Scheduled for post-MVP iterations (weeks 9-14)
 
 ---
 
