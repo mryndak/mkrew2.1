@@ -81,8 +81,8 @@ mkrew:
   # Email configuration (US-010)
   email:
     enabled: ${EMAIL_ENABLED:true}
-    sendgrid:
-      api-key: ${SENDGRID_API_KEY:}
+    mailersend:
+      api-key: ${MAILERSEND_API_KEY:}
     from-email: ${EMAIL_FROM:noreply@mkrew.pl}
     from-name: ${EMAIL_FROM_NAME:mkrew - Platforma dla dawców krwi}
 

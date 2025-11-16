@@ -77,10 +77,10 @@ if [ -z "$JWT_SECRET" ]; then
 fi
 create_or_update_secret "mkrew-jwt-secret" "$JWT_SECRET"
 
-# 5. SendGrid API Key (optional)
+# 5. MailerSend API Key (optional)
 echo ""
-SENDGRID_API_KEY=$(prompt_secret "SendGrid API Key (optional, press Enter to skip)" "")
-create_or_update_secret "mkrew-sendgrid-api-key" "$SENDGRID_API_KEY"
+MAILERSEND_API_KEY=$(prompt_secret "MailerSend API Key (optional, press Enter to skip)" "")
+create_or_update_secret "mkrew-mailersend-api-key" "$MAILERSEND_API_KEY"
 
 echo ""
 echo "✅ All secrets have been created/updated successfully!"

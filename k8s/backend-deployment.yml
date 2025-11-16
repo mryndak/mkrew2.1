@@ -36,7 +36,7 @@ spec:
           DB_PASSWORD=$(gcloud secrets versions access latest --secret="mkrew-db-password" --project=mkrew-478317)
           CLOUD_SQL_CONNECTION_NAME=$(gcloud secrets versions access latest --secret="mkrew-cloud-sql-connection" --project=mkrew-478317)
           JWT_SECRET=$(gcloud secrets versions access latest --secret="mkrew-jwt-secret" --project=mkrew-478317 || echo "VerySecureSecretKeyForJWTTokenSigningThatIsAtLeast256BitsLongForHS256Algorithm")
-          SENDGRID_API_KEY=$(gcloud secrets versions access latest --secret="mkrew-sendgrid-api-key" --project=mkrew-478317 || echo "")
+          MAILERSEND_API_KEY=$(gcloud secrets versions access latest --secret="mkrew-mailersend-api-key" --project=mkrew-478317 || echo "")
 
           # Zainstaluj kubectl jeśli nie ma (szybka metoda)
           if ! command -v kubectl &> /dev/null; then
@@ -53,7 +53,7 @@ spec:
             --from-literal=DB_PASSWORD="$DB_PASSWORD" \
             --from-literal=CLOUD_SQL_CONNECTION_NAME="$CLOUD_SQL_CONNECTION_NAME" \
             --from-literal=JWT_SECRET="$JWT_SECRET" \
-            --from-literal=SENDGRID_API_KEY="$SENDGRID_API_KEY" \
+            --from-literal=MAILERSEND_API_KEY="$MAILERSEND_API_KEY" \
             --dry-run=client -o yaml | kubectl apply -f -
 
           echo "✅ Secrets successfully loaded!"
@@ -114,11 +114,11 @@ spec:
             secretKeyRef:
               name: mkrew-secrets
               key: JWT_SECRET
-        - name: SENDGRID_API_KEY
+        - name: MAILERSEND_API_KEY
           valueFrom:
             secretKeyRef:
               name: mkrew-secrets
-              key: SENDGRID_API_KEY
+              key: MAILERSEND_API_KEY
         resources:
           requests:
             memory: "512Mi"
