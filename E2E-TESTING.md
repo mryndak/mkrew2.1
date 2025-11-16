@@ -306,6 +306,7 @@ environment:
   RATE_LIMIT_ENABLED: "false"  # ⚠️ WYŁĄCZONE dla testów
   EMAIL_ENABLED: "false"       # ⚠️ WYŁĄCZONE dla testów
   DB_NAME: mkrew_test          # Oddzielna baza testowa
+  LIQUIBASE_CONTEXTS: test     # Ładuje dane testowe
 ```
 
 ### Frontend testowy (`.env.test`)
@@ -313,53 +314,102 @@ environment:
 ```bash
 PUBLIC_API_BASE_URL=http://localhost:8080/api/v1  # Lokalny backend
 PUBLIC_ENABLE_ANALYTICS=false                      # Wyłączona analityka
-PUBLIC_RECAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZ...     # Test key
+PUBLIC_RECAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZ...     # Test key (Google test key - zawsze passes)
 ```
+
+### Dane testowe (Seed Data)
+
+Backend testowy automatycznie ładuje dane:
+
+**RCKiK Centra** (wszystkie regiony Polski):
+- Warszawa, Kraków, Wrocław, Poznań, Gdańsk, itd.
+- Źródło: `db/changelog/changesets/018-seed-rckik-data.yaml`
+
+**Blood Snapshots** (tylko dla testów E2E):
+- Snapshoty dla Warszawy (wszystkie 8 grup krwi) z różnymi poziomami
+- Snapshoty dla Krakowa (wybrane grupy)
+- Różne statusy: OPTIMAL, SUFFICIENT, LOW, CRITICAL
+- Źródło: `db/changelog/changesets/023-seed-test-data-e2e.yaml` (context: test)
+
+**Użytkownicy testowi**:
+- Test User: `test.e2e@mkrew.pl` / `TestE2E123!`
+- Admin: (z seed: 022-seed-admin-user.yaml)
+
+**Konfiguracje scraperów**:
+- Źródło: `db/changelog/changesets/019-seed-scraper-configs.yaml`
 
 ---
 
 ## 🚦 CI/CD
 
-### GitHub Actions
+### ✅ GitHub Actions - Automatyczna konfiguracja
 
-Aby uruchomić testy E2E w CI/CD, dodaj do workflow:
+**Testy E2E są już skonfigurowane w GitHub Actions!**
+
+Workflow `.github/workflows/test.yml` automatycznie:
+1. ✅ Buduje backend (Java + Gradle)
+2. ✅ Uruchamia `docker-compose.test.yml` (PostgreSQL + Backend + Liquibase)
+3. ✅ Ładuje dane testowe (seed data via Liquibase context: test)
+4. ✅ Czeka na backend health check (max 60s)
+5. ✅ Uruchamia testy Playwright
+6. ✅ Zatrzymuje backend po testach
+7. ✅ Uploaduje raporty jako artifacts
+
+### Jak to działa w CI?
+
+**Workflow uruchamia się automatycznie przy:**
+- Pull Requestach
+- Push do `main` lub `develop`
+
+**Logi i raporty:**
+- Logi backendu: dostępne w przypadku błędów
+- Playwright report: artifact `playwright-report`
+- Test results: artifact `test-results`
+
+### Co jest testowane?
+
+- **E2E Tests**: Pełne testy end-to-end (wszystkie specyfikacje)
+- **Accessibility Tests**: Osobny job dla testów axe-core
+
+### Dane testowe w CI
+
+Backend w CI automatycznie ładuje:
+- ✅ **Wszystkie RCKiK centra** (seed: 018-seed-rckik-data.yaml)
+- ✅ **Blood snapshots dla testów** (seed: 023-seed-test-data-e2e.yaml - tylko context:test)
+- ✅ **Testowy użytkownik**: `test.e2e@mkrew.pl` / `TestE2E123!`
+- ✅ **Admin użytkownik** (seed: 022-seed-admin-user.yaml)
+
+### Przykładowy workflow (już zaimplementowany)
 
 ```yaml
 jobs:
   e2e-tests:
+    name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+      - name: Setup Node.js & Java
+        # ... (konfiguracja Node 20 + Java 21)
 
-      - name: Install dependencies
-        run: |
-          cd frontend
-          npm ci
-          npm run playwright:install
+      - name: Build backend
+        run: ./gradlew build -x test
 
-      - name: Start test backend
-        run: |
-          docker-compose -f docker-compose.test.yml up -d
-          sleep 30  # Czekaj na inicjalizację
+      - name: Start test backend and database
+        run: docker-compose -f docker-compose.test.yml up -d
+
+      - name: Wait for backend health check
+        # Sprawdza http://localhost:8080/actuator/health
+        # Maksymalnie 30 prób (60 sekund)
 
       - name: Run E2E tests
-        run: |
-          cd frontend
-          npm run test:e2e
+        run: npm run test:e2e
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: playwright-report
-          path: frontend/playwright-report/
+      - name: Upload reports
+        # Playwright report + test results
 
-      - name: Cleanup
+      - name: Stop test backend
         if: always()
         run: docker-compose -f docker-compose.test.yml down -v
 ```

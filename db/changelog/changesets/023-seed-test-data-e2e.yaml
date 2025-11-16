@@ -1,0 +1,258 @@
+databaseChangeLog:
+  - changeSet:
+      id: 023-seed-test-data-e2e
+      author: mkrew-team
+      comment: Seed data for E2E tests - blood snapshots for testing
+      context: test
+      changes:
+        # Blood snapshots for Warszawa (ID=1) - Recent data with various levels
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: '0+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 85.5
+              - column:
+                  name: status
+                  value: OPTIMAL
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: '0-'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 45.2
+              - column:
+                  name: status
+                  value: SUFFICIENT
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: 'A+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 65.0
+              - column:
+                  name: status
+                  value: SUFFICIENT
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: 'A-'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 18.5
+              - column:
+                  name: status
+                  value: LOW
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: 'B+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 55.0
+              - column:
+                  name: status
+                  value: SUFFICIENT
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: 'B-'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 12.0
+              - column:
+                  name: status
+                  value: CRITICAL
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: 'AB+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 70.0
+              - column:
+                  name: status
+                  value: SUFFICIENT
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: 'AB-'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 25.0
+              - column:
+                  name: status
+                  value: LOW
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        # Blood snapshots for Kraków (ID=2)
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 2
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: '0+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 75.0
+              - column:
+                  name: status
+                  value: OPTIMAL
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 2
+              - column:
+                  name: snapshot_date
+                  valueDate: CURRENT_TIMESTAMP
+              - column:
+                  name: blood_group
+                  value: 'A+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 50.0
+              - column:
+                  name: status
+                  value: SUFFICIENT
+              - column:
+                  name: is_complete
+                  valueBoolean: true
+
+        # Test user for E2E tests
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: test.e2e@mkrew.pl
+              - column:
+                  name: password_hash
+                  # Password: TestE2E123!
+                  value: $2a$10$K8Zx1ZxGxGxGxGxGxGxGxe7RqZqZqZqZqZqZqZqZqZqZqZqZqZqZq
+              - column:
+                  name: first_name
+                  value: E2E
+              - column:
+                  name: last_name
+                  value: TestUser
+              - column:
+                  name: blood_type
+                  value: 0+
+              - column:
+                  name: is_email_verified
+                  valueBoolean: true
+              - column:
+                  name: is_active
+                  valueBoolean: true
+              - column:
+                  name: role
+                  value: USER

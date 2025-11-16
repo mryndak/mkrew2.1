@@ -33,6 +33,8 @@ services:
       LIQUIBASE_COMMAND_USERNAME: mkrew_test_user
       LIQUIBASE_COMMAND_PASSWORD: mkrew_test_password
       LIQUIBASE_COMMAND_CHANGELOG_FILE: db/changelog/db.changelog-master.yaml
+      # Enable test context to load E2E test data
+      LIQUIBASE_CONTEXTS: test
     volumes:
       - ./db/changelog:/liquibase/changelog
     depends_on:
