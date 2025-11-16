@@ -52,6 +52,9 @@ services:
     container_name: mkrew-test-backend
     environment:
       SPRING_PROFILES_ACTIVE: test
+      # Server configuration
+      SERVER_PORT: 8080
+      # Database configuration
       DB_HOST: postgres-test
       DB_PORT: 5432
       DB_NAME: mkrew_test
