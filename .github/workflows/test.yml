@@ -180,9 +180,13 @@ jobs:
         if: failure()
         run: docker compose -f docker-compose.test.yml logs
 
-      - name: Stop test backend
+      - name: Stop test backend (graceful shutdown)
         if: always()
-        run: docker compose -f docker-compose.test.yml down -v
+        run: |
+          echo "Stopping backend first..."
+          docker compose -f docker-compose.test.yml stop backend-test
+          echo "Stopping remaining services..."
+          docker compose -f docker-compose.test.yml down -v
 
   # Accessibility tests
   accessibility-tests:
@@ -255,9 +259,13 @@ jobs:
         if: failure()
         run: docker compose -f docker-compose.test.yml logs
 
-      - name: Stop test backend
+      - name: Stop test backend (graceful shutdown)
         if: always()
-        run: docker compose -f docker-compose.test.yml down -v
+        run: |
+          echo "Stopping backend first..."
+          docker compose -f docker-compose.test.yml stop backend-test
+          echo "Stopping remaining services..."
+          docker compose -f docker-compose.test.yml down -v
 
   # Security scan
   security-scan:
