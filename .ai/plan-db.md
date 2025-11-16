@@ -275,7 +275,7 @@ db/
 | opened_at | TIMESTAMP | NULL | Data otwarcia |
 | bounced_at | TIMESTAMP | NULL | Data bounce |
 | bounce_type | VARCHAR(20) | NULL | Typ bounce (HARD/SOFT) |
-| external_id | VARCHAR(255) | NULL | ID z SendGrid/Mailgun |
+| external_id | VARCHAR(255) | NULL | ID z MailerSend/Mailgun |
 | metadata | JSONB | NULL | Dodatkowe dane |
 
 **Constraints:**

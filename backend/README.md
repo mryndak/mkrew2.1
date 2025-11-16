@@ -26,7 +26,7 @@ Backend application for the mkrew blood donation platform built with Java 21 and
 ### Kluczowe funkcjonalności
 - **REST API** - pełne API zgodne z OpenAPI 3.0 (Swagger)
 - **Authentication** - JWT tokens z refresh mechanism
-- **Email Notifications** - SendGrid integration dla critical blood level alerts
+- **Email Notifications** - MailerSend integration dla critical blood level alerts
 - **Web Scraping Ready** - architecture prepared dla Jsoup scraper
 - **Database Migrations** - Liquibase dla version control schematu
 - **Security** - BCrypt password hashing, rate limiting, CORS
@@ -393,7 +393,7 @@ private String[] aliases;
 - **Features:**
   - Automated monitoring of blood inventory levels
   - Daily scheduled check at 03:00 CET (after scraping)
-  - Email alerts via SendGrid integration
+  - Email alerts via MailerSend integration
   - Critical threshold: Blood levels below 20%
   - User eligibility filtering:
     - Active accounts with verified emails
@@ -412,7 +412,7 @@ private String[] aliases;
   - `NotificationScheduler` - Cron job scheduler
   - `EmailLogRepository` - Data access and analytics
 - **Configuration:**
-  - `SENDGRID_API_KEY` - SendGrid API key
+  - `MAILERSEND_API_KEY` - MailerSend API key
   - `EMAIL_ENABLED` - Enable/disable email sending
   - `NOTIFICATION_CRITICAL_THRESHOLD` - Critical percentage (default: 20.0)
   - `NOTIFICATION_RATE_LIMIT` - Max emails per user per 24h (default: 5)

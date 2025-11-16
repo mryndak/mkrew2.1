@@ -49,7 +49,7 @@ Użytkownicy (priorytetowo: dawcy krwi) potrzebują rzetelnej informacji o stana
 - Powiadomienia e‑mail oraz powiadomienia in‑app po zalogowaniu (MVP: e‑mail + in‑app).
 - Możliwość ustawienia ulubionych RCKiK; alerty wysyłane w oparciu o progi krytyczne (konfigurowane globalnie lub per RCKiK).
 - Preferencje powiadomień (opt‑in, daily/only critical/in‑app only).
-- W PoC użycie dostawcy e‑mail (np. SendGrid/Mailgun) oraz konfiguracja SPF/DKIM/DMARC.
+- W PoC użycie dostawcy e‑mail (np. MailerSend/Mailgun) oraz konfiguracja SPF/DKIM/DMARC.
 
 3.7. Operacje administracyjne
 - Panel admina (PoC: prosty UI) do: przeglądu scraper_logs, ręcznej korekty danych, ponownego parsowania pojedynczych stron, zarządzania listą RCKiK (kanoniczne mapowanie).

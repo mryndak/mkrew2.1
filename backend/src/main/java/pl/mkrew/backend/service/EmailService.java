@@ -1,19 +1,17 @@
 package pl.mkrew.backend.service;
 
-import com.sendgrid.*;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
+import com.mailersend.sdk.MailerSend;
+import com.mailersend.sdk.MailerSendResponse;
+import com.mailersend.sdk.emails.Email;
+import com.mailersend.sdk.exceptions.MailerSendException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.mkrew.backend.dto.EmailNotificationRequest;
 
-import java.io.IOException;
-
 /**
- * Service for sending emails via SendGrid
+ * Service for sending emails via MailerSend
  * US-010: Email Notifications
  */
 @Service
@@ -23,8 +21,8 @@ public class EmailService {
 
     private final EmailLogService emailLogService;
 
-    @Value("${mkrew.email.sendgrid.api-key:}")
-    private String sendGridApiKey;
+    @Value("${mkrew.email.mailersend.api-key:}")
+    private String mailerSendApiKey;
 
     @Value("${mkrew.email.from-email}")
     private String fromEmail;
@@ -50,8 +48,8 @@ public class EmailService {
             return false;
         }
 
-        if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
-            log.warn("SendGrid API key is not configured. Cannot send email to: {}", request.getRecipientEmail());
+        if (mailerSendApiKey == null || mailerSendApiKey.isBlank()) {
+            log.warn("MailerSend API key is not configured. Cannot send email to: {}", request.getRecipientEmail());
             return false;
         }
 
@@ -59,23 +57,22 @@ public class EmailService {
             // Create email content
             String htmlContent = buildHtmlContent(request);
 
-            // Create SendGrid mail object
-            Email from = new Email(fromEmail, fromName);
-            Email to = new Email(request.getRecipientEmail(), request.getRecipientName());
-            Content content = new Content("text/html", htmlContent);
-            Mail mail = new Mail(from, request.getSubject(), to, content);
+            // Initialize MailerSend client
+            MailerSend ms = new MailerSend();
+            ms.setToken(mailerSendApiKey);
 
-            // Send email via SendGrid
-            SendGrid sg = new SendGrid(sendGridApiKey);
-            Request sendGridRequest = new Request();
-            sendGridRequest.setMethod(Method.POST);
-            sendGridRequest.setEndpoint("mail/send");
-            sendGridRequest.setBody(mail.build());
+            // Create email
+            Email email = new Email();
+            email.setFrom(fromName, fromEmail);
+            email.addRecipient(request.getRecipientName(), request.getRecipientEmail());
+            email.setSubject(request.getSubject());
+            email.setHtml(htmlContent);
 
-            Response response = sg.api(sendGridRequest);
+            // Send email via MailerSend
+            MailerSendResponse response = ms.emails().send(email);
 
-            // Extract message ID from response headers
-            String messageId = extractMessageId(response);
+            // Extract message ID from response
+            String messageId = response.messageId;
 
             // Log email
             emailLogService.createEmailLog(
@@ -87,18 +84,13 @@ public class EmailService {
                     messageId
             );
 
-            if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
-                log.info("Email sent successfully to: {}. Status: {}. Message ID: {}",
-                        request.getRecipientEmail(), response.getStatusCode(), messageId);
-                return true;
-            } else {
-                log.error("Failed to send email to: {}. Status: {}. Body: {}",
-                        request.getRecipientEmail(), response.getStatusCode(), response.getBody());
-                return false;
-            }
+            log.info("Email sent successfully to: {}. Message ID: {}",
+                    request.getRecipientEmail(), messageId);
+            return true;
 
-        } catch (IOException e) {
-            log.error("Error sending email to: {}", request.getRecipientEmail(), e);
+        } catch (MailerSendException e) {
+            log.error("Error sending email to: {}. Error: {}",
+                    request.getRecipientEmail(), e.getMessage(), e);
             return false;
         }
     }
@@ -126,22 +118,6 @@ public class EmailService {
         return request.getTemplateName();
     }
 
-    /**
-     * Extract message ID from SendGrid response headers
-     *
-     * @param response SendGrid response
-     * @return Message ID or null
-     */
-    private String extractMessageId(Response response) {
-        try {
-            if (response.getHeaders() != null && response.getHeaders().containsKey("X-Message-Id")) {
-                return response.getHeaders().get("X-Message-Id");
-            }
-        } catch (Exception e) {
-            log.debug("Could not extract message ID from SendGrid response", e);
-        }
-        return null;
-    }
 
     /**
      * Send critical blood level alert email

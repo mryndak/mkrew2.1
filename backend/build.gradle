@@ -41,8 +41,8 @@ dependencies {
     // OpenAPI/Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 
-    // Email - SendGrid
-    implementation 'com.sendgrid:sendgrid-java:4.10.2'
+    // Email - MailerSend
+    implementation 'com.mailersend:java-sdk:1.2.3'
 
     // Rate Limiting - Bucket4j
     implementation 'com.bucket4j:bucket4j-core:8.7.0'
