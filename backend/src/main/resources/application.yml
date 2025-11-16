@@ -96,6 +96,10 @@ mkrew:
     notification-check: ${SCHEDULER_NOTIFICATION_CHECK:0 0 3 * * *}  # Every day at 03:00 CET
     health-check: ${SCHEDULER_HEALTH_CHECK:0 0 * * * *}  # Every hour
 
+  # Rate limiting configuration (US-023)
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}  # Enable/disable rate limiting (disabled for E2E tests)
+
   # Application URLs
   app:
     base-url: ${APP_BASE_URL:http://localhost:3000}

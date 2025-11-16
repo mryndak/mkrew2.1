@@ -1,0 +1,253 @@
+databaseChangeLog:
+  - changeSet:
+      id: 023-seed-test-data-e2e
+      author: mkrew-team
+      comment: Seed data for E2E tests - blood snapshots and test user
+      context: test
+      changes:
+        # Blood snapshots for Warszawa (ID=1) - Recent data with various levels
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: '0+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 85.5
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: '0-'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 45.2
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: 'A+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 65.0
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: 'A-'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 18.5
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: 'B+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 55.0
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: 'B-'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 12.0
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: 'AB+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 70.0
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 1
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: 'AB-'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 25.0
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        # Blood snapshots for Kraków (ID=2)
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 2
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: '0+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 75.0
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        - insert:
+            tableName: blood_snapshots
+            columns:
+              - column:
+                  name: rckik_id
+                  valueNumeric: 2
+              - column:
+                  name: snapshot_date
+                  valueComputed: CURRENT_DATE
+              - column:
+                  name: blood_group
+                  value: 'A+'
+              - column:
+                  name: level_percentage
+                  valueNumeric: 50.0
+              - column:
+                  name: is_manual
+                  valueBoolean: true
+
+        # Test user for E2E tests
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: 'test.e2e@mkrew.pl'
+              - column:
+                  name: password_hash
+                  # Password: Admin123!  (same as admin for testing)
+                  # BCrypt hash with cost factor 12
+                  value: '$2a$12$N3uB8Mm3qhzXatZHARRQEu.6I2PpgtK8TXrlC0KJRhgENrcejDtIO'
+              - column:
+                  name: first_name
+                  value: 'E2E'
+              - column:
+                  name: last_name
+                  value: 'TestUser'
+              - column:
+                  name: blood_group
+                  value: '0+'
+              - column:
+                  name: email_verified
+                  valueBoolean: true
+              - column:
+                  name: role
+                  value: 'USER'
+              - column:
+                  name: consent_timestamp
+                  valueComputed: 'CURRENT_TIMESTAMP'
+              - column:
+                  name: consent_version
+                  value: '1.0'
+              - column:
+                  name: created_at
+                  valueComputed: 'CURRENT_TIMESTAMP'
+              - column:
+                  name: updated_at
+                  valueComputed: 'CURRENT_TIMESTAMP'
+
+      rollback:
+        - delete:
+            tableName: users
+            where: email = 'test.e2e@mkrew.pl'
+        - delete:
+            tableName: blood_snapshots
+            where: is_manual = TRUE AND rckik_id IN (1, 2)
+
+      # Run only once - skip if test user already exists
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM users WHERE email = 'test.e2e@mkrew.pl'

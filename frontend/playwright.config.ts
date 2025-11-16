@@ -1,7 +1,22 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+// Load test environment variables from .env.test
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '.env.test') });
 
 /**
  * Playwright configuration for mkrew E2E tests
+ *
+ * IMPORTANT: Tests use LOCAL backend (http://localhost:8080) with DISABLED rate limiting
+ * Configuration loaded from: .env.test
+ *
+ * Backend must be started before running tests:
+ * - Run: docker-compose -f docker-compose.test.yml up
+ * - Or use: npm run test:e2e:backend:start
+ *
  * See https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
