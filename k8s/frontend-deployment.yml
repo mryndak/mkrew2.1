@@ -27,75 +27,14 @@ spec:
           name: http
           protocol: TCP
         env:
+        # Runtime environment variables
+        # Note: PUBLIC_* variables are build-time only for Astro/Vite
+        # They are baked into the bundle during Docker build (see .github/workflows/cd-gcp.yml)
+        # and cannot be changed at runtime
         - name: HOST
           value: "0.0.0.0"
         - name: PORT
           value: "4321"
-        - name: PUBLIC_ENV
-          valueFrom:
-            configMapKeyRef:
-              name: mkrew-config
-              key: PUBLIC_ENV
-        - name: PUBLIC_APP_VERSION
-          valueFrom:
-            configMapKeyRef:
-              name: mkrew-config
-              key: PUBLIC_APP_VERSION
-        - name: PUBLIC_API_BASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: mkrew-secrets
-              key: PUBLIC_API_BASE_URL
-        - name: PUBLIC_SITE_URL
-          valueFrom:
-            secretKeyRef:
-              name: mkrew-secrets
-              key: PUBLIC_SITE_URL
-        - name: PUBLIC_ENABLE_FAVORITES
-          valueFrom:
-            configMapKeyRef:
-              name: mkrew-config
-              key: PUBLIC_ENABLE_FAVORITES
-        - name: PUBLIC_ENABLE_SCRAPER_STATUS
-          valueFrom:
-            configMapKeyRef:
-              name: mkrew-config
-              key: PUBLIC_ENABLE_SCRAPER_STATUS
-        - name: PUBLIC_ENABLE_ANALYTICS
-          valueFrom:
-            configMapKeyRef:
-              name: mkrew-config
-              key: PUBLIC_ENABLE_ANALYTICS
-        - name: PUBLIC_RECAPTCHA_SITE_KEY
-          valueFrom:
-            secretKeyRef:
-              name: mkrew-secrets
-              key: PUBLIC_RECAPTCHA_SITE_KEY
-        - name: PUBLIC_GA_TRACKING_ID
-          valueFrom:
-            secretKeyRef:
-              name: mkrew-secrets
-              key: PUBLIC_GA_TRACKING_ID
-        - name: PUBLIC_SENTRY_DSN
-          valueFrom:
-            secretKeyRef:
-              name: mkrew-secrets
-              key: PUBLIC_SENTRY_DSN
-        - name: PUBLIC_SENTRY_ENVIRONMENT
-          valueFrom:
-            secretKeyRef:
-              name: mkrew-secrets
-              key: PUBLIC_SENTRY_ENVIRONMENT
-        - name: PUBLIC_CACHE_DURATION
-          valueFrom:
-            configMapKeyRef:
-              name: mkrew-config
-              key: PUBLIC_CACHE_DURATION
-        - name: PUBLIC_API_TIMEOUT
-          valueFrom:
-            configMapKeyRef:
-              name: mkrew-config
-              key: PUBLIC_API_TIMEOUT
         resources:
           requests:
             memory: "128Mi"
