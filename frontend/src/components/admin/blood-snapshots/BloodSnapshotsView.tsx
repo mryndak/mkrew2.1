@@ -1,6 +1,8 @@
 import React from 'react';
 import { useBloodSnapshots } from '@/lib/hooks/useBloodSnapshots';
+import { StatsCards } from './StatsCards';
 import { FiltersPanel } from './FiltersPanel';
+import { BloodSnapshotTable } from './BloodSnapshotTable';
 import { ManualSnapshotModal } from './ManualSnapshotModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import type { BloodSnapshotsListResponse } from '@/lib/types/bloodSnapshots';
@@ -48,99 +50,8 @@ export function BloodSnapshotsView({ initialData, userRole }: BloodSnapshotsView
         </div>
       </div>
 
-      {/* Stats Cards - TODO: Implement */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        {/* Placeholder for StatsCards */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Dzisiaj</dt>
-                  <dd className="text-2xl font-semibold text-gray-900">
-                    {state.isLoading ? '...' : state.stats.today}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Ten tydzień</dt>
-                  <dd className="text-2xl font-semibold text-gray-900">
-                    {state.isLoading ? '...' : state.stats.thisWeek}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-6 w-6 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Ten miesiąc</dt>
-                  <dd className="text-2xl font-semibold text-gray-900">
-                    {state.isLoading ? '...' : state.stats.thisMonth}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Stats Cards */}
+      <StatsCards stats={state.stats} isLoading={state.isLoading} />
 
       {/* Action Bar */}
       <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg shadow">
@@ -176,122 +87,13 @@ export function BloodSnapshotsView({ initialData, userRole }: BloodSnapshotsView
         onReset={actions.resetFilters}
       />
 
-      {/* Table - TODO: Implement proper table component */}
-      <div className="bg-white shadow rounded-lg">
-        {state.isLoading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-            <p className="mt-2 text-sm text-gray-500">Ładowanie...</p>
-          </div>
-        ) : state.snapshots.length === 0 ? (
-          <div className="p-12 text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Brak snapshotów</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {state.filters.source === 'all'
-                ? 'Nie znaleziono żadnych snapshotów.'
-                : 'Zmień filtry lub dodaj nowy snapshot.'}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    RCKiK
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Grupa krwi
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Poziom
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Źródło
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Utworzono
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Akcje
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {state.snapshots.map((snapshot) => (
-                  <tr key={snapshot.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(snapshot.snapshotDate).toLocaleDateString('pl-PL')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {snapshot.rckikName}
-                      </div>
-                      <div className="text-sm text-gray-500">{snapshot.rckikCode}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {snapshot.bloodGroup}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {snapshot.levelPercentage.toFixed(2)}%
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          snapshot.isManual
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
-                      >
-                        {snapshot.isManual ? 'Ręcznie' : 'Automatycznie'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(snapshot.createdAt).toLocaleDateString('pl-PL')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {snapshot.isManual && (
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => actions.openEditModal(snapshot)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Edytuj
-                          </button>
-                          <button
-                            onClick={() => actions.openDeleteConfirm(snapshot)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Usuń
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* Blood Snapshot Table */}
+      <BloodSnapshotTable
+        snapshots={state.snapshots}
+        isLoading={state.isLoading}
+        onEdit={actions.openEditModal}
+        onDelete={actions.openDeleteConfirm}
+      />
 
       {/* Pagination - TODO: Implement proper pagination component */}
       {state.pagination.totalPages > 1 && (

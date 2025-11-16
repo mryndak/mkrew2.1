@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ALL_BLOOD_GROUPS } from '@/lib/constants/bloodGroups';
+import { RckikSearchSelect } from './RckikSearchSelect';
 import {
   createBloodSnapshotSchema,
   updateBloodSnapshotSchema,
@@ -151,24 +152,20 @@ export function ManualSnapshotForm({
           <label htmlFor="rckikId" className="block text-sm font-medium text-gray-700 mb-1">
             Centrum RCKiK <span className="text-red-500">*</span>
           </label>
-          <select
-            id="rckikId"
-            {...register('rckikId', { valueAsNumber: true })}
-            disabled={isSubmitting}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 ${
-              errors.rckikId ? 'border-red-300' : 'border-gray-300'
-            }`}
-          >
-            <option value="">Wybierz centrum...</option>
-            {/* TODO: Fetch actual RCKiK list from API */}
-            <option value="1">RCKiK Warszawa</option>
-            <option value="2">RCKiK Kraków</option>
-            <option value="3">RCKiK Wrocław</option>
-          </select>
-          {errors.rckikId && (
-            <p className="mt-1 text-sm text-red-600">{errors.rckikId.message}</p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">Wybierz centrum dla którego wprowadzasz dane</p>
+          <Controller
+            name="rckikId"
+            control={control}
+            render={({ field }) => (
+              <RckikSearchSelect
+                value={field.value || null}
+                onChange={(id) => field.onChange(id)}
+                error={errors.rckikId?.message}
+                disabled={isSubmitting}
+                required
+              />
+            )}
+          />
+          <p className="mt-1 text-xs text-gray-500">Wyszukaj centrum po nazwie lub kodzie</p>
         </div>
       )}
 
