@@ -40,9 +40,10 @@
 
 | Resource | Database Table | Description | Access Level |
 |----------|---------------|-------------|--------------|
+| Blood Snapshots (Manual) | `blood_snapshots` | Manually created blood level snapshots | Admin only |
+| Parser Configs | `scraper_configs` | Parser configurations per RCKiK with JSON selectors | Admin only |
 | Scraper Runs | `scraper_runs` | Web scraping execution runs | Admin only |
 | Scraper Logs | `scraper_logs` | Individual scraping operation logs | Admin only |
-| Scraper Configs | `scraper_configs` | Scraper configurations per RCKiK | Admin only |
 | User Reports | `user_reports` | User-submitted data issue reports | Authenticated (create), Admin (manage) |
 | Email Logs | `email_logs` | Email delivery tracking | Admin only |
 | Audit Logs | `audit_logs` | Immutable audit trail | Admin only (read) |
@@ -1618,6 +1619,818 @@ Content-Disposition: attachment; filename="donations_export_20250108.json"
 
 ---
 
+### 2.12 Admin Blood Snapshot Endpoints (Manual Entry)
+
+#### Admin - Create Manual Blood Snapshot
+**US-028: Ręczne wprowadzanie stanów krwi przez administratora**
+
+- **Method:** POST
+- **Path:** `/api/v1/admin/blood-snapshots`
+- **Description:** Manually create blood level snapshot for RCKiK (including historical/backdated data)
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Rate Limit:** 50 requests per admin per hour
+
+**Request Body:**
+```json
+{
+  "rckikId": 1,
+  "snapshotDate": "2025-01-08",
+  "bloodGroup": "A+",
+  "levelPercentage": 45.50,
+  "notes": "Ręczne uzupełnienie danych historycznych"
+}
+```
+
+**Request Validation:**
+- `rckikId`: Required, must exist in `rckik` table
+- `snapshotDate`: Required, ISO 8601 date, cannot be future date, max 2 years in past
+- `bloodGroup`: Required, must be one of: "0+", "0-", "A+", "A-", "B+", "B-", "AB+", "AB-"
+- `levelPercentage`: Required, NUMERIC(5,2), CHECK: 0.00 to 100.00
+- `notes`: Optional, max 500 chars, stored in audit log
+
+**Success Response (201 Created):**
+```json
+{
+  "id": 5001,
+  "rckikId": 1,
+  "rckikName": "RCKiK Warszawa",
+  "snapshotDate": "2025-01-08",
+  "bloodGroup": "A+",
+  "levelPercentage": 45.50,
+  "levelStatus": "IMPORTANT",
+  "isManual": true,
+  "createdBy": "admin@mkrew.pl",
+  "createdAt": "2025-01-08T19:00:00Z"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Validation errors
+  ```json
+  {
+    "error": "VALIDATION_ERROR",
+    "message": "Invalid input data",
+    "details": [
+      {
+        "field": "snapshotDate",
+        "message": "Snapshot date cannot be in the future"
+      }
+    ]
+  }
+  ```
+- `404 Not Found`: RCKiK not found
+- `409 Conflict`: Snapshot for this date and blood group already exists (manual)
+  ```json
+  {
+    "error": "DUPLICATE_SNAPSHOT",
+    "message": "Manual snapshot for this RCKiK, date, and blood group already exists",
+    "existingSnapshotId": 5000
+  }
+  ```
+
+**Business Logic:**
+1. Validate RCKiK exists and is active
+2. Validate snapshot date not in future and not older than 2 years
+3. Set `is_manual=true`
+4. Set `scraped_at=NOW()`
+5. Set `parser_version=NULL` (manual entry)
+6. Set `source_url=NULL` (manual entry)
+7. Create audit log entry (MANUAL_SNAPSHOT_CREATED) with admin email, RCKiK, date, blood group, level, notes
+8. Trigger materialized view refresh: `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_latest_blood_levels`
+9. Check if this creates CRITICAL or IMPORTANT status - potentially trigger notifications
+10. Allow multiple snapshots per day (for corrections), but warn if replacing recent data
+
+---
+
+#### Admin - List Manual Blood Snapshots
+- **Method:** GET
+- **Path:** `/api/v1/admin/blood-snapshots`
+- **Description:** Get list of manually created blood snapshots with filtering
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Query Parameters:**
+  - `rckikId` (optional): Filter by RCKiK
+  - `bloodGroup` (optional): Filter by blood group
+  - `fromDate` (optional): Start date (ISO 8601)
+  - `toDate` (optional): End date (ISO 8601)
+  - `manualOnly` (optional, default: true): Show only manual entries
+  - `createdBy` (optional): Filter by admin email
+  - `page` (optional, default: 0)
+  - `size` (optional, default: 50, max: 100)
+  - `sortBy` (optional, default: "snapshotDate"): Sort field
+  - `sortOrder` (optional, default: "DESC"): Sort order
+
+**Success Response (200 OK):**
+```json
+{
+  "snapshots": [
+    {
+      "id": 5001,
+      "rckikId": 1,
+      "rckikName": "RCKiK Warszawa",
+      "rckikCode": "RCKIK-WAW",
+      "snapshotDate": "2025-01-08",
+      "bloodGroup": "A+",
+      "levelPercentage": 45.50,
+      "levelStatus": "IMPORTANT",
+      "isManual": true,
+      "createdBy": "admin@mkrew.pl",
+      "createdAt": "2025-01-08T19:00:00Z",
+      "auditTrail": {
+        "notes": "Ręczne uzupełnienie danych historycznych"
+      }
+    }
+  ],
+  "page": 0,
+  "size": 50,
+  "totalElements": 125,
+  "totalPages": 3
+}
+```
+
+**Business Logic:**
+1. Filter by `is_manual=true` by default
+2. Join with `rckik` table for center details
+3. Join with `audit_logs` to get creation details and notes
+4. Extract `createdBy` from audit log where action='MANUAL_SNAPSHOT_CREATED'
+
+---
+
+#### Admin - Update Manual Blood Snapshot
+- **Method:** PUT
+- **Path:** `/api/v1/admin/blood-snapshots/{id}`
+- **Description:** Update existing manual blood snapshot
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Path Parameters:**
+  - `id`: Blood snapshot ID
+
+**Request Body:**
+```json
+{
+  "levelPercentage": 50.00,
+  "notes": "Korekta wartości po weryfikacji z RCKiK"
+}
+```
+
+**Request Validation:**
+- `levelPercentage`: Required, NUMERIC(5,2), CHECK: 0.00 to 100.00
+- `notes`: Optional, max 500 chars
+
+**Success Response (200 OK):**
+```json
+{
+  "id": 5001,
+  "rckikId": 1,
+  "snapshotDate": "2025-01-08",
+  "bloodGroup": "A+",
+  "levelPercentage": 50.00,
+  "levelStatus": "OK",
+  "isManual": true,
+  "updatedBy": "admin@mkrew.pl",
+  "updatedAt": "2025-01-08T20:00:00Z"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Validation errors
+- `403 Forbidden`: Cannot update automated snapshot (is_manual=false)
+  ```json
+  {
+    "error": "FORBIDDEN",
+    "message": "Cannot update automated snapshot. Only manual snapshots can be edited."
+  }
+  ```
+- `404 Not Found`: Snapshot not found
+
+**Business Logic:**
+1. Verify snapshot exists and `is_manual=true`
+2. Update only `level_percentage`
+3. Cannot change `rckik_id`, `snapshot_date`, or `blood_group` (immutable after creation)
+4. Create audit log entry (MANUAL_SNAPSHOT_UPDATED) with before/after values and notes
+5. Trigger materialized view refresh
+6. Update levelStatus based on new percentage
+
+---
+
+#### Admin - Delete Manual Blood Snapshot
+- **Method:** DELETE
+- **Path:** `/api/v1/admin/blood-snapshots/{id}`
+- **Description:** Delete manual blood snapshot (hard delete, use with caution)
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Path Parameters:**
+  - `id`: Blood snapshot ID
+
+**Success Response (204 No Content)**
+
+**Error Responses:**
+- `403 Forbidden`: Cannot delete automated snapshot
+  ```json
+  {
+    "error": "FORBIDDEN",
+    "message": "Cannot delete automated snapshot. Only manual snapshots can be deleted."
+  }
+  ```
+- `404 Not Found`: Snapshot not found
+
+**Business Logic:**
+1. Verify snapshot exists and `is_manual=true`
+2. Hard delete from database (no soft delete for snapshots)
+3. Create audit log entry (MANUAL_SNAPSHOT_DELETED) with snapshot details
+4. Trigger materialized view refresh
+5. Warn in UI: "This will permanently delete the snapshot and may affect historical data visibility"
+
+---
+
+#### Admin - Get Blood Snapshot Details
+- **Method:** GET
+- **Path:** `/api/v1/admin/blood-snapshots/{id}`
+- **Description:** Get detailed information about specific blood snapshot
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Path Parameters:**
+  - `id`: Blood snapshot ID
+
+**Success Response (200 OK):**
+```json
+{
+  "id": 5001,
+  "rckikId": 1,
+  "rckikName": "RCKiK Warszawa",
+  "rckikCode": "RCKIK-WAW",
+  "snapshotDate": "2025-01-08",
+  "bloodGroup": "A+",
+  "levelPercentage": 45.50,
+  "levelStatus": "IMPORTANT",
+  "sourceUrl": null,
+  "parserVersion": null,
+  "scrapedAt": "2025-01-08T19:00:00Z",
+  "isManual": true,
+  "auditTrail": [
+    {
+      "action": "MANUAL_SNAPSHOT_CREATED",
+      "actorId": "admin@mkrew.pl",
+      "timestamp": "2025-01-08T19:00:00Z",
+      "metadata": {
+        "notes": "Ręczne uzupełnienie danych historycznych",
+        "rckikId": 1,
+        "bloodGroup": "A+",
+        "levelPercentage": 45.50
+      }
+    }
+  ]
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Snapshot not found
+
+**Business Logic:**
+1. Retrieve snapshot with RCKiK details
+2. Join with audit_logs to show complete audit trail
+3. Show both manual and automated snapshots (no is_manual filter)
+
+---
+
+### 2.13 Admin Parser Configuration Endpoints
+
+#### Admin - List Parser Configurations
+**US-029, US-030: Zarządzanie konfiguracją parserów dla RCKiK**
+
+- **Method:** GET
+- **Path:** `/api/v1/admin/parsers/configs`
+- **Description:** Get list of parser configurations for all RCKiK centers
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Query Parameters:**
+  - `rckikId` (optional): Filter by RCKiK
+  - `parserType` (optional): Filter by parser type
+  - `active` (optional): Filter by active status
+  - `page` (optional, default: 0)
+  - `size` (optional, default: 50, max: 100)
+
+**Success Response (200 OK):**
+```json
+{
+  "configs": [
+    {
+      "id": 10,
+      "rckikId": 15,
+      "rckikName": "RCKiK Rzeszów",
+      "rckikCode": "RCKIK-RZE",
+      "sourceUrl": "https://rckik.rzeszow.pl/zapasy-krwi",
+      "parserType": "CUSTOM",
+      "cssSelectors": {
+        "container": ".blood-levels-container",
+        "bloodGroupRow": "tr.blood-row",
+        "bloodGroupName": "td:nth-child(1)",
+        "levelPercentage": "td:nth-child(2) .percentage",
+        "dateSelector": ".last-update-date"
+      },
+      "active": true,
+      "scheduleCron": "0 2 * * *",
+      "timeoutSeconds": 30,
+      "lastSuccessfulRun": "2025-01-08T02:15:00Z",
+      "lastRunStatus": "SUCCESS",
+      "createdAt": "2025-01-07T10:00:00Z",
+      "updatedAt": "2025-01-08T14:30:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 50,
+  "totalElements": 52
+}
+```
+
+**Business Logic:**
+1. Join with `rckik` table for center details
+2. Join with `scraper_logs` to get last run info
+3. Show JSON selectors in pretty format
+
+---
+
+#### Admin - Get Parser Configuration Details
+- **Method:** GET
+- **Path:** `/api/v1/admin/parsers/configs/{id}`
+- **Description:** Get detailed parser configuration with audit trail
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Path Parameters:**
+  - `id`: Parser config ID
+
+**Success Response (200 OK):**
+```json
+{
+  "id": 10,
+  "rckikId": 15,
+  "rckikName": "RCKiK Rzeszów",
+  "sourceUrl": "https://rckik.rzeszow.pl/zapasy-krwi",
+  "parserType": "CUSTOM",
+  "cssSelectors": {
+    "container": ".blood-levels-container",
+    "bloodGroupRow": "tr.blood-row",
+    "bloodGroupName": "td:nth-child(1)",
+    "levelPercentage": "td:nth-child(2) .percentage",
+    "dateSelector": ".last-update-date"
+  },
+  "active": true,
+  "scheduleCron": "0 2 * * *",
+  "timeoutSeconds": 30,
+  "createdAt": "2025-01-07T10:00:00Z",
+  "updatedAt": "2025-01-08T14:30:00Z",
+  "recentRuns": [
+    {
+      "runId": 1050,
+      "startedAt": "2025-01-08T02:00:00Z",
+      "status": "SUCCESS",
+      "recordsParsed": 8,
+      "recordsFailed": 0,
+      "responseTimeMs": 1850
+    },
+    {
+      "runId": 1049,
+      "startedAt": "2025-01-07T02:00:00Z",
+      "status": "SUCCESS",
+      "recordsParsed": 8,
+      "recordsFailed": 0,
+      "responseTimeMs": 1620
+    }
+  ],
+  "auditTrail": [
+    {
+      "action": "PARSER_CONFIG_UPDATED",
+      "actorId": "admin@mkrew.pl",
+      "timestamp": "2025-01-08T14:30:00Z",
+      "metadata": {
+        "changes": {
+          "cssSelectors.levelPercentage": {
+            "old": "td:nth-child(2) span",
+            "new": "td:nth-child(2) .percentage"
+          }
+        },
+        "notes": "Zaktualizowano selektor po zmianie struktury strony"
+      }
+    },
+    {
+      "action": "PARSER_CONFIG_CREATED",
+      "actorId": "admin@mkrew.pl",
+      "timestamp": "2025-01-07T10:00:00Z",
+      "metadata": {
+        "rckikId": 15,
+        "parserType": "CUSTOM",
+        "notes": "Nowa konfiguracja parsera dla RCKiK Rzeszów"
+      }
+    }
+  ]
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Parser config not found
+
+**Business Logic:**
+1. Retrieve full configuration
+2. Join with recent scraper_logs (last 10 runs)
+3. Join with audit_logs for complete change history
+4. Pretty-print JSON selectors
+
+---
+
+#### Admin - Create Parser Configuration
+**US-029: Implementacja parsera dla RCKiK Rzeszów**
+
+- **Method:** POST
+- **Path:** `/api/v1/admin/parsers/configs`
+- **Description:** Create new parser configuration for RCKiK center
+- **Authentication:** Required (JWT, role=ADMIN)
+
+**Request Body:**
+```json
+{
+  "rckikId": 15,
+  "sourceUrl": "https://rckik.rzeszow.pl/zapasy-krwi",
+  "parserType": "CUSTOM",
+  "cssSelectors": {
+    "container": ".blood-levels-container",
+    "bloodGroupRow": "tr.blood-row",
+    "bloodGroupName": "td:nth-child(1)",
+    "levelPercentage": "td:nth-child(2) .percentage",
+    "dateSelector": ".last-update-date"
+  },
+  "active": true,
+  "scheduleCron": "0 2 * * *",
+  "timeoutSeconds": 30,
+  "notes": "Nowa konfiguracja parsera dla RCKiK Rzeszów"
+}
+```
+
+**Request Validation:**
+- `rckikId`: Required, must exist in `rckik` table, cannot have multiple active configs
+- `sourceUrl`: Required, valid HTTPS URL, max 2000 chars
+- `parserType`: Required, one of: "JSOUP", "SELENIUM", "CUSTOM"
+- `cssSelectors`: Required if parserType is CUSTOM, valid JSON object with required keys
+  - Required keys: `bloodGroupRow`, `bloodGroupName`, `levelPercentage`
+  - Optional keys: `container`, `dateSelector`, `customFields`
+- `active`: Optional, default true
+- `scheduleCron`: Optional, valid cron expression, default "0 2 * * *"
+- `timeoutSeconds`: Optional, integer 10-120, default 30
+- `notes`: Optional, max 500 chars, stored in audit log
+
+**Success Response (201 Created):**
+```json
+{
+  "id": 10,
+  "rckikId": 15,
+  "rckikName": "RCKiK Rzeszów",
+  "sourceUrl": "https://rckik.rzeszow.pl/zapasy-krwi",
+  "parserType": "CUSTOM",
+  "cssSelectors": {
+    "container": ".blood-levels-container",
+    "bloodGroupRow": "tr.blood-row",
+    "bloodGroupName": "td:nth-child(1)",
+    "levelPercentage": "td:nth-child(2) .percentage",
+    "dateSelector": ".last-update-date"
+  },
+  "active": true,
+  "scheduleCron": "0 2 * * *",
+  "timeoutSeconds": 30,
+  "createdAt": "2025-01-08T20:00:00Z"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Validation errors, invalid JSON selectors
+  ```json
+  {
+    "error": "VALIDATION_ERROR",
+    "message": "Invalid CSS selectors configuration",
+    "details": [
+      {
+        "field": "cssSelectors.bloodGroupName",
+        "message": "Required selector missing"
+      }
+    ]
+  }
+  ```
+- `404 Not Found`: RCKiK not found
+- `409 Conflict`: RCKiK already has active parser config
+  ```json
+  {
+    "error": "DUPLICATE_CONFIG",
+    "message": "RCKiK already has an active parser configuration",
+    "existingConfigId": 9
+  }
+  ```
+
+**Business Logic:**
+1. Validate RCKiK exists
+2. Check for existing active config (only one active config per RCKiK)
+3. Validate CSS selectors JSON structure
+4. Validate cron expression if provided
+5. Create audit log entry (PARSER_CONFIG_CREATED) with admin email, RCKiK, parser type, notes
+6. Return created config with RCKiK details
+
+---
+
+#### Admin - Update Parser Configuration
+**US-030: Zarządzanie konfiguracją parserów**
+
+- **Method:** PUT
+- **Path:** `/api/v1/admin/parsers/configs/{id}`
+- **Description:** Update existing parser configuration
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Path Parameters:**
+  - `id`: Parser config ID
+
+**Request Body:**
+```json
+{
+  "sourceUrl": "https://rckik.rzeszow.pl/zapasy-krwi",
+  "cssSelectors": {
+    "container": ".blood-levels-container",
+    "bloodGroupRow": "tr.blood-row",
+    "bloodGroupName": "td:nth-child(1)",
+    "levelPercentage": "td:nth-child(2) .percentage-value",
+    "dateSelector": ".last-update-date"
+  },
+  "active": true,
+  "timeoutSeconds": 45,
+  "notes": "Zaktualizowano selektor levelPercentage po zmianie struktury strony"
+}
+```
+
+**Request Validation:**
+- Same validation as create, except `rckikId` and `parserType` are immutable
+- All fields except `notes` are optional (partial update)
+
+**Success Response (200 OK):**
+```json
+{
+  "id": 10,
+  "rckikId": 15,
+  "rckikName": "RCKiK Rzeszów",
+  "sourceUrl": "https://rckik.rzeszow.pl/zapasy-krwi",
+  "parserType": "CUSTOM",
+  "cssSelectors": {
+    "container": ".blood-levels-container",
+    "bloodGroupRow": "tr.blood-row",
+    "bloodGroupName": "td:nth-child(1)",
+    "levelPercentage": "td:nth-child(2) .percentage-value",
+    "dateSelector": ".last-update-date"
+  },
+  "active": true,
+  "timeoutSeconds": 45,
+  "updatedAt": "2025-01-08T20:30:00Z"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Validation errors, invalid JSON selectors
+- `404 Not Found`: Parser config not found
+
+**Business Logic:**
+1. Cannot change `rckik_id` or `parser_type` (immutable after creation)
+2. Update provided fields only
+3. Validate CSS selectors if provided
+4. Create audit log entry (PARSER_CONFIG_UPDATED) with before/after values for changed fields and notes
+5. Set `updated_at=NOW()`
+
+---
+
+#### Admin - Delete Parser Configuration
+- **Method:** DELETE
+- **Path:** `/api/v1/admin/parsers/configs/{id}`
+- **Description:** Delete parser configuration (soft delete via active=false recommended)
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Path Parameters:**
+  - `id`: Parser config ID
+
+**Success Response (204 No Content)**
+
+**Error Responses:**
+- `404 Not Found`: Parser config not found
+
+**Business Logic:**
+1. Soft delete: Set `active=false` instead of hard delete
+2. Create audit log entry (PARSER_CONFIG_DELETED) with config details
+3. Warn in UI: "This will deactivate the parser. Existing snapshots will remain."
+4. Alternative: Hard delete if confirmed by admin (requires confirmation parameter)
+
+---
+
+#### Admin - Test Parser Configuration (Dry Run)
+**US-029: Testing parser before deployment**
+
+- **Method:** POST
+- **Path:** `/api/v1/admin/parsers/configs/{id}/test`
+- **Description:** Test parser configuration without saving results (dry-run mode)
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Path Parameters:**
+  - `id`: Parser config ID
+- **Query Parameters:**
+  - `saveResults` (optional, default: false): If true, save parsed data to blood_snapshots
+
+**Request Body:**
+```json
+{
+  "testUrl": "https://rckik.rzeszow.pl/zapasy-krwi"
+}
+```
+
+**Request Validation:**
+- `testUrl`: Optional, overrides config's sourceUrl for testing
+
+**Success Response (200 OK):**
+```json
+{
+  "testId": "test-20250108-203045-abc123",
+  "configId": 10,
+  "rckikId": 15,
+  "rckikName": "RCKiK Rzeszów",
+  "testUrl": "https://rckik.rzeszow.pl/zapasy-krwi",
+  "parserType": "CUSTOM",
+  "status": "SUCCESS",
+  "executionTimeMs": 1850,
+  "httpStatusCode": 200,
+  "parsedData": [
+    {
+      "bloodGroup": "0+",
+      "levelPercentage": 55.00,
+      "levelStatus": "OK",
+      "source": {
+        "selector": "tr.blood-row:nth-child(1)",
+        "rawText": "0+ | 55%"
+      }
+    },
+    {
+      "bloodGroup": "0-",
+      "levelPercentage": 18.50,
+      "levelStatus": "CRITICAL",
+      "source": {
+        "selector": "tr.blood-row:nth-child(2)",
+        "rawText": "0- | 18.5%"
+      }
+    },
+    {
+      "bloodGroup": "A+",
+      "levelPercentage": 42.00,
+      "levelStatus": "IMPORTANT",
+      "source": {
+        "selector": "tr.blood-row:nth-child(3)",
+        "rawText": "A+ | 42%"
+      }
+    }
+  ],
+  "warnings": [
+    "Blood group 'AB+' not found on page - expected 8 groups, found 7"
+  ],
+  "errors": [],
+  "summary": {
+    "totalGroupsExpected": 8,
+    "totalGroupsFound": 7,
+    "successfulParses": 7,
+    "failedParses": 0,
+    "saved": false
+  }
+}
+```
+
+**Error Response (200 OK with errors):**
+```json
+{
+  "testId": "test-20250108-203045-abc123",
+  "configId": 10,
+  "status": "PARTIAL",
+  "executionTimeMs": 2100,
+  "httpStatusCode": 200,
+  "parsedData": [
+    {
+      "bloodGroup": "0+",
+      "levelPercentage": 55.00,
+      "levelStatus": "OK"
+    }
+  ],
+  "warnings": [],
+  "errors": [
+    {
+      "selector": "tr.blood-row:nth-child(2)",
+      "bloodGroup": "0-",
+      "error": "Could not parse level percentage: selector returned empty"
+    },
+    {
+      "selector": ".blood-levels-container",
+      "error": "Container not found - check if page structure changed"
+    }
+  ],
+  "summary": {
+    "totalGroupsExpected": 8,
+    "totalGroupsFound": 1,
+    "successfulParses": 1,
+    "failedParses": 7,
+    "saved": false
+  }
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Parser config not found
+- `500 Internal Server Error`: Network error, timeout
+  ```json
+  {
+    "error": "PARSER_TEST_FAILED",
+    "message": "Failed to fetch URL: Connection timeout after 30 seconds",
+    "testId": "test-20250108-203045-abc123"
+  }
+  ```
+
+**Business Logic:**
+1. Load parser configuration
+2. Use test URL if provided, otherwise use config's sourceUrl
+3. Execute parser logic (Jsoup/Selenium based on parserType)
+4. Parse HTML using CSS selectors from config
+5. Validate parsed data:
+   - Check all 8 blood groups found
+   - Validate level percentages (0-100)
+   - Validate blood group names
+6. If `saveResults=false` (default): Return results without saving
+7. If `saveResults=true`: Save to blood_snapshots with `is_manual=false`
+8. Return detailed results with:
+   - Parsed data with source selectors
+   - Warnings for missing blood groups
+   - Errors for parsing failures
+   - Execution metrics
+9. Do NOT create audit log for test (unless saveResults=true)
+10. Useful for debugging parser issues before enabling in production
+
+---
+
+#### Admin - Get Parser Audit Trail
+- **Method:** GET
+- **Path:** `/api/v1/admin/parsers/audit`
+- **Description:** Get audit trail for all parser configuration changes
+- **Authentication:** Required (JWT, role=ADMIN)
+- **Query Parameters:**
+  - `configId` (optional): Filter by parser config ID
+  - `rckikId` (optional): Filter by RCKiK
+  - `action` (optional): Filter by action type
+  - `actorId` (optional): Filter by admin email
+  - `fromDate` (optional): Start date
+  - `toDate` (optional): End date
+  - `page` (optional, default: 0)
+  - `size` (optional, default: 50)
+
+**Success Response (200 OK):**
+```json
+{
+  "auditLogs": [
+    {
+      "id": 9050,
+      "configId": 10,
+      "rckikId": 15,
+      "rckikName": "RCKiK Rzeszów",
+      "action": "PARSER_CONFIG_UPDATED",
+      "actorId": "admin@mkrew.pl",
+      "timestamp": "2025-01-08T20:30:00Z",
+      "metadata": {
+        "changes": {
+          "cssSelectors.levelPercentage": {
+            "old": "td:nth-child(2) .percentage",
+            "new": "td:nth-child(2) .percentage-value"
+          },
+          "timeoutSeconds": {
+            "old": 30,
+            "new": 45
+          }
+        },
+        "notes": "Zaktualizowano selektor levelPercentage po zmianie struktury strony"
+      },
+      "ipAddress": "192.168.1.100"
+    },
+    {
+      "id": 9045,
+      "configId": 10,
+      "rckikId": 15,
+      "rckikName": "RCKiK Rzeszów",
+      "action": "PARSER_CONFIG_CREATED",
+      "actorId": "admin@mkrew.pl",
+      "timestamp": "2025-01-08T20:00:00Z",
+      "metadata": {
+        "parserType": "CUSTOM",
+        "sourceUrl": "https://rckik.rzeszow.pl/zapasy-krwi",
+        "notes": "Nowa konfiguracja parsera dla RCKiK Rzeszów"
+      },
+      "ipAddress": "192.168.1.100"
+    }
+  ],
+  "page": 0,
+  "size": 50,
+  "totalElements": 28
+}
+```
+
+**Business Logic:**
+1. Query audit_logs table with filters
+2. Filter by actions: PARSER_CONFIG_CREATED, PARSER_CONFIG_UPDATED, PARSER_CONFIG_DELETED
+3. Join with scraper_configs and rckik for details
+4. Show complete change history with before/after values
+
+---
+
 #### Admin - Email Deliverability Metrics
 **US-022: Email Analytics**
 
@@ -1800,7 +2613,11 @@ Content-Disposition: attachment; filename="donations_export_20250108.json"
 | `/api/v1/blood-levels/latest` (GET) | ✓ | ✓ | ✓ |
 | `/api/v1/donations/confirm` (GET) | ✓ | ✓ | ✓ |
 | `/api/v1/reports` (POST) | ✓ | ✓ | ✗ |
-| `/api/v1/admin/*` | ✗ | ✓ | ✗ |
+| `/api/v1/admin/blood-snapshots` | ✗ | ✓ | ✗ |
+| `/api/v1/admin/parsers/configs` | ✗ | ✓ | ✗ |
+| `/api/v1/admin/parsers/configs/{id}/test` | ✗ | ✓ | ✗ |
+| `/api/v1/admin/parsers/audit` | ✗ | ✓ | ✗ |
+| `/api/v1/admin/*` (other) | ✗ | ✓ | ✗ |
 
 **Resource-Level Authorization:**
 - Users can only access their own resources (donations, notifications, favorites)
@@ -2073,6 +2890,80 @@ public ResponseEntity<List<ScraperRun>> getScraperRuns() {
 
 ---
 
+#### Manual Blood Snapshots (Admin) (`/api/v1/admin/blood-snapshots`)
+
+| Field | Type | Constraints | Validation |
+|-------|------|-------------|------------|
+| `rckikId` | bigint | FK, NOT NULL | Must exist in `rckik` table, RCKiK must be active |
+| `snapshotDate` | date | NOT NULL | ISO 8601 date format, cannot be future date, max 2 years in past |
+| `bloodGroup` | string | NOT NULL | Must be one of 8 valid blood groups |
+| `levelPercentage` | decimal | NOT NULL | NUMERIC(5,2), CHECK: 0.00 to 100.00 |
+| `notes` | string | NULLABLE | Max 500 chars, stored in audit log metadata |
+
+**Business Logic:**
+- Computed field: `levelStatus` = "CRITICAL" if <20%, "IMPORTANT" if <50%, "OK" if >=50%
+- Always set `is_manual=true` for admin-created snapshots
+- Set `parser_version=NULL` and `source_url=NULL` (not applicable for manual entries)
+- Set `scraped_at=NOW()` to timestamp creation
+- Create audit log entry (MANUAL_SNAPSHOT_CREATED) with admin email, RCKiK ID, date, blood group, level, notes
+- Trigger materialized view refresh: `REFRESH MATERIALIZED VIEW CONCURRENTLY mv_latest_blood_levels`
+- Allow multiple snapshots per day (for corrections)
+- Warn if duplicate snapshot exists for same date/blood group combination
+- Check for CRITICAL/IMPORTANT status and potentially trigger notifications
+- **Update restrictions:** Only `levelPercentage` can be updated after creation
+- **Immutable fields:** `rckik_id`, `snapshot_date`, `blood_group` cannot be changed
+- **Delete restrictions:** Only manual snapshots (`is_manual=true`) can be deleted
+- Hard delete (no soft delete for snapshots)
+
+---
+
+#### Parser Configurations (`/api/v1/admin/parsers/configs`)
+
+| Field | Type | Constraints | Validation |
+|-------|------|-------------|------------|
+| `rckikId` | bigint | FK, NOT NULL | Must exist in `rckik` table, only one active config per RCKiK |
+| `sourceUrl` | string | NOT NULL | Valid HTTPS URL, max 2000 chars |
+| `parserType` | string | NOT NULL | Must be: "JSOUP", "SELENIUM", "CUSTOM" |
+| `cssSelectors` | jsonb | CONDITIONAL | Required if parserType="CUSTOM", valid JSON object with required keys |
+| `active` | boolean | NOT NULL | Default true, only one active config per RCKiK |
+| `scheduleCron` | string | NULLABLE | Valid cron expression, default "0 2 * * *" |
+| `timeoutSeconds` | integer | NOT NULL | CHECK: 10 to 120, default 30 |
+| `notes` | string | NULLABLE | Max 500 chars, stored in audit log metadata |
+
+**CSS Selectors Validation (when parserType="CUSTOM"):**
+- Required keys: `bloodGroupRow`, `bloodGroupName`, `levelPercentage`
+- Optional keys: `container`, `dateSelector`, `customFields`
+- Each selector must be a valid CSS selector string
+- Example structure:
+  ```json
+  {
+    "container": ".blood-levels-container",
+    "bloodGroupRow": "tr.blood-row",
+    "bloodGroupName": "td:nth-child(1)",
+    "levelPercentage": "td:nth-child(2) .percentage",
+    "dateSelector": ".last-update-date"
+  }
+  ```
+
+**Business Logic:**
+- Only one active parser config per RCKiK (unique constraint on `rckik_id` WHERE `active=true`)
+- Validate cron expression format (if provided)
+- Validate CSS selectors JSON structure
+- Create audit log entries for all CRUD operations:
+  - PARSER_CONFIG_CREATED: Store rckikId, parserType, sourceUrl, notes
+  - PARSER_CONFIG_UPDATED: Store before/after values for changed fields, notes
+  - PARSER_CONFIG_DELETED: Store full config details
+- **Immutable fields after creation:** `rckik_id`, `parser_type`
+- **Update:** All other fields can be updated
+- **Delete:** Soft delete (set `active=false`) recommended over hard delete
+- **Test endpoint:** Dry-run mode validates parser without saving results
+  - Returns parsed data with source selectors for debugging
+  - Validates all 8 blood groups found
+  - Checks level percentages (0-100)
+  - Can optionally save results if `saveResults=true`
+
+---
+
 ### 4.2 Error Response Format
 
 **Standard Error Response:**
@@ -2281,7 +3172,7 @@ servers:
 - All sensitive data encrypted in transit (TLS) and at rest
 
 **Alignment with PRD:**
-- ✅ All 27 User Stories mapped to API endpoints
+- ✅ All 30 User Stories mapped to API endpoints
 - ✅ Authentication (US-001 to US-004)
 - ✅ Profile management (US-005, US-006)
 - ✅ RCKiK browsing (US-007, US-008, US-009)
@@ -2290,6 +3181,9 @@ servers:
 - ✅ GDPR compliance (US-015, US-016)
 - ✅ Admin operations (US-017, US-018, US-019, US-021, US-022, US-024)
 - ✅ Security (US-023)
+- ✅ Manual blood data entry (US-028)
+- ✅ Parser implementation for RCKiK Rzeszów (US-029)
+- ✅ Parser configuration management (US-030)
 
 ---
 

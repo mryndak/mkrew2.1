@@ -262,6 +262,42 @@ Kryteria akceptacji:
 - E‑mail zawiera bezpieczny link jednorazowy, który po kliknięciu otwiera ekran potwierdzenia i dodaje wpis do dziennika lub oznacza istniejącą donację jako potwierdzoną.
 - Link wygasa po jednorazowym użyciu lub po krótkim czasie.
 
+US-028
+Tytuł: Ręczne wprowadzanie stanów krwi przez administratora
+Opis: Jako administrator systemu chcę mieć możliwość ręcznego wprowadzenia danych o stanie krwi dla danego RCKiK (w tym danych wstecz), aby zapewnić ciągłość danych w przypadku awarii scrapera lub braku dostępu do źródłowych stron RCKiK.
+Kryteria akceptacji:
+- Panel admina zawiera formularz do ręcznego wprowadzenia snapshotu krwi z polami: RCKiK (wybór z listy), data snapshotu (może być data wsteczna), grupa krwi, poziom procentowy.
+- System waliduje wprowadzone dane: RCKiK musi istnieć i być aktywny, grupa krwi musi być poprawna (A+, A-, B+, B-, AB+, AB-, O+, O-), poziom musi być w zakresie 0–100%, data nie może być z przyszłości.
+- Ręcznie wprowadzony snapshot jest oznaczany flagą is_manual = true i nie zawiera source_url ani parser_version.
+- System zapisuje audit log z informacją o administratorze, który wprowadził dane (triggered_by), timestampem i szczegółami operacji.
+- Po zapisaniu snapshot jest widoczny w historii RCKiK i oznaczony jako "ręcznie wprowadzony" w UI.
+- Administrator może wprowadzić wiele snapshotów dla różnych grup krwi dla tego samego RCKiK i tej samej daty.
+- System umożliwia wprowadzenie danych historycznych (data wstecz) w celu uzupełnienia luk w danych.
+
+US-029
+Tytuł: Implementacja parsera dla RCKiK Rzeszów
+Opis: Jako właściciel produktu chcę, aby system automatycznie pobierał i parsował dane o stanach krwi z publicznej strony RCKiK w Rzeszowie, aby użytkownicy otrzymywali aktualne informacje bez konieczności ręcznego wprowadzania.
+Kryteria akceptacji:
+- System zawiera dedykowany parser dla strony RCKiK w Rzeszowie z konfiguracją URL źródłowego i specyficznych selektorów HTML.
+- Parser poprawnie ekstraktuje dane dla wszystkich grup krwi (A+, A-, B+, B-, AB+, AB-, O+, O-) i poziomów procentowych.
+- Parser obsługuje błędy parsowania (zmiana struktury HTML, brak danych) i loguje szczegóły błędów do scraper_logs.
+- Po udanym parsowaniu system tworzy snapshoty z flagą is_manual = false, wypełnionymi polami source_url i parser_version.
+- Parser jest identyfikowany unikalną nazwą i wersją (np. "rzeszow_v1") zapisywaną w polu parser_version.
+- System umożliwia testowanie parsera w trybie dry-run (bez zapisu do bazy) w celu weryfikacji poprawności ekstrakcji.
+- Parser integruje się z istniejącym mechanizmem schedulowania (daily scraping) i może być uruchamiany ręcznie przez administratora.
+
+US-030
+Tytuł: Zarządzanie konfiguracją parserów dla RCKiK
+Opis: Jako administrator systemu chcę zarządzać konfiguracją parserów dla różnych centrów RCKiK, aby móc łatwo dodawać nowe centra, aktualizować URL-e i selektory bez konieczności modyfikacji kodu.
+Kryteria akceptacji:
+- Tabela scraper_config zawiera konfiguracje dla każdego RCKiK: rckik_id, parser_type (np. "rzeszow", "warszawa"), source_url, selectors (JSON z selektorami CSS/XPath), parser_version, is_active.
+- Panel admina umożliwia przeglądanie, dodawanie i edycję konfiguracji parserów.
+- Przy edycji konfiguracji system zapisuje historię zmian (audit log) z informacją o administratorze i timestampem.
+- System waliduje poprawność JSON z selektorami i URL źródłowego przed zapisem.
+- Administrator może dezaktywować parser dla danego RCKiK (is_active = false), co powoduje pominięcie tego centrum podczas automatycznego scrapingu.
+- System pokazuje ostatni status parsowania dla każdej konfiguracji (success/failure, timestamp, error message).
+- Możliwość testowania konfiguracji parsera w trybie dry-run bezpośrednio z panelu admina.
+
 (End of user stories)
 
 ## 6. Metryki sukcesu
@@ -290,5 +326,196 @@ Najbliższe kroki:
 - Zatwierdzenie PRD przez interesariuszy.
 - Uzyskanie opinii prawnej i (jeśli możliwe) pisemnych zgód od właścicieli stron RCKiK.
 - Implementacja PoC według priorytetów: scraper i DB -> auth i rejestracja -> dashboard i donacje -> powiadomienia -> panel admina.
+
+## 7. Plan implementacji nowych funkcjonalności (US-028, US-029, US-030)
+
+### 7.1. Architektura rozwiązania
+
+**Komponenty backendowe:**
+1. **BloodSnapshotService** - nowy serwis do zarządzania snapshotami (ręczne wprowadzanie, listowanie)
+2. **ParserService** - serwis do zarządzania parserami i ich konfiguracją
+3. **RzeszowParser** - implementacja parsera dla RCKiK Rzeszów
+4. **AdminBloodSnapshotController** - kontroler API dla admina do ręcznego wprowadzania
+5. **AdminParserController** - kontroler API do zarządzania konfiguracją parserów
+
+**Modele danych:**
+- BloodSnapshot - istniejąca encja, wykorzystanie pola `is_manual`
+- ScraperConfig - istniejąca tabela, rozszerzenie o pola `selectors` (JSONB), `parser_type`
+- AuditLog - istniejąca tabela, logowanie operacji manualnych
+
+**Architektura parserów:**
+```
+ParserInterface (interface)
+  ├── parseBloodLevels(url: String): List<BloodLevelData>
+  ├── getParserType(): String
+  └── getParserVersion(): String
+
+RzeszowParser implements ParserInterface
+  - Specyficzna logika parsowania dla Rzeszowa
+  - Konfiguracja selektorów HTML/CSS
+  - Walidacja i transformacja danych
+```
+
+### 7.2. Plan implementacji etapami
+
+**Etap 1: Ręczne wprowadzanie danych (US-028)**
+Priorytet: WYSOKI | Czas: 3-5 dni
+
+Backend:
+1. Utworzenie DTO:
+   - CreateBloodSnapshotRequest (rckikId, snapshotDate, bloodGroup, levelPercentage)
+   - BloodSnapshotResponse (z flagą isManual)
+2. Utworzenie BloodSnapshotService z metodami:
+   - createManualSnapshot(request, userId) - walidacja i zapis
+   - validateBloodSnapshot(request) - walidacja danych
+   - listSnapshots(rckikId, filters) - listowanie z filtrowaniem
+3. Utworzenie AdminBloodSnapshotController z endpointami:
+   - POST /api/v1/admin/blood-snapshots - tworzenie manualnego snapshotu
+   - GET /api/v1/admin/blood-snapshots - listowanie z filtrowaniem (manual/scraped)
+4. Dodanie walidacji:
+   - Grupa krwi: enum validation (A+, A-, B+, B-, AB+, AB-, O+, O-)
+   - Poziom: 0-100%
+   - Data: nie z przyszłości
+   - RCKiK: exists and active
+5. Audit logging:
+   - Wykorzystanie AuditLogService do logowania operacji CREATE
+   - Zapisanie userId, action, targetId, timestamp
+
+Frontend (Astro + React/Vue):
+1. Dodanie komponentu formularza w panelu admina
+2. Implementacja walidacji po stronie klienta
+3. Obsługa błędów i komunikatów sukcesu
+4. Wyświetlanie historii snapshotów z oznaczeniem "manual"
+
+**Etap 2: Infrastruktura parserów (US-030)**
+Priorytet: WYSOKI | Czas: 3-4 dni
+
+Backend:
+1. Utworzenie interfejsu ParserInterface (Parser.java):
+   ```java
+   public interface Parser {
+       List<BloodLevelData> parseBloodLevels(String htmlContent) throws ParsingException;
+       String getParserType();
+       String getParserVersion();
+   }
+   ```
+2. Utworzenie modelu BloodLevelData (DTO dla wyników parsowania):
+   - bloodGroup, levelPercentage
+3. Aktualizacja encji ScraperConfig:
+   - Dodanie pola `selectors` (JSON/JSONB)
+   - Dodanie pola `parser_type` (String)
+4. Utworzenie ScraperConfigService:
+   - getConfigForRckik(rckikId)
+   - createConfig(config)
+   - updateConfig(id, config)
+   - testParserDryRun(configId) - testowanie bez zapisu do DB
+5. Utworzenie AdminParserController:
+   - GET /api/v1/admin/parsers/configs - lista konfiguracji
+   - POST /api/v1/admin/parsers/configs - tworzenie konfiguracji
+   - PUT /api/v1/admin/parsers/configs/{id} - aktualizacja
+   - POST /api/v1/admin/parsers/configs/{id}/test - dry-run test
+6. Utworzenie ParserFactory:
+   - Wzorzec Factory do tworzenia instancji parserów na podstawie parser_type
+   - Rejestracja dostępnych parserów
+
+**Etap 3: Parser dla RCKiK Rzeszów (US-029)**
+Priorytet: WYSOKI | Czas: 4-6 dni
+
+Backend:
+1. Analiza strony RCKiK Rzeszów:
+   - Określenie URL źródłowego
+   - Identyfikacja selektorów CSS/XPath dla grup krwi i poziomów
+   - Obsługa edge cases (brak danych, niepoprawny format)
+2. Implementacja RzeszowParser implements Parser:
+   - Parsowanie HTML za pomocą Jsoup
+   - Ekstrakcja danych dla wszystkich grup krwi
+   - Walidacja i transformacja danych
+   - Obsługa błędów parsowania
+3. Utworzenie konfiguracji w scraper_config:
+   - INSERT dla RCKiK Rzeszów z URL i selektorami
+4. Integracja z ScraperService:
+   - Aktualizacja triggerManualScraping() do używania ParserFactory
+   - Implementacja faktycznej logiki scrapingu (obecnie TODO)
+5. Testy jednostkowe:
+   - Test parsowania przykładowego HTML
+   - Test obsługi błędów
+   - Test walidacji danych
+6. Testy integracyjne:
+   - Test end-to-end scrapingu dla Rzeszowa
+   - Weryfikacja zapisu snapshotów z is_manual = false
+
+Monitoring i logowanie:
+1. Szczegółowe logowanie błędów parsowania
+2. Metryki sukcesu/failure dla parsera
+3. Alerty przy konsekutywnych błędach
+
+**Etap 4: Frontend dla zarządzania parserami**
+Priorytet: ŚREDNI | Czas: 3-4 dni
+
+1. Panel admina - zarządzanie konfiguracją parserów
+2. Formularz edycji selektorów (JSON editor)
+3. Przycisk testowania parsera (dry-run)
+4. Wyświetlanie statusu i błędów parsowania
+
+### 7.3. Zależności techniczne
+
+**Backend (Java/Spring Boot):**
+- Jsoup - parsowanie HTML (już w projekcie)
+- Jackson - parsowanie JSON dla konfiguracji selektorów
+- Spring Validation - walidacja DTO
+
+**Baza danych:**
+- PostgreSQL JSONB - dla pola `selectors` w scraper_config
+- Liquibase - migracje dla nowych pól w scraper_config
+
+### 7.4. Priorytety i timeline
+
+**Sprint 1 (7 dni):** US-028 + US-030 (infrastruktura)
+- Ręczne wprowadzanie danych
+- Podstawowa infrastruktura parserów
+- Testy jednostkowe i integracyjne
+
+**Sprint 2 (5 dni):** US-029 (RCKiK Rzeszów)
+- Implementacja parsera Rzeszów
+- Integracja z schedulingiem
+- Testy end-to-end
+
+**Sprint 3 (3 dni):** Frontend i dopracowanie
+- Panel admina - formularz ręcznego wprowadzania
+- Panel admina - zarządzanie parserami
+- Dokumentacja i testy akceptacyjne
+
+**Całkowity czas: ~15 dni roboczych (3 tygodnie)**
+
+### 7.5. Ryzyka i mitygacja
+
+**Ryzyko 1:** Zmiana struktury HTML strony RCKiK Rzeszów
+- Mitygacja: System konfiguracji parserów umożliwia szybką aktualizację selektorów bez zmiany kodu
+- Mitygacja: Alerty przy błędach parsowania + ręczne wprowadzanie danych jako backup
+
+**Ryzyko 2:** Blokowanie scrapingu przez RCKiK (rate limiting, CAPTCHA)
+- Mitygacja: User-Agent rotation, delays między requestami
+- Mitygacja: Ręczne wprowadzanie danych jako fallback
+
+**Ryzyko 3:** Niepoprawne dane na stronie źródłowej
+- Mitygacja: Walidacja parsowanych danych (zakres 0-100%, poprawne grupy krwi)
+- Mitygacja: Logowanie szczegółów błędów dla analizy
+
+### 7.6. Metryki sukcesu dla nowych funkcjonalności
+
+**US-028 (Ręczne wprowadzanie):**
+- Liczba ręcznie wprowadzonych snapshotów / tydzień
+- Czas wypełnienia luk w danych po awarii scrapera
+- % dni z kompletnymi danymi (scraped + manual)
+
+**US-029 (Parser Rzeszów):**
+- Success rate parsowania dla Rzeszowa (cel: >95%)
+- Średni czas parsowania pojedynczego RCKiK (<5s)
+- Liczba błędów parsowania / miesiąc (cel: <5)
+
+**US-030 (Zarządzanie parserami):**
+- Liczba skonfigurowanych parserów dla różnych RCKiK
+- Czas potrzebny na dodanie nowego parsera (cel: <1h)
+- Liczba użyć dry-run testów / tydzień
 
 
