@@ -103,3 +103,8 @@ mkrew:
   # Application URLs
   app:
     base-url: ${APP_BASE_URL:http://localhost:3000}
+
+# Google reCAPTCHA configuration
+recaptcha:
+  secret:
+    key: ${RECAPTCHA_SECRET_KEY:}

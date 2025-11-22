@@ -36,6 +36,7 @@ public class AuthService {
     private final LoginAttemptService loginAttemptService;
     private final RateLimitService rateLimitService;
     private final EmailService emailService;
+    private final ReCaptchaService reCaptchaService;
 
     private static final int TOKEN_VALIDITY_HOURS = 24;
     private static final int PASSWORD_RESET_TOKEN_VALIDITY_HOURS = 1;
@@ -234,7 +235,27 @@ public class AuthService {
             );
         }
 
-        // 2. Find user by email (active users only)
+        // 2. Verify reCAPTCHA if user has 3 or more failed attempts
+        int failedAttempts = loginAttemptService.getFailedAttempts(email);
+        if (failedAttempts >= 3) {
+            log.debug("User has {} failed attempts, reCAPTCHA verification required", failedAttempts);
+
+            if (request.getCaptchaToken() == null || request.getCaptchaToken().isEmpty()) {
+                log.warn("Login blocked: reCAPTCHA token missing after {} failed attempts", failedAttempts);
+                throw new InvalidCredentialsException("reCAPTCHA verification required");
+            }
+
+            boolean captchaValid = reCaptchaService.verify(request.getCaptchaToken());
+            if (!captchaValid) {
+                loginAttemptService.recordFailedAttempt(email);
+                log.warn("Login blocked: Invalid reCAPTCHA token for email: {}", email);
+                throw new InvalidCredentialsException("reCAPTCHA verification failed");
+            }
+
+            log.debug("reCAPTCHA verification successful for email: {}", email);
+        }
+
+        // 3. Find user by email (active users only)
         User user = userRepository.findByEmailAndDeletedAtIsNull(email)
                 .orElseThrow(() -> {
                     loginAttemptService.recordFailedAttempt(email);
@@ -242,29 +263,29 @@ public class AuthService {
                     return new InvalidCredentialsException("Invalid email or password");
                 });
 
-        // 3. Verify password
+        // 4. Verify password
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             loginAttemptService.recordFailedAttempt(email);
             log.warn("Login failed: Invalid password for email: {}", email);
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        // 4. Check if email is verified
+        // 5. Check if email is verified
         if (!user.getEmailVerified()) {
             log.warn("Login failed: Email not verified for: {}", email);
             throw new EmailNotVerifiedException("Please verify your email before logging in");
         }
 
-        // 5. Reset failed attempts counter on successful authentication
+        // 6. Reset failed attempts counter on successful authentication
         loginAttemptService.resetAttempts(email);
 
-        // 6. Generate JWT tokens
+        // 7. Generate JWT tokens
         String accessToken = jwtTokenProvider.generateAccessToken(user);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user);
 
         log.info("Login successful for user ID: {}, email: {}", user.getId(), email);
 
-        // 7. Build user DTO
+        // 8. Build user DTO
         UserDto userDto = UserDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -275,7 +296,7 @@ public class AuthService {
                 .role(user.getRole().name()) // Use actual user role (USER or ADMIN)
                 .build();
 
-        // 8. Return login response
+        // 9. Return login response
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .tokenType("Bearer")
