@@ -331,9 +331,18 @@ public class AuthService {
                     String resetToken = generatePasswordResetToken(user);
                     log.info("Password reset token generated for user ID: {}", user.getId());
 
-                    // 4. TODO: Send password reset email
-                    // emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
-                    log.info("Password reset email would be sent to: {} with token: {}", user.getEmail(), resetToken);
+                    // 4. Send password reset email
+                    boolean emailSent = emailService.sendPasswordResetEmail(
+                            user.getEmail(),
+                            user.getFirstName(),
+                            resetToken
+                    );
+
+                    if (emailSent) {
+                        log.info("Password reset email sent successfully to: {}", user.getEmail());
+                    } else {
+                        log.warn("Failed to send password reset email to: {}", user.getEmail());
+                    }
                 });
 
         // 5. Always return success (prevent email enumeration)
@@ -403,13 +412,22 @@ public class AuthService {
         userTokenRepository.save(userToken);
         log.info("Password reset token marked as used");
 
-        // 8. TODO: Invalidate all existing sessions for this user
-        // sessionRepository.revokeAllSessionsForUser(user.getId());
-        log.info("All sessions would be invalidated for user ID: {}", user.getId());
+        // 8. Send confirmation email
+        boolean confirmationEmailSent = emailService.sendPasswordResetConfirmationEmail(
+                user.getEmail(),
+                user.getFirstName()
+        );
 
-        // 9. TODO: Send confirmation email
-        // emailService.sendPasswordResetConfirmationEmail(user.getEmail());
-        log.info("Password reset confirmation email would be sent to: {}", user.getEmail());
+        if (confirmationEmailSent) {
+            log.info("Password reset confirmation email sent successfully to: {}", user.getEmail());
+        } else {
+            log.warn("Failed to send password reset confirmation email to: {}", user.getEmail());
+        }
+
+        // Note: Session invalidation is not implemented yet
+        // Future enhancement: Revoke all existing sessions for this user for security
+        // sessionRepository.revokeAllSessionsForUser(user.getId());
+        log.debug("Session invalidation not implemented - future enhancement");
 
         return PasswordResetResponse.builder()
                 .message("Password reset successfully. You can now log in with your new password.")

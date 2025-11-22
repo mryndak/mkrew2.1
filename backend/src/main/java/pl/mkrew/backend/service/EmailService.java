@@ -566,4 +566,176 @@ public class EmailService {
 
         return sendEmail(request);
     }
+
+    /**
+     * Send password reset email with reset link
+     * US-004: Password Reset
+     *
+     * @param recipientEmail Recipient email
+     * @param firstName      Recipient first name
+     * @param resetToken     Password reset token
+     * @return true if sent successfully
+     */
+    public boolean sendPasswordResetEmail(
+            String recipientEmail,
+            String firstName,
+            String resetToken) {
+
+        String subject = "Reset hasła - mkrew";
+
+        // Build password reset URL
+        String resetUrl = appBaseUrl + "/reset-password/confirm?token=" + resetToken;
+
+        String htmlTemplate = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Reset hasła</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #d32f2f; margin: 0;">mkrew</h1>
+                            <p style="color: #666; font-size: 14px; margin: 5px 0;">Platforma dla dawców krwi</p>
+                        </div>
+
+                        <h2 style="color: #333;">Witaj {{firstName}}! 👋</h2>
+                        <p>Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta w serwisie mkrew.</p>
+                        <p>Jeśli to Ty złożyłeś/aś tę prośbę, kliknij poniższy przycisk, aby ustawić nowe hasło:</p>
+
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{{resetUrl}}" style="background-color: #d32f2f; color: white; padding: 14px 40px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; font-size: 16px;">
+                                Zresetuj hasło
+                            </a>
+                        </div>
+
+                        <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+                            <p style="margin: 0; font-size: 14px; color: #856404;">
+                                <strong>⚠️ Ważne:</strong> Link resetujący jest ważny przez <strong>1 godzinę</strong>.
+                            </p>
+                        </div>
+
+                        <p style="font-size: 14px; color: #666;">
+                            Jeśli przycisk nie działa, skopiuj i wklej poniższy link do przeglądarki:
+                        </p>
+                        <p style="font-size: 12px; word-break: break-all; color: #2196f3; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
+                            {{resetUrl}}
+                        </p>
+
+                        <div style="background-color: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin: 20px 0;">
+                            <p style="margin: 0; font-size: 14px; color: #c62828;">
+                                <strong>🔒 Bezpieczeństwo:</strong> Jeśli to nie Ty złożyłeś/aś prośbę o reset hasła, zignoruj tę wiadomość.
+                                Twoje hasło pozostanie bez zmian.
+                            </p>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+                        <p style="font-size: 12px; color: #999;">
+                            mkrew - Platforma dla dawców krwi<br>
+                            <a href="https://mkrew.pl" style="color: #d32f2f;">mkrew.pl</a>
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """;
+
+        EmailNotificationRequest request = EmailNotificationRequest.builder()
+                .recipientEmail(recipientEmail)
+                .recipientName(firstName)
+                .subject(subject)
+                .notificationType("OTHER")
+                .templateName(htmlTemplate)
+                .templateVariables(java.util.Map.of(
+                        "firstName", firstName,
+                        "resetUrl", resetUrl
+                ))
+                .userId(null)
+                .rckikId(null)
+                .build();
+
+        return sendEmail(request);
+    }
+
+    /**
+     * Send password reset confirmation email
+     * US-004: Password Reset
+     *
+     * @param recipientEmail Recipient email
+     * @param firstName      Recipient first name
+     * @return true if sent successfully
+     */
+    public boolean sendPasswordResetConfirmationEmail(
+            String recipientEmail,
+            String firstName) {
+
+        String subject = "Hasło zostało zmienione - mkrew";
+
+        String loginUrl = appBaseUrl + "/login";
+
+        String htmlTemplate = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Hasło zostało zmienione</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #d32f2f; margin: 0;">mkrew</h1>
+                            <p style="color: #666; font-size: 14px; margin: 5px 0;">Platforma dla dawców krwi</p>
+                        </div>
+
+                        <h2 style="color: #333;">Witaj {{firstName}}! 👋</h2>
+                        <p>Twoje hasło zostało pomyślnie zmienione.</p>
+
+                        <div style="background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin: 20px 0;">
+                            <p style="margin: 0; font-size: 14px; color: #2e7d32;">
+                                <strong>✅ Potwierdzenie:</strong> Możesz teraz zalogować się używając nowego hasła.
+                            </p>
+                        </div>
+
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{{loginUrl}}" style="background-color: #d32f2f; color: white; padding: 14px 40px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; font-size: 16px;">
+                                Zaloguj się
+                            </a>
+                        </div>
+
+                        <div style="background-color: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #c62828;">🔒 Nie zmieniałeś/aś hasła?</h3>
+                            <p style="margin: 0; font-size: 14px; color: #c62828;">
+                                Jeśli to nie Ty zmieniłeś/aś hasło, natychmiast skontaktuj się z nami.
+                                Twoje konto może być zagrożone.
+                            </p>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+                        <p style="font-size: 12px; color: #999;">
+                            mkrew - Platforma dla dawców krwi<br>
+                            <a href="https://mkrew.pl" style="color: #d32f2f;">mkrew.pl</a>
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """;
+
+        EmailNotificationRequest request = EmailNotificationRequest.builder()
+                .recipientEmail(recipientEmail)
+                .recipientName(firstName)
+                .subject(subject)
+                .notificationType("OTHER")
+                .templateName(htmlTemplate)
+                .templateVariables(java.util.Map.of(
+                        "firstName", firstName,
+                        "loginUrl", loginUrl
+                ))
+                .userId(null)
+                .rckikId(null)
+                .build();
+
+        return sendEmail(request);
+    }
 }
