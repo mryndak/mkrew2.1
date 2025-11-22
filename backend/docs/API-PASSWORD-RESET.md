@@ -91,10 +91,13 @@ Invalid email format:
 - Token type: "PASSWORD_RESET"
 - Stores in `user_tokens` table
 
-#### 4. Send Email (TODO)
-- Email service integration pending (SendGrid/Mailgun)
+#### 4. Send Email
+- Email service integration implemented (MailerSend)
 - Email contains reset link with token
-- Currently logged for development
+- Link format: `{appBaseUrl}/reset-password/confirm?token={resetToken}`
+- Professional HTML template with mkrew branding
+- 1-hour validity warning included
+- Security notice if request wasn't made by user
 
 #### 5. Return Success
 - Always returns generic success message
@@ -303,14 +306,17 @@ Weak password or missing fields:
 - Sets `used_at = NOW()`
 - Prevents future reuse
 
-#### 8. Invalidate Sessions (TODO)
-- Future: Revoke all existing sessions for security
-- Currently logged for development
+#### 8. Send Confirmation Email
+- Email service integration implemented (MailerSend)
+- Informs user of successful password change
+- Professional HTML template with mkrew branding
+- Security warning if user didn't make the change
+- Call-to-action button to login with new password
 
-#### 9. Send Confirmation Email (TODO)
-- Email service integration pending
-- Informs user of password change
-- Currently logged for development
+#### 9. Invalidate Sessions (Future Enhancement)
+- Future: Revoke all existing sessions for security
+- Not yet implemented - logged for tracking
+- Will force re-login on all devices after password change
 
 ### Flow Diagram
 
@@ -523,8 +529,18 @@ public PasswordResetResponse requestPasswordReset(PasswordResetRequestDto reques
             // Generate new token
             String resetToken = generatePasswordResetToken(user);
 
-            // TODO: Send email
-            // emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+            // Send password reset email
+            boolean emailSent = emailService.sendPasswordResetEmail(
+                    user.getEmail(),
+                    user.getFirstName(),
+                    resetToken
+            );
+
+            if (emailSent) {
+                log.info("Password reset email sent successfully to: {}", user.getEmail());
+            } else {
+                log.warn("Failed to send password reset email to: {}", user.getEmail());
+            }
         });
 
     // Always return success
@@ -558,7 +574,21 @@ public PasswordResetResponse confirmPasswordReset(PasswordResetConfirmDto reques
     userToken.setUsedAt(LocalDateTime.now());
     userTokenRepository.save(userToken);
 
-    // TODO: Invalidate sessions, send confirmation email
+    // Send confirmation email
+    boolean confirmationEmailSent = emailService.sendPasswordResetConfirmationEmail(
+            user.getEmail(),
+            user.getFirstName()
+    );
+
+    if (confirmationEmailSent) {
+        log.info("Password reset confirmation email sent successfully to: {}", user.getEmail());
+    } else {
+        log.warn("Failed to send password reset confirmation email to: {}", user.getEmail());
+    }
+
+    // Note: Session invalidation is not implemented yet
+    // Future enhancement: Revoke all existing sessions for this user for security
+    log.debug("Session invalidation not implemented - future enhancement");
 
     return PasswordResetResponse.builder()
         .message("Password reset successfully. You can now log in with your new password.")
@@ -600,12 +630,13 @@ public PasswordResetResponse confirmPasswordReset(PasswordResetConfirmDto reques
 - CAPTCHA after multiple requests
 
 ### Future Enhancements
-- Email service integration (SendGrid/Mailgun)
-- Session revocation on password change
-- Security notification emails
-- Account activity log
-- IP tracking for password changes
-- Two-factor authentication support
+- ✅ Email service integration (MailerSend) - IMPLEMENTED
+- ✅ Password reset emails - IMPLEMENTED
+- ✅ Security notification emails - IMPLEMENTED
+- ⏳ Session revocation on password change
+- ⏳ Account activity log
+- ⏳ IP tracking for password changes
+- ⏳ Two-factor authentication support
 
 ---
 
@@ -730,11 +761,12 @@ docker exec -it mkrew-backend-postgres psql -U mkrew_user -d mkrew \
 2. ✅ Email Verification (US-002) - IMPLEMENTED
 3. ✅ User Login (US-003) - IMPLEMENTED
 4. ✅ Password Reset (US-004) - IMPLEMENTED
-5. ⏳ Email Service Integration (SendGrid/Mailgun)
+5. ✅ Email Service Integration (MailerSend) - IMPLEMENTED
 6. ⏳ Profile Management (US-005)
 7. ⏳ Notification Preferences (US-006)
 8. ⏳ Integration tests for auth flow
 9. ⏳ Rate limiting for password reset endpoint
+10. ⏳ Session revocation on password change
 
 ---
 
